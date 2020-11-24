@@ -61,14 +61,14 @@ class ContentView(context: Context) : FrameLayout(context) {
         tv_footer_left.typeface = ChapterProvider.typeface
         tv_footer_middle.typeface = ChapterProvider.typeface
         tv_footer_right.typeface = ChapterProvider.typeface
-        bv_header_left.setColor(infoColor)
-        tv_header_left.setColor(infoColor)
-        tv_header_middle.setColor(infoColor)
-        tv_header_right.setColor(infoColor)
-        bv_footer_left.setColor(infoColor)
-        tv_footer_left.setColor(infoColor)
-        tv_footer_middle.setColor(infoColor)
-        tv_footer_right.setColor(infoColor)
+        bv_header_left.setColor(textColor)
+        tv_header_left.setColor(textColor)
+        tv_header_middle.setColor(textColor)
+        tv_header_right.setColor(textColor)
+        bv_footer_left.setColor(textColor)
+        tv_footer_left.setColor(textColor)
+        tv_footer_middle.setColor(textColor)
+        tv_footer_right.setColor(textColor)
         upStatusBar()
         ll_header.setPadding(
             headerPaddingLeft.dp,
@@ -125,7 +125,7 @@ class ContentView(context: Context) : FrameLayout(context) {
         }
         tvTitle?.apply {
             isBattery = false
-            textSize = 13f
+            textSize = 12f
         }
         tvTime = when (ReadTipConfig.time) {
             ReadTipConfig.tipHeaderLeft -> bv_header_left
@@ -150,8 +150,8 @@ class ContentView(context: Context) : FrameLayout(context) {
             else -> null
         }
         tvBattery?.apply {
-            isBattery = false
-            textSize = 12f
+            isBattery = true
+            textSize = 10f
         }
         tvPage = when (ReadTipConfig.page) {
             ReadTipConfig.tipHeaderLeft -> bv_header_left
@@ -212,14 +212,12 @@ class ContentView(context: Context) : FrameLayout(context) {
     }
 
     fun upTime() {
-
         tvTime?.text = timeFormat.format(Date(System.currentTimeMillis()))
     }
 
     fun upBattery(battery: Int) {
         this.battery = battery
-        tvBattery?.text = "${timeFormat.format(Date(System.currentTimeMillis()))}  $battery%"
-        //tvBattery?.setBattery(battery)
+        tvBattery?.setBattery(battery)
     }
 
     fun setContent(pageData: PageData, resetPageOffset: Boolean = true) {

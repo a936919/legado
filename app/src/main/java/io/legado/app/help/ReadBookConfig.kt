@@ -1,7 +1,6 @@
 package io.legado.app.help
 
 import android.graphics.Color
-import android.graphics.Color.parseColor
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
@@ -41,7 +40,6 @@ object ReadBookConfig {
     var bg: Drawable? = null
     var bgMeanColor: Int = 0
     val textColor: Int get() = durConfig.curTextColor()
-    val infoColor = Color.parseColor("#888888")
 
     init {
         initConfigs()
