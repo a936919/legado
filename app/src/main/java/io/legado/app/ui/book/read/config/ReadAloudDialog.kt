@@ -55,7 +55,7 @@ class ReadAloudDialog : BaseDialogFragment() {
     }
 
     override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) {
-        val bg = ReadBookConfig.bgMeanColor//requireContext().bottomBackground
+        val bg = ReadBookConfig.bgMeanColor+10//requireContext().bottomBackground
         val isLight = ColorUtils.isColorLight(bg)
         val textColor = requireContext().getPrimaryTextColor(isLight)
         root_view.setBackgroundColor(bg)
