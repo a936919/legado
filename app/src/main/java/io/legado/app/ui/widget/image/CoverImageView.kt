@@ -69,7 +69,7 @@ class CoverImageView @JvmOverloads constructor(
         authorPaint.textSize = width / 9
         authorPaint.strokeWidth = authorPaint.textSize / 10
         val fm = namePaint.fontMetrics
-        nameHeight = height * 0.5f + (fm.bottom - fm.top) * 0.5f
+        nameHeight = height * 0.3f + (fm.bottom - fm.top) * 0.3f
         authorHeight = nameHeight + (fm.bottom - fm.top) * 0.6f
     }
 
@@ -96,7 +96,7 @@ class CoverImageView @JvmOverloads constructor(
             namePaint.color = Color.WHITE
             namePaint.style = Paint.Style.STROKE
             canvas.drawText(it, width / 2, nameHeight, namePaint)
-            namePaint.color = Color.RED
+            namePaint.color = Color.DKGRAY
             namePaint.style = Paint.Style.FILL
             canvas.drawText(it, width / 2, nameHeight, namePaint)
         }
@@ -104,7 +104,7 @@ class CoverImageView @JvmOverloads constructor(
             authorPaint.color = Color.WHITE
             authorPaint.style = Paint.Style.STROKE
             canvas.drawText(it, width / 2, authorHeight, authorPaint)
-            authorPaint.color = Color.RED
+            authorPaint.color = Color.DKGRAY
             authorPaint.style = Paint.Style.FILL
             canvas.drawText(it, width / 2, authorHeight, authorPaint)
         }
