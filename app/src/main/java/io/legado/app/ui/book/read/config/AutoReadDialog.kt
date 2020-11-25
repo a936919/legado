@@ -49,7 +49,7 @@ class AutoReadDialog : BaseDialogFragment() {
     }
 
     override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) {
-        val bg = requireContext().bottomBackground
+        val bg = ReadBookConfig.bgMeanColor//requireContext().bottomBackground
         val isLight = ColorUtils.isColorLight(bg)
         val textColor = requireContext().getPrimaryTextColor(isLight)
         root_view.setBackgroundColor(bg)

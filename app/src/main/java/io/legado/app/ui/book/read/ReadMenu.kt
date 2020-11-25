@@ -2,6 +2,7 @@ package io.legado.app.ui.book.read
 
 import android.content.Context
 import android.content.res.ColorStateList
+import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.util.AttributeSet
 import android.view.WindowManager
@@ -14,6 +15,7 @@ import io.legado.app.R
 import io.legado.app.constant.PreferKey
 import io.legado.app.help.AppConfig
 import io.legado.app.help.LocalConfig
+import io.legado.app.help.ReadBookConfig
 import io.legado.app.lib.theme.*
 import io.legado.app.service.help.ReadBook
 import io.legado.app.utils.*
@@ -34,7 +36,7 @@ class ReadMenu @JvmOverloads constructor(
     private lateinit var menuTopOut: Animation
     private lateinit var menuBottomIn: Animation
     private lateinit var menuBottomOut: Animation
-    private val bgColor: Int = context.bottomBackground
+    private val bgColor: Int = ReadBookConfig.bgMeanColor//context.bottomBackground
     private val textColor: Int = context.getPrimaryTextColor(ColorUtils.isColorLight(bgColor))
     private val bottomBackgroundList: ColorStateList = Selector.colorBuild()
         .setDefaultColor(bgColor)

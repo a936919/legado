@@ -44,7 +44,7 @@ class MoreConfigDialog : DialogFragment() {
     ): View? {
         (activity as ReadBookActivity).bottomDialog++
         val view = LinearLayout(context)
-        view.setBackgroundColor(requireContext().bottomBackground)
+        view.setBackgroundColor(ReadBookConfig.bgMeanColor)//view.setBackgroundColor(requireContext().bottomBackground)
         view.id = R.id.tag1
         container?.addView(view)
         return view

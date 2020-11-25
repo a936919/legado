@@ -69,7 +69,7 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
     }
 
     private fun initView() {
-        val bg = requireContext().bottomBackground
+        val bg = ReadBookConfig.bgMeanColor//equireContext().bottomBackground
         val isLight = ColorUtils.isColorLight(bg)
         val textColor = requireContext().getPrimaryTextColor(isLight)
         root_view.setBackgroundColor(bg)
