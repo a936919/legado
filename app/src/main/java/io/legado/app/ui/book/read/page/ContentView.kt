@@ -212,14 +212,13 @@ class ContentView(context: Context) : FrameLayout(context) {
     }
 
     fun upTime() {
-
-        tvTime?.text = timeFormat.format(Date(System.currentTimeMillis()))
+        tvTime?.text = "${timeFormat.format(Date(System.currentTimeMillis()))}  $battery%"
     }
 
     fun upBattery(battery: Int) {
         this.battery = battery
-        tvBattery?.text = "${timeFormat.format(Date(System.currentTimeMillis()))}  $battery%"
-        //tvBattery?.setBattery(battery)
+        tvBattery?.setBattery(battery)
+        upTime()
     }
 
     fun setContent(pageData: PageData, resetPageOffset: Boolean = true) {

@@ -39,7 +39,7 @@ class BatteryView @JvmOverloads constructor(
 
     @SuppressLint("SetTextI18n")
     fun setBattery(battery: Int) {
-        text = "$battery"
+        text = "$battery%"
     }
 
     override fun onDraw(canvas: Canvas) {
