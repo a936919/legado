@@ -36,7 +36,7 @@ class ReadMenu @JvmOverloads constructor(
     private lateinit var menuTopOut: Animation
     private lateinit var menuBottomIn: Animation
     private lateinit var menuBottomOut: Animation
-    private val bgColor: Int = ReadBookConfig.bgMeanColor + 10//context.bottomBackground
+    private val bgColor: Int = ReadBookConfig.bgMeanColor//context.bottomBackground
     //private val textColor: Int = context.accentColor
     private val textColor: Int = context.getPrimaryTextColor(ColorUtils.isColorLight(bgColor))
     private val bottomBackgroundList: ColorStateList = Selector.colorBuild()
