@@ -265,6 +265,7 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
                 iv_style.onClick {
                     if (iv_style.isInView) {
                         changeBg(holder.layoutPosition)
+                        root_view.setBackgroundColor(ReadBookConfig.bgMeanColor)
                     }
                 }
                 iv_style.onLongClick {

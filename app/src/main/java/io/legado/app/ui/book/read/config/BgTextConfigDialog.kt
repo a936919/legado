@@ -84,7 +84,7 @@ class BgTextConfigDialog : BaseDialogFragment(), FilePickerDialog.CallBack {
     }
 
     private fun initView() {
-        val bg = requireContext().bottomBackground
+        val bg = ReadBookConfig.bgMeanColor
         val isLight = ColorUtils.isColorLight(bg)
         primaryTextColor = requireContext().getPrimaryTextColor(isLight)
         secondaryTextColor = requireContext().getSecondaryTextColor(isLight)
