@@ -39,6 +39,7 @@
             android:paddingRight="10dp"
             android:singleLine="true"
             android:textSize="12sp"
+            android:paddingBottom="5dp"
             android:visibility="gone" />
 
     </io.legado.app.ui.widget.TitleBar>

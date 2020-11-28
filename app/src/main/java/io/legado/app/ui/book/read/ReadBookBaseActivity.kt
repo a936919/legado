@@ -150,6 +150,7 @@ abstract class ReadBookBaseActivity :
         if (toolBarHide) {
             ATH.setLightStatusBar(this, ReadBookConfig.durConfig.curStatusIconDark())
         } else {
+            //todo
             ATH.setLightStatusBarAuto(
                 this,
                 ThemeStore.statusBarColor(this, AppConfig.isTransparentStatusBar)

@@ -178,6 +178,7 @@ object ChapterProvider {
     /**
      * 排版文字
      */
+    //todo
     private fun setTypeText(
         text: String,
         y: Float,
@@ -311,6 +312,7 @@ object ChapterProvider {
     /**
      * 超出边界处理
      */
+    //todo
     private fun exceed(textLine: TextLine, words: Array<String>) {
         val endX = textLine.textChars.last().end
         if (endX > visibleRight) {

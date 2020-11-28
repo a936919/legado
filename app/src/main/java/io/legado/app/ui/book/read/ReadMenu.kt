@@ -116,6 +116,8 @@ class ReadMenu @JvmOverloads constructor(
         bottom_menu.visible()
         title_bar.startAnimation(menuTopIn)
         bottom_menu.startAnimation(menuBottomIn)
+        //todo
+        //title_bar.setBackgroundColor(bgColor)
         if(bgColor!=ReadBookConfig.bgMeanColor)
         {
             bgColor = ReadBookConfig.bgMeanColor
@@ -129,7 +131,6 @@ class ReadMenu @JvmOverloads constructor(
             fabReplaceRule.backgroundTintList = bottomBackgroundList
             fabNightTheme.backgroundTintList = bottomBackgroundList
         }
-
     }
 
     fun runMenuOut(onMenuOutEnd: (() -> Unit)? = null) {

@@ -64,19 +64,19 @@ class QrCodeActivity : BaseActivity(R.layout.activity_qrcode_capture), QRCodeVie
             .rationale(R.string.qr_per)
             .onGranted {
                 zxingview.visibility = View.VISIBLE
-                //TODO 显示扫描框，并开始识别
+                //tTODO 显示扫描框，并开始识别
                 zxingview.startSpotAndShowRect()
             }.request()
     }
 
     override fun onStop() {
-        //TODO 关闭摄像头预览，并且隐藏扫描框
+        //tTODO 关闭摄像头预览，并且隐藏扫描框
         zxingview.stopCamera()
         super.onStop()
     }
 
     override fun onDestroy() {
-        //TODO 销毁二维码扫描控件
+        //tTODO 销毁二维码扫描控件
         zxingview.onDestroy()
         super.onDestroy()
     }
@@ -99,7 +99,7 @@ class QrCodeActivity : BaseActivity(R.layout.activity_qrcode_capture), QRCodeVie
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         data?.data?.let {
-            //TODO 显示扫描框，并开始识别
+            //tTODO 显示扫描框，并开始识别
             zxingview.startSpotAndShowRect()
 
             if (resultCode == Activity.RESULT_OK && requestCode == requestQrImage) {

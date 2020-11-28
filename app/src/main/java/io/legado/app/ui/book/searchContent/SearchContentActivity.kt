@@ -219,9 +219,9 @@ class SearchContentActivity :
 
     private fun constructText(content: String, position: Int, query: String): Array<Any> {
         // 构建关键词周边文字，在搜索结果里显示
-        // todo: 判断段落，只在关键词所在段落内分割
-        // todo: 利用标点符号分割完整的句
-        // todo: length和设置结合，自由调整周边文字长度
+        // ttodo: 判断段落，只在关键词所在段落内分割
+        // ttodo: 利用标点符号分割完整的句
+        // ttodo: length和设置结合，自由调整周边文字长度
         val length = 20
         var po1 = position - length
         var po2 = position + query.length + length

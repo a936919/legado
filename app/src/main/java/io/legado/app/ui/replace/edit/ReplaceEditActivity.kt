@@ -117,12 +117,12 @@ class ReplaceEditActivity :
         if (view is EditText) {
             val start = view.selectionStart
             val end = view.selectionEnd
-            //TODO 获取EditText的文字
+            //tTODO 获取EditText的文字
             val edit = view.editableText
             if (start < 0 || start >= edit.length) {
                 edit.append(text)
             } else {
-                //TODO 光标所在位置插入文字
+                //tTODO 光标所在位置插入文字
                 edit.replace(start, end, text)
             }
         }

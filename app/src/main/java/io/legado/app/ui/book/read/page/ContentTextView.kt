@@ -25,6 +25,7 @@ import kotlin.math.min
 /**
  * 阅读内容界面
  */
+//todo
 class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
     var selectAble = context.getPrefBoolean(PreferKey.textSelectAble)
     var upView: ((TextPage) -> Unit)? = null
