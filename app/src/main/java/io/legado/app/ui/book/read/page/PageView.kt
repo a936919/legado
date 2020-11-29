@@ -36,7 +36,7 @@ class PageView(context: Context, attrs: AttributeSet) :
             field = value
             upContent()
         }
-    var isScroll = ReadBook.pageAnim() == 3
+    var isScroll = false
     var prevPage: ContentView = ContentView(context)
     var curPage: ContentView = ContentView(context)
     var nextPage: ContentView = ContentView(context)
@@ -95,9 +95,11 @@ class PageView(context: Context, attrs: AttributeSet) :
         addView(nextPage)
         addView(curPage)
         addView(prevPage)
-        upBg()
-        setWillNotDraw(false)
-        upPageAnim()
+        if (!isInEditMode) {
+            upBg()
+            setWillNotDraw(false)
+            upPageAnim()
+        }
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -113,15 +115,12 @@ class PageView(context: Context, attrs: AttributeSet) :
         brRect.set(width * 0.66f, height * 0.66f, width - 10f, height - 10f)
         prevPage.x = -w.toFloat()
         pageDelegate?.setViewSize(w, h)
-        if (w != 0 && h != 0) {
-            ReadBook.loadContent(resetPageOffset = false)
-        }
     }
 
     override fun dispatchDraw(canvas: Canvas) {
         super.dispatchDraw(canvas)
         pageDelegate?.onDraw(canvas)
-        if (callBack.isAutoPage && !isScroll) {
+        if (!isInEditMode && callBack.isAutoPage && !isScroll) {
             nextPage.screenshot()?.let {
                 val bottom =
                     page_view.height * callBack.autoPageProgress / (ReadBookConfig.autoReadSpeed * 50)
@@ -170,7 +169,6 @@ class PageView(context: Context, attrs: AttributeSet) :
                 setStartPoint(event.x, event.y)
             }
             MotionEvent.ACTION_MOVE -> {
-                pressDown = true
                 if (!isMove) {
                     isMove =
                         abs(startX - event.x) > slopSquare || abs(startY - event.y) > slopSquare
@@ -188,6 +186,7 @@ class PageView(context: Context, attrs: AttributeSet) :
             MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_UP -> {
                 removeCallbacks(longPressRunnable)
                 if (!pressDown) return true
+                pressDown = false
                 if (!isMove) {
                     if (!longPressed && !pressOnTextSelected) {
                         onSingleTapUp()

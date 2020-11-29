@@ -128,6 +128,7 @@ class ContentView(context: Context) : FrameLayout(context) {
         tvTitle?.apply {
             isBattery = false
             textSize = 13f
+
         }
         tvTime = getTipView(ReadTipConfig.time)
         tvTime?.apply {
