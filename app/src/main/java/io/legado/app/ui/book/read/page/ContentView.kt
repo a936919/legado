@@ -64,14 +64,14 @@ class ContentView(context: Context) : FrameLayout(context) {
         tv_footer_left.typeface = ChapterProvider.typeface
         tv_footer_middle.typeface = ChapterProvider.typeface
         tv_footer_right.typeface = ChapterProvider.typeface
-        bv_header_left.setColor(textColor)
-        tv_header_left.setColor(textColor)
-        tv_header_middle.setColor(textColor)
-        tv_header_right.setColor(textColor)
-        bv_footer_left.setColor(textColor)
-        tv_footer_left.setColor(textColor)
-        tv_footer_middle.setColor(textColor)
-        tv_footer_right.setColor(textColor)
+        bv_header_left.setColor(infoColor)
+        tv_header_left.setColor(infoColor)
+        tv_header_middle.setColor(infoColor)
+        tv_header_right.setColor(infoColor)
+        bv_footer_left.setColor(infoColor)
+        tv_footer_left.setColor(infoColor)
+        tv_footer_middle.setColor(infoColor)
+        tv_footer_right.setColor(infoColor)
         upStatusBar()
         ll_header.setPadding(
             headerPaddingLeft.dp,
@@ -127,7 +127,7 @@ class ContentView(context: Context) : FrameLayout(context) {
         tvTitle = getTipView(ReadTipConfig.chapterTitle)
         tvTitle?.apply {
             isBattery = false
-            textSize = 12f
+            textSize = 13f
 
         }
         tvTime = getTipView(ReadTipConfig.time)
@@ -200,7 +200,7 @@ class ContentView(context: Context) : FrameLayout(context) {
     private fun upTimeBattery() {
         tvTimeBattery?.let {
             val time = timeFormat.format(Date(System.currentTimeMillis()))
-            it.text = "$time $battery%"
+            it.text = "$time  $battery%"
         }
     }
 
