@@ -64,14 +64,14 @@ class ContentView(context: Context) : FrameLayout(context) {
         tv_footer_left.typeface = ChapterProvider.typeface
         tv_footer_middle.typeface = ChapterProvider.typeface
         tv_footer_right.typeface = ChapterProvider.typeface
-        bv_header_left.setColor(infoColor)
-        tv_header_left.setColor(infoColor)
-        tv_header_middle.setColor(infoColor)
-        tv_header_right.setColor(infoColor)
-        bv_footer_left.setColor(infoColor)
-        tv_footer_left.setColor(infoColor)
-        tv_footer_middle.setColor(infoColor)
-        tv_footer_right.setColor(infoColor)
+        bv_header_left.setColor(textColor)
+        tv_header_left.setColor(textColor)
+        tv_header_middle.setColor(textColor)
+        tv_header_right.setColor(textColor)
+        bv_footer_left.setColor(textColor)
+        tv_footer_left.setColor(textColor)
+        tv_footer_middle.setColor(textColor)
+        tv_footer_right.setColor(textColor)
         upStatusBar()
         ll_header.setPadding(
             headerPaddingLeft.dp,
@@ -127,7 +127,8 @@ class ContentView(context: Context) : FrameLayout(context) {
         tvTitle = getTipView(ReadTipConfig.chapterTitle)
         tvTitle?.apply {
             isBattery = false
-            textSize = 13f
+            textSize = 12f
+
         }
         tvTime = getTipView(ReadTipConfig.time)
         tvTime?.apply {
@@ -225,7 +226,7 @@ class ContentView(context: Context) : FrameLayout(context) {
         tvTitle?.text = textPage.title
         tvPage?.text = "${index.plus(1)}/$pageSize"
         tvTotalProgress?.text = readProgress
-        tvPageAndTotal?.text = "${index.plus(1)}/$pageSize  $readProgress"
+        tvPageAndTotal?.text = "${index.plus(1)}/$pageSize $readProgress"
     }
 
     fun scroll(offset: Int) {
