@@ -6,6 +6,7 @@ import android.os.Build
 import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
+import android.util.Log
 import io.legado.app.App
 import io.legado.app.constant.AppPattern
 import io.legado.app.data.entities.Book
@@ -231,6 +232,7 @@ object ChapterProvider {
             if (lineIndex == 0 && layout.lineCount > 1 && !isTitle) {
                 //第一行
                 textLine.text = words
+                //Log.d("ChapterProvider","first line $words")
                 addCharsToLineFirst(textLine, words.toStringArray(), textPaint, desiredWidth)
             } else if (lineIndex == layout.lineCount - 1) {
                 //最后一行
@@ -239,10 +241,12 @@ object ChapterProvider {
                 val x = if (isTitle && ReadBookConfig.titleMode == 1)
                     (visibleWidth - layout.getLineWidth(lineIndex)) / 2
                 else 0f
+                //Log.d("ChapterProvider","last line $words")
                 addCharsToLineLast(textLine, words.toStringArray(), textPaint, x)
             } else {
                 //中间行
                 textLine.text = words
+                //Log.d("ChapterProvider","midle line $words")
                 addCharsToLineMiddle(textLine, words.toStringArray(), textPaint, desiredWidth, 0f)
             }
             if (durY + textPaint.textHeight > visibleHeight) {
