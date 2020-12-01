@@ -230,6 +230,7 @@ class ContentView(context: Context) : FrameLayout(context) {
         tvPage?.text = "${index.plus(1)}/$pageSize"
         tvTotalProgress?.text = readProgress
         tvPageAndTotal?.text = "${index.plus(1)}/$pageSize $readProgress"
+        tvPageAndTotal?.text = "${index.plus(1)}/$pageSize  $readProgress"
     }
 
     fun scroll(offset: Int) {
