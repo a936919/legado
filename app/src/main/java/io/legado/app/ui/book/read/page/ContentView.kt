@@ -64,14 +64,17 @@ class ContentView(context: Context) : FrameLayout(context) {
         tv_footer_left.typeface = ChapterProvider.typeface
         tv_footer_middle.typeface = ChapterProvider.typeface
         tv_footer_right.typeface = ChapterProvider.typeface
-        bv_header_left.setColor(infoColor)
-        tv_header_left.setColor(infoColor)
-        tv_header_middle.setColor(infoColor)
-        tv_header_right.setColor(infoColor)
-        bv_footer_left.setColor(infoColor)
-        tv_footer_left.setColor(infoColor)
-        tv_footer_middle.setColor(infoColor)
-        tv_footer_right.setColor(infoColor)
+
+        val tipColor = if (ReadTipConfig.tipColor == 0) textColor else ReadTipConfig.tipColor
+        bv_header_left.setColor(tipColor)
+        tv_header_left.setColor(tipColor)
+        tv_header_middle.setColor(tipColor)
+        tv_header_right.setColor(tipColor)
+        bv_footer_left.setColor(tipColor)
+        tv_footer_left.setColor(tipColor)
+        tv_footer_middle.setColor(tipColor)
+        tv_footer_right.setColor(tipColor)
+
         upStatusBar()
         ll_header.setPadding(
             headerPaddingLeft.dp,
