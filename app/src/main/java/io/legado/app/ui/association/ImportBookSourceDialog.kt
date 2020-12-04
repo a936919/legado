@@ -16,21 +16,23 @@ import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.base.adapter.SimpleRecyclerAdapter
 import io.legado.app.constant.PreferKey
 import io.legado.app.data.entities.BookSource
+import io.legado.app.databinding.DialogEditTextBinding
+import io.legado.app.databinding.DialogRecyclerViewBinding
+import io.legado.app.databinding.ItemSourceImportBinding
 import io.legado.app.help.AppConfig
 import io.legado.app.lib.dialogs.alert
-import io.legado.app.ui.widget.text.AutoCompleteTextView
 import io.legado.app.utils.getViewModelOfActivity
 import io.legado.app.utils.putPrefBoolean
+import io.legado.app.utils.viewbindingdelegate.viewBinding
 import io.legado.app.utils.visible
-import kotlinx.android.synthetic.main.dialog_edit_text.view.*
-import kotlinx.android.synthetic.main.dialog_recycler_view.*
-import kotlinx.android.synthetic.main.item_source_import.view.*
 import org.jetbrains.anko.sdk27.listeners.onClick
 
 /**
  * 导入书源弹出窗口
  */
 class ImportBookSourceDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickListener {
+
+    private val binding by viewBinding(DialogRecyclerViewBinding::bind)
 
     val viewModel: ImportBookSourceViewModel
         get() = getViewModelOfActivity(ImportBookSourceViewModel::class.java)
@@ -53,18 +55,18 @@ class ImportBookSourceDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickList
     }
 
     override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) {
-        tool_bar.setTitle(R.string.import_book_source)
+        binding.toolBar.setTitle(R.string.import_book_source)
         initMenu()
         adapter = SourcesAdapter(requireContext())
-        recycler_view.layoutManager = LinearLayoutManager(requireContext())
-        recycler_view.adapter = adapter
+        binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.recyclerView.adapter = adapter
         adapter.setItems(viewModel.allSources)
-        tv_cancel.visible()
-        tv_cancel.onClick {
+        binding.tvCancel.visible()
+        binding.tvCancel.onClick {
             dismiss()
         }
-        tv_ok.visible()
-        tv_ok.onClick {
+        binding.tvOk.visible()
+        binding.tvOk.onClick {
             viewModel.importSelect {
                 dismiss()
             }
@@ -72,9 +74,10 @@ class ImportBookSourceDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickList
     }
 
     private fun initMenu() {
-        tool_bar.setOnMenuItemClickListener(this)
-        tool_bar.inflateMenu(R.menu.import_source)
-        tool_bar.menu.findItem(R.id.menu_Keep_original_name)?.isChecked = AppConfig.importKeepName
+        binding.toolBar.setOnMenuItemClickListener(this)
+        binding.toolBar.inflateMenu(R.menu.import_source)
+        binding.toolBar.menu.findItem(R.id.menu_Keep_original_name)
+            ?.isChecked = AppConfig.importKeepName
     }
 
     @SuppressLint("InflateParams")
@@ -82,14 +85,10 @@ class ImportBookSourceDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickList
         when (item.itemId) {
             R.id.menu_new_group -> {
                 alert(R.string.diy_edit_source_group) {
-                    var editText: AutoCompleteTextView? = null
-                    customView {
-                        layoutInflater.inflate(R.layout.dialog_edit_text, null).apply {
-                            editText = edit_view
-                        }
-                    }
+                    val alertBinding = DialogEditTextBinding.inflate(layoutInflater)
+                    customView = alertBinding.root
                     okButton {
-                        editText?.text?.toString()?.let { group ->
+                        alertBinding.editView.text?.toString()?.let { group ->
                             viewModel.groupName = group
                             item.title = getString(R.string.diy_edit_source_group_title, group)
                         }
@@ -127,23 +126,34 @@ class ImportBookSourceDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickList
     }
 
     inner class SourcesAdapter(context: Context) :
-        SimpleRecyclerAdapter<BookSource>(context, R.layout.item_source_import) {
+        SimpleRecyclerAdapter<BookSource, ItemSourceImportBinding>(context) {
 
-        override fun convert(holder: ItemViewHolder, item: BookSource, payloads: MutableList<Any>) {
-            holder.itemView.apply {
-                cb_source_name.isChecked = viewModel.selectStatus[holder.layoutPosition]
-                cb_source_name.text = item.bookSourceName
-                tv_source_state.text = if (viewModel.checkSources[holder.layoutPosition] != null) {
-                    "已存在"
-                } else {
-                    "新书源"
-                }
-            }
+        override fun getViewBinding(parent: ViewGroup): ItemSourceImportBinding {
+            return ItemSourceImportBinding.inflate(inflater, parent, false)
         }
 
-        override fun registerListener(holder: ItemViewHolder) {
-            holder.itemView.apply {
-                cb_source_name.setOnCheckedChangeListener { buttonView, isChecked ->
+        override fun convert(
+            holder: ItemViewHolder,
+            binding: ItemSourceImportBinding,
+            item: BookSource,
+            payloads: MutableList<Any>
+        ) {
+            binding.apply {
+                cbSourceName.isChecked = viewModel.selectStatus[holder.layoutPosition]
+                cbSourceName.text = item.bookSourceName
+                tvSourceState.text =
+                    if (viewModel.checkSources[holder.layoutPosition] != null) {
+                        "已存在"
+                    } else {
+                        "新书源"
+                    }
+            }
+
+        }
+
+        override fun registerListener(holder: ItemViewHolder, binding: ItemSourceImportBinding) {
+            binding.apply {
+                cbSourceName.setOnCheckedChangeListener { buttonView, isChecked ->
                     if (buttonView.isPressed) {
                         viewModel.selectStatus[holder.layoutPosition] = isChecked
                     }

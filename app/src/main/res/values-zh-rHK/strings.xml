@@ -198,6 +198,7 @@
     <string name="volume_key_page">音量鍵翻頁</string>
     <string name="click_turn_page">點擊翻頁</string>
     <string name="page_anim">翻頁動畫</string>
+    <string name="book_page_anim">翻頁動畫(本書)</string>
     <string name="keep_light">屏幕超時</string>
     <string name="back">返回</string>
     <string name="menu">菜單</string>
@@ -346,7 +347,7 @@
     <string name="sort">排序</string>
     <string name="sort_auto">智能排序</string>
     <string name="sort_manual">手動排序</string>
-    <string name="sort_pin_yin">拼音排序</string>
+    <string name="sort_name">名稱排序</string>
     <string name="go_to_top">滾動到頂部</string>
     <string name="go_to_bottom">滾動到底部</string>
     <string name="read_y">已讀: %s</string>
@@ -402,6 +403,7 @@
     <string name="book_url_pattern">書籍 URL 正則 (bookUrlPattern)</string>
     <string name="rule_book_info_init">預處理規則 (bookInfoInit)</string>
     <string name="rule_toc_url">目錄 URL 規則 (tocUrl)</string>
+    <string name="rule_can_re_name">允许修改书名作者(canReName)</string>
     <string name="rule_next_toc_url">目錄下一頁規則 (nextTocUrl)</string>
     <string name="rule_chapter_list">目錄列表規則 (chapterList)</string>
     <string name="rule_chapter_name">章節名稱規則 (ChapterName)</string>
@@ -785,5 +787,6 @@
     <string name="body_title">正文标题</string>
     <string name="show_hide">显示/隐藏</string>
     <string name="header_footer">页眉<![CDATA[&]]>页脚</string>
+    <string name="source_subscription">源订阅</string>
 
 </resources>

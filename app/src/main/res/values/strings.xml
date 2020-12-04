@@ -201,6 +201,7 @@
     <string name="volume_key_page">Volume keys to turn page</string>
     <string name="click_turn_page">Tap screen to turn page</string>
     <string name="page_anim">Flip animation</string>
+    <string name="book_page_anim">Flip animation (book)</string>
     <string name="keep_light">Keep screen awake</string>
     <string name="back">Back</string>
     <string name="menu">Menu</string>
@@ -350,7 +351,7 @@
     <string name="sort">Sort</string>
     <string name="sort_auto">Sort automatically</string>
     <string name="sort_manual">Sort manually</string>
-    <string name="sort_pin_yin">Sort phonetically</string>
+    <string name="sort_name">Sort name</string>
     <string name="go_to_top">Scroll to the top</string>
     <string name="go_to_bottom">Scroll to the bottom</string>
     <string name="read_y">Read: %s</string>
@@ -410,6 +411,7 @@
     <string name="book_url_pattern">书籍URL正则(bookUrlPattern)</string>
     <string name="rule_book_info_init">预处理规则(bookInfoInit)</string>
     <string name="rule_toc_url">目录URL规则(tocUrl)</string>
+    <string name="rule_can_re_name">允许修改书名作者(canReName)</string>
     <string name="rule_next_toc_url">目录下一页规则(nextTocUrl)</string>
     <string name="rule_chapter_list">目录列表规则(chapterList)</string>
     <string name="rule_chapter_name">章节名称规则(ChapterName)</string>
@@ -792,5 +794,6 @@
     <string name="body_title">正文标题</string>
     <string name="show_hide">显示/隐藏</string>
     <string name="header_footer">footer <![CDATA[&]]> header</string>
+    <string name="source_subscription">源订阅</string>
 
 </resources>

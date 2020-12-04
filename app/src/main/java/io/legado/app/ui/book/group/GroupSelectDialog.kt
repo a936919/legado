@@ -7,7 +7,6 @@ import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -19,6 +18,9 @@ import io.legado.app.base.BaseDialogFragment
 import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.base.adapter.SimpleRecyclerAdapter
 import io.legado.app.data.entities.BookGroup
+import io.legado.app.databinding.DialogBookGroupPickerBinding
+import io.legado.app.databinding.DialogEditTextBinding
+import io.legado.app.databinding.ItemGroupSelectBinding
 import io.legado.app.lib.dialogs.alert
 import io.legado.app.lib.theme.accentColor
 import io.legado.app.lib.theme.backgroundColor
@@ -29,10 +31,7 @@ import io.legado.app.utils.applyTint
 import io.legado.app.utils.getSize
 import io.legado.app.utils.getViewModel
 import io.legado.app.utils.requestInputMethod
-import kotlinx.android.synthetic.main.dialog_book_group_picker.*
-import kotlinx.android.synthetic.main.dialog_edit_text.view.*
-import kotlinx.android.synthetic.main.dialog_recycler_view.tool_bar
-import kotlinx.android.synthetic.main.item_group_select.view.*
+import io.legado.app.utils.viewbindingdelegate.viewBinding
 import org.jetbrains.anko.sdk27.listeners.onClick
 import java.util.*
 
@@ -52,6 +51,7 @@ class GroupSelectDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickListener 
         }
     }
 
+    private val binding by viewBinding(DialogBookGroupPickerBinding::bind)
     private var requestCode: Int = -1
     private lateinit var viewModel: GroupViewModel
     private lateinit var adapter: GroupAdapter
@@ -74,7 +74,7 @@ class GroupSelectDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickListener 
     }
 
     override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) {
-        tool_bar.setBackgroundColor(primaryColor)
+        binding.toolBar.setBackgroundColor(primaryColor)
         callBack = activity as? CallBack
         arguments?.let {
             groupId = it.getLong("groupId")
@@ -85,20 +85,20 @@ class GroupSelectDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickListener 
     }
 
     private fun initView() {
-        tool_bar.title = getString(R.string.group_select)
-        tool_bar.inflateMenu(R.menu.book_group_manage)
-        tool_bar.menu.applyTint(requireContext())
-        tool_bar.setOnMenuItemClickListener(this)
+        binding.toolBar.title = getString(R.string.group_select)
+        binding.toolBar.inflateMenu(R.menu.book_group_manage)
+        binding.toolBar.menu.applyTint(requireContext())
+        binding.toolBar.setOnMenuItemClickListener(this)
         adapter = GroupAdapter(requireContext())
-        recycler_view.layoutManager = LinearLayoutManager(requireContext())
-        recycler_view.addItemDecoration(VerticalDivider(requireContext()))
-        recycler_view.adapter = adapter
+        binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.recyclerView.addItemDecoration(VerticalDivider(requireContext()))
+        binding.recyclerView.adapter = adapter
         val itemTouchCallback = ItemTouchCallback(adapter)
         itemTouchCallback.isCanDrag = true
-        ItemTouchHelper(itemTouchCallback).attachToRecyclerView(recycler_view)
-        tv_cancel.onClick { dismiss() }
-        tv_ok.setTextColor(requireContext().accentColor)
-        tv_ok.onClick {
+        ItemTouchHelper(itemTouchCallback).attachToRecyclerView(binding.recyclerView)
+        binding.tvCancel.onClick { dismiss() }
+        binding.tvOk.setTextColor(requireContext().accentColor)
+        binding.tvOk.onClick {
             callBack?.upGroup(requestCode, groupId)
             dismiss()
         }
@@ -120,16 +120,12 @@ class GroupSelectDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickListener 
     @SuppressLint("InflateParams")
     private fun addGroup() {
         alert(title = getString(R.string.add_group)) {
-            var editText: EditText? = null
-            customView {
-                layoutInflater.inflate(R.layout.dialog_edit_text, null).apply {
-                    editText = edit_view.apply {
-                        setHint(R.string.group_name)
-                    }
-                }
+            val alertBinding = DialogEditTextBinding.inflate(layoutInflater).apply {
+                editView.setHint(R.string.group_name)
             }
+            customView = alertBinding.root
             yesButton {
-                editText?.text?.toString()?.let {
+                alertBinding.editView.text?.toString()?.let {
                     if (it.isNotBlank()) {
                         viewModel.addGroup(it)
                     }
@@ -142,39 +138,46 @@ class GroupSelectDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickListener 
     @SuppressLint("InflateParams")
     private fun editGroup(bookGroup: BookGroup) {
         alert(title = getString(R.string.group_edit)) {
-            var editText: EditText? = null
-            customView {
-                layoutInflater.inflate(R.layout.dialog_edit_text, null).apply {
-                    editText = edit_view.apply {
-                        setHint(R.string.group_name)
-                        setText(bookGroup.groupName)
-                    }
-                }
+            val alertBinding = DialogEditTextBinding.inflate(layoutInflater).apply {
+                editView.setHint(R.string.group_name)
+                editView.setText(bookGroup.groupName)
             }
+            customView = alertBinding.root
             yesButton {
-                viewModel.upGroup(bookGroup.copy(groupName = editText?.text?.toString() ?: ""))
+                alertBinding.editView.text?.toString()?.let {
+                    viewModel.upGroup(bookGroup.copy(groupName = it))
+                }
             }
             noButton()
         }.show().requestInputMethod()
     }
 
     private inner class GroupAdapter(context: Context) :
-        SimpleRecyclerAdapter<BookGroup>(context, R.layout.item_group_select),
+        SimpleRecyclerAdapter<BookGroup, ItemGroupSelectBinding>(context),
         ItemTouchCallback.Callback {
 
         private var isMoved: Boolean = false
 
-        override fun convert(holder: ItemViewHolder, item: BookGroup, payloads: MutableList<Any>) {
-            holder.itemView.apply {
-                setBackgroundColor(context.backgroundColor)
-                cb_group.text = item.groupName
-                cb_group.isChecked = (groupId and item.groupId) > 0
+        override fun getViewBinding(parent: ViewGroup): ItemGroupSelectBinding {
+            return ItemGroupSelectBinding.inflate(inflater, parent, false)
+        }
+
+        override fun convert(
+            holder: ItemViewHolder,
+            binding: ItemGroupSelectBinding,
+            item: BookGroup,
+            payloads: MutableList<Any>
+        ) {
+            with(binding) {
+                root.setBackgroundColor(context.backgroundColor)
+                cbGroup.text = item.groupName
+                cbGroup.isChecked = (groupId and item.groupId) > 0
             }
         }
 
-        override fun registerListener(holder: ItemViewHolder) {
-            holder.itemView.apply {
-                cb_group.setOnCheckedChangeListener { buttonView, isChecked ->
+        override fun registerListener(holder: ItemViewHolder, binding: ItemGroupSelectBinding) {
+            with(binding) {
+                cbGroup.setOnCheckedChangeListener { buttonView, isChecked ->
                     getItem(holder.layoutPosition)?.let {
                         if (buttonView.isPressed) {
                             groupId = if (isChecked) {
@@ -185,7 +188,7 @@ class GroupSelectDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickListener 
                         }
                     }
                 }
-                tv_edit.onClick { getItem(holder.layoutPosition)?.let { editGroup(it) } }
+                tvEdit.onClick { getItem(holder.layoutPosition)?.let { editGroup(it) } }
             }
         }
 
