@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.*
 import androidx.core.view.get
 import io.legado.app.R
+import io.legado.app.R.id.root_view
 import io.legado.app.base.BaseDialogFragment
 import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.base.adapter.SimpleRecyclerAdapter
@@ -238,7 +239,7 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
                 ivStyle.onClick {
                     if (ivStyle.isInView) {
                         changeBg(holder.layoutPosition)
-                        //todo root_view.setBackgroundColor(ReadBookConfig.bgMeanColor)
+                        changeRootViewBg()
                     }
                 }
                 ivStyle.onLongClick {
@@ -249,6 +250,10 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
                     }
                 }
             }
+        }
+
+        private fun changeRootViewBg(){
+            binding.rootView.setBackgroundColor(ReadBookConfig.bgMeanColor)
         }
 
     }
