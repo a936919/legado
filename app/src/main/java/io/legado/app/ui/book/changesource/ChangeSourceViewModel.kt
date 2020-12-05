@@ -17,6 +17,7 @@ import io.legado.app.help.AppConfig
 import io.legado.app.help.coroutine.CompositeCoroutine
 import io.legado.app.model.webBook.WebBook
 import io.legado.app.utils.getPrefBoolean
+import io.legado.app.utils.getPrefString
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.ExecutorCoroutineDispatcher
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -97,8 +98,14 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
 
     private fun startSearch() {
         execute {
+	//mq
+            val searchGroup = App.INSTANCE.getPrefString("searchGroup") ?: ""
             bookSourceList.clear()
-            bookSourceList.addAll(App.db.bookSourceDao().allEnabled)
+            if (searchGroup.isBlank()) {
+                bookSourceList.addAll(App.db.bookSourceDao().allEnabled)
+            } else {
+                bookSourceList.addAll(App.db.bookSourceDao().getEnabledByGroup(searchGroup))
+            }
             searchStateData.postValue(true)
             initSearchPool()
             for (i in 0 until threadCount) {

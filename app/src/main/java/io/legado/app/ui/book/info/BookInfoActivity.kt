@@ -252,6 +252,7 @@ class BookInfoActivity :
                 GroupSelectDialog.show(supportFragmentManager, it.group)
             }
         }
+        //todo
         tvAuthor.onClick {
             startActivity<SearchActivity>(Pair("key", viewModel.bookData.value?.author))
         }
