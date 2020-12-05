@@ -592,8 +592,6 @@
     <string name="change_cover_source">封面換源</string>
     <string name="select_local_image">選擇本地圖片</string>
     <string name="book_type">類型: </string>
-    <string name="book_type_text">文本</string>
-    <string name="book_type_audio">音頻</string>
     <string name="to_backstage">後台</string>
     <string name="importing">正在導入</string>
     <string name="exporting">正在導出</string>
@@ -787,6 +785,7 @@
     <string name="body_title">正文标题</string>
     <string name="show_hide">显示/隐藏</string>
     <string name="header_footer">页眉<![CDATA[&]]>页脚</string>
-    <string name="source_subscription">源订阅</string>
+    <string name="rule_subscription">规则订阅</string>
+    <string name="rule_sub_empty_msg">添加大佬们提供的源导入地址,添加后点击可导入源</string>
 
 </resources>

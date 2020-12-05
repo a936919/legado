@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import androidx.core.view.isGone
 import io.legado.app.App
 import io.legado.app.R
 import io.legado.app.base.VMBaseFragment
@@ -17,8 +16,7 @@ import io.legado.app.ui.rss.favorites.RssFavoritesActivity
 import io.legado.app.ui.rss.source.edit.RssSourceEditActivity
 import io.legado.app.ui.rss.source.manage.RssSourceActivity
 import io.legado.app.ui.rss.source.manage.RssSourceViewModel
-import io.legado.app.ui.rss.subscription.SourceSubActivity
-
+import io.legado.app.ui.rss.subscription.RuleSubActivity
 import io.legado.app.utils.getViewModel
 import io.legado.app.utils.startActivity
 import io.legado.app.utils.viewbindingdelegate.viewBinding
@@ -58,10 +56,10 @@ class RssFragment : VMBaseFragment<RssSourceViewModel>(R.layout.fragment_rss),
         binding.recyclerView.adapter = adapter
         adapter.addHeaderView {
             ItemRssBinding.inflate(layoutInflater, it, false).apply {
-                tvName.setText(R.string.source_subscription)
+                tvName.setText(R.string.rule_subscription)
                 ivIcon.setImageResource(R.mipmap.ic_launcher)
                 root.onClick {
-                    startActivity<SourceSubActivity>()
+                    startActivity<RuleSubActivity>()
                 }
             }
         }
@@ -69,7 +67,6 @@ class RssFragment : VMBaseFragment<RssSourceViewModel>(R.layout.fragment_rss),
 
     private fun initData() {
         App.db.rssSourceDao().liveEnabled().observe(viewLifecycleOwner, {
-            binding.tvEmptyMsg.isGone = it.isNotEmpty()
             adapter.setItems(it)
         })
     }

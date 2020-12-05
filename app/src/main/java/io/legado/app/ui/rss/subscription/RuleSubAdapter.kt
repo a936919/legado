@@ -8,28 +8,30 @@ import androidx.recyclerview.widget.RecyclerView
 import io.legado.app.R
 import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.base.adapter.SimpleRecyclerAdapter
-import io.legado.app.data.entities.SourceSub
-import io.legado.app.databinding.ItemSourceSubBinding
+import io.legado.app.data.entities.RuleSub
+import io.legado.app.databinding.ItemRuleSubBinding
 import io.legado.app.ui.widget.recycler.ItemTouchCallback
 import org.jetbrains.anko.sdk27.listeners.onClick
 import java.util.*
 
-class SourceSubAdapter(context: Context, val callBack: Callback) :
-    SimpleRecyclerAdapter<SourceSub, ItemSourceSubBinding>(context),
+class RuleSubAdapter(context: Context, val callBack: Callback) :
+    SimpleRecyclerAdapter<RuleSub, ItemRuleSubBinding>(context),
     ItemTouchCallback.Callback {
+
+    private val typeArray = context.resources.getStringArray(R.array.rule_type)
 
     override fun convert(
         holder: ItemViewHolder,
-        binding: ItemSourceSubBinding,
-        item: SourceSub,
+        binding: ItemRuleSubBinding,
+        item: RuleSub,
         payloads: MutableList<Any>
     ) {
-        binding.tvType.text = SourceSub.Type.values()[item.type].name
+        binding.tvType.text = typeArray[item.type]
         binding.tvName.text = item.name
         binding.tvUrl.text = item.url
     }
 
-    override fun registerListener(holder: ItemViewHolder, binding: ItemSourceSubBinding) {
+    override fun registerListener(holder: ItemViewHolder, binding: ItemRuleSubBinding) {
         binding.root.onClick {
             callBack.openSubscription(getItem(holder.layoutPosition)!!)
         }
@@ -54,8 +56,8 @@ class SourceSubAdapter(context: Context, val callBack: Callback) :
         popupMenu.show()
     }
 
-    override fun getViewBinding(parent: ViewGroup): ItemSourceSubBinding {
-        return ItemSourceSubBinding.inflate(inflater, parent, false)
+    override fun getViewBinding(parent: ViewGroup): ItemRuleSubBinding {
+        return ItemRuleSubBinding.inflate(inflater, parent, false)
     }
 
     override fun onMove(srcPosition: Int, targetPosition: Int): Boolean {
@@ -77,7 +79,7 @@ class SourceSubAdapter(context: Context, val callBack: Callback) :
         return true
     }
 
-    private val movedItems = hashSetOf<SourceSub>()
+    private val movedItems = hashSetOf<RuleSub>()
 
     override fun onClearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
         if (movedItems.isNotEmpty()) {
@@ -87,10 +89,10 @@ class SourceSubAdapter(context: Context, val callBack: Callback) :
     }
 
     interface Callback {
-        fun openSubscription(sourceSub: SourceSub)
-        fun editSubscription(sourceSub: SourceSub)
-        fun delSubscription(sourceSub: SourceSub)
-        fun updateSourceSub(vararg sourceSub: SourceSub)
+        fun openSubscription(ruleSub: RuleSub)
+        fun editSubscription(ruleSub: RuleSub)
+        fun delSubscription(ruleSub: RuleSub)
+        fun updateSourceSub(vararg ruleSub: RuleSub)
         fun upOrder()
     }
 
