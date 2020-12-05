@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.lifecycle.LiveData
+import androidx.recyclerview.widget.ItemTouchHelper
 import io.legado.app.App
 import io.legado.app.R
 import io.legado.app.base.BaseActivity
@@ -11,6 +12,12 @@ import io.legado.app.data.entities.SourceSub
 import io.legado.app.databinding.ActivitySourceSubBinding
 import io.legado.app.databinding.DialogSourceSubEditBinding
 import io.legado.app.lib.dialogs.alert
+import io.legado.app.ui.association.ImportBookSourceActivity
+import io.legado.app.ui.association.ImportRssSourceActivity
+import io.legado.app.ui.widget.recycler.ItemTouchCallback
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.launch
+import org.jetbrains.anko.startActivity
 
 class SourceSubActivity : BaseActivity<ActivitySourceSubBinding>(),
     SourceSubAdapter.Callback {
@@ -34,7 +41,10 @@ class SourceSubActivity : BaseActivity<ActivitySourceSubBinding>(),
 
     override fun onCompatOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.menu_add -> editSubscription(SourceSub())
+            R.id.menu_add -> {
+                val order = App.db.sourceSubDao().maxOrder + 1
+                editSubscription(SourceSub(customOrder = order))
+            }
         }
         return super.onCompatOptionsItemSelected(item)
     }
@@ -42,6 +52,9 @@ class SourceSubActivity : BaseActivity<ActivitySourceSubBinding>(),
     private fun initView() {
         adapter = SourceSubAdapter(this, this)
         binding.recyclerView.adapter = adapter
+        val itemTouchCallback = ItemTouchCallback(adapter)
+        itemTouchCallback.isCanDrag = true
+        ItemTouchHelper(itemTouchCallback).attachToRecyclerView(binding.recyclerView)
     }
 
     private fun initData() {
@@ -49,6 +62,17 @@ class SourceSubActivity : BaseActivity<ActivitySourceSubBinding>(),
         liveData = App.db.sourceSubDao().observeAll()
         liveData?.observe(this) {
             adapter.setItems(it)
+        }
+    }
+
+    override fun openSubscription(sourceSub: SourceSub) {
+        when (sourceSub.type) {
+            SourceSub.Type.RssSource.ordinal -> {
+                startActivity<ImportRssSourceActivity>("source" to sourceSub.url)
+            }
+            else -> {
+                startActivity<ImportBookSourceActivity>("source" to sourceSub.url)
+            }
         }
     }
 
@@ -70,13 +94,34 @@ class SourceSubActivity : BaseActivity<ActivitySourceSubBinding>(),
                 }
                 sourceSub.name = alertBinding.etName.text?.toString() ?: ""
                 sourceSub.url = alertBinding.etUrl.text?.toString() ?: ""
-                App.db.sourceSubDao().insert(sourceSub)
+                launch(IO) {
+                    App.db.sourceSubDao().insert(sourceSub)
+                }
             }
             cancelButton()
         }.show()
     }
 
     override fun delSubscription(sourceSub: SourceSub) {
-
+        launch(IO) {
+            App.db.sourceSubDao().delete(sourceSub)
+        }
     }
+
+    override fun updateSourceSub(vararg sourceSub: SourceSub) {
+        launch(IO) {
+            App.db.sourceSubDao().update(*sourceSub)
+        }
+    }
+
+    override fun upOrder() {
+        launch(IO) {
+            val sourceSubs = App.db.sourceSubDao().all
+            for ((index: Int, sourceSub: SourceSub) in sourceSubs.withIndex()) {
+                sourceSub.customOrder = index + 1
+            }
+            App.db.sourceSubDao().update(*sourceSubs.toTypedArray())
+        }
+    }
+
 }
