@@ -1,36 +1,37 @@
 package io.legado.app.ui.book.changesource
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
+import android.util.Log
+import android.view.*
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import io.legado.app.App
 import io.legado.app.R
 import io.legado.app.base.BaseDialogFragment
+import io.legado.app.constant.AppPattern
 import io.legado.app.constant.PreferKey
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.SearchBook
 import io.legado.app.databinding.DialogChangeSourceBinding
 import io.legado.app.help.AppConfig
 import io.legado.app.lib.theme.primaryColor
+import io.legado.app.ui.book.source.manage.BookSourceActivity
 import io.legado.app.ui.widget.recycler.VerticalDivider
-import io.legado.app.utils.applyTint
-import io.legado.app.utils.getSize
-import io.legado.app.utils.getViewModel
-import io.legado.app.utils.putPrefBoolean
+import io.legado.app.utils.*
 import io.legado.app.utils.viewbindingdelegate.viewBinding
+import org.antlr.v4.runtime.misc.MurmurHash.finish
+import org.jetbrains.anko.startActivity
+import java.text.Collator
 
 
 class ChangeSourceDialog : BaseDialogFragment(),
     Toolbar.OnMenuItemClickListener,
     ChangeSourceAdapter.CallBack {
-
+    var groups = linkedSetOf<String>()
     companion object {
         const val tag = "changeSourceDialog"
 
@@ -90,7 +91,9 @@ class ChangeSourceDialog : BaseDialogFragment(),
         binding.toolBar.menu.findItem(R.id.menu_load_info)?.isChecked =
             AppConfig.changeSourceLoadInfo
         binding.toolBar.menu.findItem(R.id.menu_load_toc)?.isChecked = AppConfig.changeSourceLoadToc
+        //todo upGroupMenu()
     }
+
 
     private fun initRecyclerView() {
         adapter = ChangeSourceAdapter(requireContext(), this)
@@ -150,6 +153,14 @@ class ChangeSourceDialog : BaseDialogFragment(),
             adapter.setItems(it)
             diffResult.dispatchUpdatesTo(adapter)
         })
+/*todo
+        App.db.bookSourceDao().liveGroupEnabled().observe(this, {
+            groups.clear()
+            it.map { group ->
+                groups.addAll(group.splitNotBlank(AppPattern.splitGroupRegex))
+            }
+            upGroupMenu()
+        })*/
     }
 
     private val stopMenuItem: MenuItem?
@@ -165,7 +176,24 @@ class ChangeSourceDialog : BaseDialogFragment(),
                 putPrefBoolean(PreferKey.changeSourceLoadInfo, !item.isChecked)
                 item.isChecked = !item.isChecked
             }
+            R.id.book_source_manage->{
+                startActivity<BookSourceActivity>()
+            }
             R.id.menu_stop -> viewModel.stopSearch()
+            /*todo
+            else -> if (item?.groupId == R.id.source_group) {
+                item?.isChecked = true
+                if (item?.title.toString() == getString(R.string.all_source)) {
+                    putPrefString("searchGroup", "")
+                } else {
+                    putPrefString("searchGroup", item?.title.toString())
+                }
+                /*
+                serchView.query?.toString()?.trim()?.let {
+                    serchView.setQuery(it, true)
+                }*/
+                App.db.searchBookDao().clearAll()
+            }*/
         }
         return false
     }
@@ -182,6 +210,28 @@ class ChangeSourceDialog : BaseDialogFragment(),
 
     override fun disableSource(searchBook: SearchBook) {
         viewModel.disableSource(searchBook)
+    }
+
+    /**
+     * 更新分组菜单
+     */
+    private fun upGroupMenu() {
+
+        var menu: Menu = binding.toolBar.menu
+        val selectedGroup = getPrefString("searchGroup") ?: ""
+        menu.removeGroup(R.id.source_group)
+        var item = menu.add(R.id.source_group, Menu.NONE, Menu.NONE, R.string.all_source)
+        if (selectedGroup == "") {
+            item?.isChecked = true
+        }
+        groups.sortedWith(Collator.getInstance(java.util.Locale.CHINESE))
+            .map {
+                item = menu.add(R.id.source_group, Menu.NONE, Menu.NONE, it)
+                if (it == selectedGroup) {
+                    item.isChecked = true
+                }
+            }
+        menu.setGroupCheckable(R.id.source_group, true, true)
     }
 
     interface CallBack {
