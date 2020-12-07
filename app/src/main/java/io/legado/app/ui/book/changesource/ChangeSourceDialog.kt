@@ -1,7 +1,6 @@
 package io.legado.app.ui.book.changesource
 
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
@@ -18,14 +17,14 @@ import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.SearchBook
 import io.legado.app.databinding.DialogChangeSourceBinding
 import io.legado.app.help.AppConfig
+import io.legado.app.lib.theme.backgroundColor
+import io.legado.app.lib.theme.getPrimaryTextColor
 import io.legado.app.lib.theme.primaryColor
-import io.legado.app.ui.book.search.SearchActivity
 import io.legado.app.ui.book.source.manage.BookSourceActivity
 import io.legado.app.ui.widget.recycler.VerticalDivider
 import io.legado.app.utils.*
 import io.legado.app.utils.viewbindingdelegate.viewBinding
-import org.antlr.v4.runtime.misc.MurmurHash.finish
-import org.jetbrains.anko.startActivity
+import org.jetbrains.anko.textColor
 import java.text.Collator
 
 
@@ -92,7 +91,19 @@ class ChangeSourceDialog : BaseDialogFragment(),
         binding.toolBar.menu.findItem(R.id.menu_load_info)?.isChecked =
             AppConfig.changeSourceLoadInfo
         binding.toolBar.menu.findItem(R.id.menu_load_toc)?.isChecked = AppConfig.changeSourceLoadToc
-        //todo upGroupMenu()
+        val name = callBack?.oldBook?.originName
+        if(name != null) {
+            val Group = App.db.bookSourceDao().getByName(name)[0].bookSourceGroup
+            when(Group){
+                ""->binding.sourceName.text = "书源:${name}    |    分组:空"
+                else->binding.sourceName.text = "书源:${name}    |    分组:${Group}"
+            }
+        }
+        else{
+            binding.sourceName.text = "内容为空"
+        }
+        val isLight = ColorUtils.isColorLight(requireContext().backgroundColor)
+        binding.sourceName.textColor =  requireContext().getPrimaryTextColor(isLight)
     }
 
 
