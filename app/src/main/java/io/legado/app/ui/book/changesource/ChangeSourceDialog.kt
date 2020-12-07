@@ -151,17 +151,21 @@ class ChangeSourceDialog : BaseDialogFragment(),
         })
         viewModel.searchBooksLiveData.observe(viewLifecycleOwner, {
             val diffResult = DiffUtil.calculateDiff(DiffCallBack(adapter.getItems(), it))
-            adapter.setItems(it)
+            val searchGroup = App.INSTANCE.getPrefString("searchGroup") ?: ""
+            var items = it
+            var newitems = it
+            if(searchGroup != "") newitems = items.filter { (App.db.bookSourceDao().getByName(it.originName))[0].bookSourceGroup == searchGroup}
+            adapter.setItems(newitems)
             diffResult.dispatchUpdatesTo(adapter)
         })
-/*todo
+
         App.db.bookSourceDao().liveGroupEnabled().observe(this, {
             groups.clear()
             it.map { group ->
                 groups.addAll(group.splitNotBlank(AppPattern.splitGroupRegex))
             }
             upGroupMenu()
-        })*/
+        })
     }
 
     private val stopMenuItem: MenuItem?
@@ -172,17 +176,18 @@ class ChangeSourceDialog : BaseDialogFragment(),
             R.id.menu_load_toc -> {
                 putPrefBoolean(PreferKey.changeSourceLoadToc, !item.isChecked)
                 item.isChecked = !item.isChecked
+                initLiveData()
             }
             R.id.menu_load_info -> {
                 putPrefBoolean(PreferKey.changeSourceLoadInfo, !item.isChecked)
                 item.isChecked = !item.isChecked
+                initLiveData()
             }
             R.id.book_source_manage->{
                 startActivity<BookSourceActivity>()
                 //todo startActivity<SearchActivity>(Pair("key", viewModel.name))
             }
             R.id.menu_stop -> viewModel.stopSearch()
-            /*todo
             else -> if (item?.groupId == R.id.source_group) {
                 item?.isChecked = true
                 if (item?.title.toString() == getString(R.string.all_source)) {
@@ -190,12 +195,8 @@ class ChangeSourceDialog : BaseDialogFragment(),
                 } else {
                     putPrefString("searchGroup", item?.title.toString())
                 }
-                /*
-                serchView.query?.toString()?.trim()?.let {
-                    serchView.setQuery(it, true)
-                }*/
-                App.db.searchBookDao().clearAll()
-            }*/
+                initLiveData()
+            }
         }
         return false
     }

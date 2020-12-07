@@ -91,7 +91,7 @@ class SearchActivity : VMBaseActivity<ActivityBookSearchBinding, SearchViewModel
                 serchView.query?.toString()?.trim()?.let {
                     serchView.setQuery(it, true)
                 }
-                App.db.searchBookDao().clearAll()
+                //App.db.searchBookDao().clearAll()
             }
             R.id.menu_source_manage -> startActivity<BookSourceActivity>()
             else -> if (item.groupId == R.id.source_group) {
@@ -104,7 +104,7 @@ class SearchActivity : VMBaseActivity<ActivityBookSearchBinding, SearchViewModel
                 serchView.query?.toString()?.trim()?.let {
                     serchView.setQuery(it, true)
                 }
-                App.db.searchBookDao().clearAll()
+                //App.db.searchBookDao().clearAll()
             }
         }
         return super.onCompatOptionsItemSelected(item)
