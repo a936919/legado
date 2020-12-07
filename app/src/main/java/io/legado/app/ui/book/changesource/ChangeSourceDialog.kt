@@ -93,7 +93,7 @@ class ChangeSourceDialog : BaseDialogFragment(),
         binding.toolBar.menu.findItem(R.id.menu_load_toc)?.isChecked = AppConfig.changeSourceLoadToc
         val name = callBack?.oldBook?.originName
         if(name != null) {
-            val Group = App.db.bookSourceDao().getByName(name)[0].bookSourceGroup
+            val Group = App.db.bookSourceDao.getByName(name)[0].bookSourceGroup
             when(Group){
                 ""->binding.sourceName.text = "书源:${name}    |    分组:空"
                 else->binding.sourceName.text = "书源:${name}    |    分组:${Group}"
@@ -165,12 +165,12 @@ class ChangeSourceDialog : BaseDialogFragment(),
             val searchGroup = App.INSTANCE.getPrefString("searchGroup") ?: ""
             var items = it
             var newitems = it
-            if(searchGroup != "") newitems = items.filter { (App.db.bookSourceDao().getByName(it.originName))[0].bookSourceGroup == searchGroup}
+            if(searchGroup != "") newitems = items.filter { (App.db.bookSourceDao.getByName(it.originName))[0].bookSourceGroup == searchGroup}
             adapter.setItems(newitems)
             diffResult.dispatchUpdatesTo(adapter)
         })
 
-        App.db.bookSourceDao().liveGroupEnabled().observe(this, {
+        App.db.bookSourceDao.liveGroupEnabled().observe(this, {
             groups.clear()
             it.map { group ->
                 groups.addAll(group.splitNotBlank(AppPattern.splitGroupRegex))
