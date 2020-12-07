@@ -19,6 +19,7 @@ import io.legado.app.data.entities.SearchBook
 import io.legado.app.databinding.DialogChangeSourceBinding
 import io.legado.app.help.AppConfig
 import io.legado.app.lib.theme.primaryColor
+import io.legado.app.ui.book.search.SearchActivity
 import io.legado.app.ui.book.source.manage.BookSourceActivity
 import io.legado.app.ui.widget.recycler.VerticalDivider
 import io.legado.app.utils.*
@@ -178,6 +179,7 @@ class ChangeSourceDialog : BaseDialogFragment(),
             }
             R.id.book_source_manage->{
                 startActivity<BookSourceActivity>()
+                //todo startActivity<SearchActivity>(Pair("key", viewModel.name))
             }
             R.id.menu_stop -> viewModel.stopSearch()
             /*todo

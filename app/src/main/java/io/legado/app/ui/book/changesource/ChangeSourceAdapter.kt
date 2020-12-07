@@ -2,6 +2,7 @@ package io.legado.app.ui.book.changesource
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.widget.PopupMenu
@@ -30,6 +31,7 @@ class ChangeSourceAdapter(context: Context, val callBack: CallBack) :
         payloads: MutableList<Any>
     ) {
         val bundle = payloads.getOrNull(0) as? Bundle
+        //todo Log.d("debug1","ChangeSourceAdapter convert $bundle $this ${item.originName} ${callBack.bookUrl}")
         binding.apply {
             if (bundle == null) {
                 tvOrigin.text = item.originName
