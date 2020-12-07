@@ -70,7 +70,7 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
         readRecord.ivRemove.onClick {
             alert(R.string.delete, R.string.sure_del) {
                 okButton {
-                    App.db.readRecordDao().clear()
+                    App.db.readRecordDao.clear()
                     initData()
                 }
                 noButton()
@@ -80,13 +80,15 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
 
     private fun initData() {
         launch(IO) {
-            val allTime = App.db.readRecordDao().allTime
+            val allTime = App.db.readRecordDao.allTime
             withContext(Main) {
                 binding.readRecord.tvReadTime.text = formatDuring(allTime)
             }
-            var readRecords = App.db.readRecordDao().allShow
+
+            var readRecords = App.db.readRecordDao.allShow
             var filterTime = 0
             if(shortTimeFilter) filterTime = 5 *60*1000
+
             readRecords = when (sortMode) {
                 1 -> {readRecords.filter { it.readTime >= (filterTime)}
                         .sortedBy { it.readTime }}
@@ -128,7 +130,7 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
                     alert(R.string.delete, R.string.sure_del) {
                         okButton {
                             getItem(holder.layoutPosition)?.let {
-                                App.db.readRecordDao().deleteByName(it.bookName)
+                                App.db.readRecordDao.deleteByName(it.bookName)
                                 initData()
                             }
                         }

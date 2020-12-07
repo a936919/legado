@@ -150,6 +150,7 @@
     <string name="set_timer">定時</string>
     <string name="read_aloud_pause">朗讀暫停</string>
     <string name="read_aloud_timer">正在朗讀(還剩%d分鐘)</string>
+    <string name="playing_timer">正在朗播放(還剩%d分鐘)</string>
     <string name="ps_hide_navigation_bar">閱讀介面隱藏虛擬按鍵</string>
     <string name="pt_hide_navigation_bar">隱藏導航欄</string>
     <string name="re_navigation_bar_color">導航欄顏色</string>
@@ -787,6 +788,6 @@
     <string name="show_hide">显示/隐藏</string>
     <string name="header_footer">页眉<![CDATA[&]]>页脚</string>
     <string name="rule_subscription">规则订阅</string>
-    <string name="rule_sub_empty_msg">添加大佬们提供的源导入地址,添加后点击可导入源</string>
+    <string name="rule_sub_empty_msg">添加大佬们提供的规则导入地址\n添加后点击可导入规则</string>
 
 </resources>

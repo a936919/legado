@@ -153,6 +153,7 @@
     <string name="set_timer">Timer</string>
     <string name="read_aloud_pause">Speak Paused</string>
     <string name="read_aloud_timer">Speaking(%d min left)</string>
+    <string name="playing_timer">Playing(%d min left)</string>
     <string name="ps_hide_navigation_bar">Hide virtual buttons when reading</string>
     <string name="pt_hide_navigation_bar">Hide navigation bar</string>
     <string name="re_navigation_bar_color">Navigation bar color</string>
@@ -793,6 +794,6 @@
     <string name="show_hide">显示/隐藏</string>
     <string name="header_footer">footer <![CDATA[&]]> header</string>
     <string name="rule_subscription">规则订阅</string>
-    <string name="rule_sub_empty_msg">添加大佬们提供的源导入地址,添加后点击可导入源</string>
+    <string name="rule_sub_empty_msg">添加大佬们提供的规则导入地址\n添加后点击可导入规则</string>
 
 </resources>
