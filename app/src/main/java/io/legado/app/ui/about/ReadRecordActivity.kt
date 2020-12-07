@@ -2,6 +2,7 @@ package io.legado.app.ui.about
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.ViewGroup
@@ -26,6 +27,7 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
 
     lateinit var adapter: RecordAdapter
     private var sortMode = 0
+    private var shortTimeFilter = true
 
     override fun getViewBinding(): ActivityReadRecordBinding {
         return ActivityReadRecordBinding.inflate(layoutInflater)
@@ -38,6 +40,7 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
 
     override fun onCompatCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.book_read_record, menu)
+        menu.findItem(R.id.filter_short_time)?.isChecked = shortTimeFilter
         return super.onCompatCreateOptionsMenu(menu)
     }
 
@@ -49,6 +52,11 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
             }
             R.id.menu_sort_time -> {
                 sortMode = 1
+                initData()
+            }
+            R.id.filter_short_time ->{
+                item.isChecked = !item.isChecked
+                shortTimeFilter = item.isChecked
                 initData()
             }
         }
@@ -77,10 +85,14 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
                 binding.readRecord.tvReadTime.text = formatDuring(allTime)
             }
             var readRecords = App.db.readRecordDao().allShow
+            var filterTime = 0
+            if(shortTimeFilter) filterTime = 5 *60*1000
             readRecords = when (sortMode) {
-                1 -> readRecords.sortedBy { it.readTime }
+                1 -> {readRecords.filter { it.readTime >= (filterTime)}
+                        .sortedBy { it.readTime }}
                 else -> {
-                    readRecords.sortedWith { o1, o2 ->
+                    readRecords.filter { it.readTime >= (filterTime)}
+                            .sortedWith { o1, o2 ->
                         o1.bookName.cnCompare(o2.bookName)
                     }
                 }
