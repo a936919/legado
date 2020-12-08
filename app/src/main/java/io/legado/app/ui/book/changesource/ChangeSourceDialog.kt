@@ -95,9 +95,9 @@ class ChangeSourceDialog : BaseDialogFragment(),
         val isLight = ColorUtils.isColorLight(requireContext().backgroundColor)
         var string = "书源不在库中"
         callBack?.oldBook?.originName?.let{
-            val bookSource = App.db.bookSourceDao.getByName(it)
+            val bookSource = App.db.bookSourceDao.getEnableByName(it)
             for(i in 0 until bookSource.size){
-                if(i == 0) string = "书源:${it} ┋ 分组:"
+                if(i == 0) string = "书源:${it} ┇ 分组:"
                 string = "${string}${bookSource[i].bookSourceGroup} "
             }
         }
@@ -177,7 +177,7 @@ class ChangeSourceDialog : BaseDialogFragment(),
     }
 
     private fun filterEnable(searchBook:SearchBook,searchGroup:String):Boolean{
-        val sourcebook = App.db.bookSourceDao.getByName(searchBook.originName)
+        val sourcebook = App.db.bookSourceDao.getEnableByName(searchBook.originName)
         for (i in 0 until  sourcebook.size) {
             sourcebook[i].bookSourceGroup?.let {if(it.contains(searchGroup)) return true}
         }
