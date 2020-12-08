@@ -1,6 +1,7 @@
 package io.legado.app.ui.book.changesource
 
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
@@ -91,21 +92,19 @@ class ChangeSourceDialog : BaseDialogFragment(),
         binding.toolBar.menu.findItem(R.id.menu_load_info)?.isChecked =
             AppConfig.changeSourceLoadInfo
         binding.toolBar.menu.findItem(R.id.menu_load_toc)?.isChecked = AppConfig.changeSourceLoadToc
+        val isLight = ColorUtils.isColorLight(requireContext().backgroundColor)
         val name = callBack?.oldBook?.originName
+        var st = "书源不在库中"
         if(name != null) {
-            val Group = App.db.bookSourceDao.getByName(name)[0].bookSourceGroup
-            when(Group){
-                ""->binding.sourceName.text = "书源:${name}    |    分组:空"
-                else->binding.sourceName.text = "书源:${name}    |    分组:${Group}"
+            val bookSource = App.db.bookSourceDao.getByName(name)
+            for(i in 0 until bookSource.size){
+                if(i == 0) st = "书源:${name}    |    分组:"
+                st = "${st}${bookSource[i].bookSourceGroup} "
             }
         }
-        else{
-            binding.sourceName.text = "内容为空"
-        }
-        val isLight = ColorUtils.isColorLight(requireContext().backgroundColor)
+        binding.sourceName.text = st
         binding.sourceName.textColor =  requireContext().getPrimaryTextColor(isLight)
     }
-
 
     private fun initRecyclerView() {
         adapter = ChangeSourceAdapter(requireContext(), this)
@@ -164,9 +163,8 @@ class ChangeSourceDialog : BaseDialogFragment(),
             val diffResult = DiffUtil.calculateDiff(DiffCallBack(adapter.getItems(), it))
             val searchGroup = App.INSTANCE.getPrefString("searchGroup") ?: ""
             var items = it
-            var newitems = it
-            if(searchGroup != "") newitems = items.filter { (App.db.bookSourceDao.getByName(it.originName))[0].bookSourceGroup == searchGroup}
-            adapter.setItems(newitems)
+            if(searchGroup != "") items = items.filter {filterEnable(it,searchGroup) }
+            adapter.setItems(items)
             diffResult.dispatchUpdatesTo(adapter)
         })
 
@@ -179,6 +177,13 @@ class ChangeSourceDialog : BaseDialogFragment(),
         })
     }
 
+    private fun filterEnable(searchBook:SearchBook,searchGroup:String):Boolean{
+        val sourcebook = App.db.bookSourceDao.getByName(searchBook.originName)
+        for (i in 0 until  sourcebook.size) {
+            sourcebook[i].bookSourceGroup?.let {if(it.contains(searchGroup)) return true}
+        }
+        return false
+    }
     private val stopMenuItem: MenuItem?
         get() = binding.toolBar.menu.findItem(R.id.menu_stop)
 
@@ -200,11 +205,11 @@ class ChangeSourceDialog : BaseDialogFragment(),
             }
             R.id.menu_stop -> viewModel.stopSearch()
             else -> if (item?.groupId == R.id.source_group) {
-                item?.isChecked = true
-                if (item?.title.toString() == getString(R.string.all_source)) {
+                item.isChecked = true
+                if (item.title.toString() == getString(R.string.all_source)) {
                     putPrefString("searchGroup", "")
                 } else {
-                    putPrefString("searchGroup", item?.title.toString())
+                    putPrefString("searchGroup", item.title.toString())
                 }
                 initLiveData()
             }
