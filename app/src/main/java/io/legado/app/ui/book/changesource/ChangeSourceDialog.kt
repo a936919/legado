@@ -93,16 +93,15 @@ class ChangeSourceDialog : BaseDialogFragment(),
             AppConfig.changeSourceLoadInfo
         binding.toolBar.menu.findItem(R.id.menu_load_toc)?.isChecked = AppConfig.changeSourceLoadToc
         val isLight = ColorUtils.isColorLight(requireContext().backgroundColor)
-        val name = callBack?.oldBook?.originName
-        var st = "书源不在库中"
-        if(name != null) {
-            val bookSource = App.db.bookSourceDao.getByName(name)
+        var string = "书源不在库中"
+        callBack?.oldBook?.originName?.let{
+            val bookSource = App.db.bookSourceDao.getByName(it)
             for(i in 0 until bookSource.size){
-                if(i == 0) st = "书源:${name}    |    分组:"
-                st = "${st}${bookSource[i].bookSourceGroup} "
+                if(i == 0) string = "书源:${it} ┋ 分组:"
+                string = "${string}${bookSource[i].bookSourceGroup} "
             }
         }
-        binding.sourceName.text = st
+        binding.sourceName.text = string
         binding.sourceName.textColor =  requireContext().getPrimaryTextColor(isLight)
     }
 
@@ -163,7 +162,7 @@ class ChangeSourceDialog : BaseDialogFragment(),
             val diffResult = DiffUtil.calculateDiff(DiffCallBack(adapter.getItems(), it))
             val searchGroup = App.INSTANCE.getPrefString("searchGroup") ?: ""
             var items = it
-            if(searchGroup != "") items = items.filter {filterEnable(it,searchGroup) }
+            if(searchGroup != "") items = items.filter {filterEnable(it,searchGroup)}
             adapter.setItems(items)
             diffResult.dispatchUpdatesTo(adapter)
         })
