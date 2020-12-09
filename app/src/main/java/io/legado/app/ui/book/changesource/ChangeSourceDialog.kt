@@ -159,10 +159,10 @@ class ChangeSourceDialog : BaseDialogFragment(),
             binding.toolBar.menu.applyTint(requireContext())
         })
         viewModel.searchBooksLiveData.observe(viewLifecycleOwner, {
-            val diffResult = DiffUtil.calculateDiff(DiffCallBack(adapter.getItems(), it))
-            val searchGroup = App.INSTANCE.getPrefString("searchGroup") ?: ""
             var items = it
+            val searchGroup = App.INSTANCE.getPrefString("searchGroup") ?: ""
             if(searchGroup != "") items = items.filter {filterEnable(it,searchGroup)}
+            val diffResult = DiffUtil.calculateDiff(DiffCallBack(adapter.getItems(), items))
             adapter.setItems(items)
             diffResult.dispatchUpdatesTo(adapter)
         })
