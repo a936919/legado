@@ -209,10 +209,11 @@ object ChapterProvider {
         textPaint: TextPaint
     ): Float {
         var durY = if (isTitle) y + titleTopSpacing else y
+        /*
         val layout = StaticLayout(
             text, textPaint, visibleWidth, Layout.Alignment.ALIGN_NORMAL, 0f, 0f, true
-        )
-        processTextLine(text,textPaint)
+        )*/
+        val layout = TextProcess(text,textPaint)
         //Log.d("debug1","宽度:$visibleWidth 行数:${layout.lineCount}")
         for (lineIndex in 0 until layout.lineCount) {
             val textLine = TextLine(isTitle = isTitle)
@@ -221,7 +222,10 @@ object ChapterProvider {
             val desiredWidth = layout.getLineWidth(lineIndex)
             var isLastLine = false
             //Log.d("debug1","第 $lineIndex 行 行起始：${layout.getLineStart(lineIndex)} 行结束：${layout.getLineEnd(lineIndex)} 行宽${layout.getLineWidth(lineIndex)} 行内容：$words")
-            if (lineIndex == 0 && layout.lineCount > 1 && !isTitle) {
+            if(layout.getLineYs(lineIndex)== true) {
+
+            }
+            else if (lineIndex == 0 && layout.lineCount > 1 && !isTitle) {
                 //第一行
                 textLine.text = words
                 addCharsToLineFirst(textLine, words.toStringArray(), textPaint, desiredWidth)
@@ -282,81 +286,6 @@ object ChapterProvider {
         }
         val words1 = words.copyOfRange(bodyIndent.length, words.size)
         addCharsToLineMiddle(textLine, words1, textPaint, desiredWidth, x)
-    }
-
-    private fun processTextLine(
-            text:String,
-            textPaint: TextPaint,
-    ) {
-        var words = text.toStringArray()
-        var lineW = 0f
-        var lineStar = HashMap<Int,Int>()
-        var lineEnd = HashMap<Int,Int>()
-        var lineYS = HashMap<Int,Boolean>()
-        var line = 0
-        lineStar[line] = 0
-        //Log.d("debug2","start debug")
-
-        words.forEachIndexed { index, s ->
-            val cw = StaticLayout.getDesiredWidth(s, textPaint)
-            lineW = lineW + cw
-            //Log.d("debug2","$s $cw $line $index $lineW $visibleWidth")
-
-            if(lineW > visibleWidth) {
-                //标点不能在行尾
-                if(words[index-1] == "“") {
-                    lineEnd[line] = index-1
-                    line++
-                    lineStar[line]= index-1
-                }
-                //标点不能在行首
-                else if(words[index] == "，"
-                        || words[index] == "。"
-                        || words[index] == "："
-                        || words[index] == "？"
-                        || words[index] == "！") {
-                        lineEnd[line] = index-1
-                        line++
-                        lineStar[line]= index-1
-                }
-                else if(words[index] == "”"){
-                    if(words[index-1] == "，"
-                            || words[index] == "。"
-                            || words[index] == "："
-                            || words[index] == "？"
-                            || words[index] == "！") {
-                        lineEnd[line] = index
-                        line++
-                        lineStar[line]= index
-                    }
-                    else{
-                        lineEnd[line] = index-1
-                        line++
-                        lineStar[line] = index-1
-                    }
-                }
-                else {
-                    lineEnd[line] = index
-                    line++
-                    lineStar[line]= index
-                }
-                lineW = cw
-            }
-        }
-        lineEnd[line] = words.lastIndex+1
-        line++
-
-        for(i in 0 until  line){
-            val s = lineStar.get(i)
-            val e = lineEnd.get(i)
-            if(s !=null && e !=null) {
-                val t = text.substring(s, e)
-                Log.d("debug2","line: $i ${e-s} $t")
-            }
-            else{
-                Log.d("debug2","line: $i $s $e")
-            }
-        }
     }
 
     /**
