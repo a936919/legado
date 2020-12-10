@@ -43,7 +43,7 @@ class TextProcess(
                 }
                 //标点需要压缩
                 else if(mayCompress(words[index])){
-                    if(banEndOfLine(words[index-1])){
+                    if(banStartOfLine(words[index-1])){
                         lindexTag = 2
                     }
                     else{
