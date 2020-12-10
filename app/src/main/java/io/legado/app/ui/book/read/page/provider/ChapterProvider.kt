@@ -214,21 +214,19 @@ object ChapterProvider {
             text, textPaint, visibleWidth, Layout.Alignment.ALIGN_NORMAL, 0f, 0f, true
         )*/
         val layout = TextProcess(text,textPaint)
-        //Log.d("debug1","宽度:$visibleWidth 行数:${layout.lineCount}")
+        Log.d("debug2","宽度:$visibleWidth 行数:${layout.lineCount}")
         for (lineIndex in 0 until layout.lineCount) {
             val textLine = TextLine(isTitle = isTitle)
             val words =
                 text.substring(layout.getLineStart(lineIndex), layout.getLineEnd(lineIndex))
             val desiredWidth = layout.getLineWidth(lineIndex)
             var isLastLine = false
+            val lineCompressMod = layout.getLineCompressMod(lineIndex)
             //Log.d("debug1","第 $lineIndex 行 行起始：${layout.getLineStart(lineIndex)} 行结束：${layout.getLineEnd(lineIndex)} 行宽${layout.getLineWidth(lineIndex)} 行内容：$words")
-            if(layout.getLineYs(lineIndex)== true) {
-
-            }
-            else if (lineIndex == 0 && layout.lineCount > 1 && !isTitle) {
+            if (lineIndex == 0 && layout.lineCount > 1 && !isTitle) {
                 //第一行
                 textLine.text = words
-                addCharsToLineFirst(textLine, words.toStringArray(), textPaint, desiredWidth)
+                addCharsToLineFirst(textLine, words.toStringArray(), textPaint, desiredWidth ,lineCompressMod)
             } else if (lineIndex == layout.lineCount - 1) {
                 //最后一行
                 textLine.text = "$words\n"
@@ -236,11 +234,11 @@ object ChapterProvider {
                 val x = if (isTitle && ReadBookConfig.titleMode == 1)
                     (visibleWidth - layout.getLineWidth(lineIndex)) / 2
                 else 0f
-                addCharsToLineLast(textLine, words.toStringArray(), textPaint, x)
+                addCharsToLineLast(textLine, words.toStringArray(), textPaint, x,lineCompressMod)
             } else {
                 //中间行
                 textLine.text = words
-                addCharsToLineMiddle(textLine, words.toStringArray(), textPaint, desiredWidth, 0f)
+                addCharsToLineMiddle(textLine, words.toStringArray(), textPaint, desiredWidth, 0f,lineCompressMod)
             }
             if (durY + textPaint.textHeight > visibleHeight) {
                 //当前页面结束,设置各种值
@@ -271,21 +269,27 @@ object ChapterProvider {
         words: Array<String>,
         textPaint: TextPaint,
         desiredWidth: Float,
+        lineCompressMod:Int,
     ) {
         var x = 0f
         if (!ReadBookConfig.textFullJustify) {
-            addCharsToLineLast(textLine, words, textPaint, x)
+            addCharsToLineLast(textLine, words, textPaint, x,lineCompressMod)
             return
         }
         val bodyIndent = ReadBookConfig.paragraphIndent
         val icw = StaticLayout.getDesiredWidth(bodyIndent, textPaint) / bodyIndent.length
+        var num = 0
+        //Log.d("debug2","|$bodyIndent| ${bodyIndent.length} icw is $icw")
         bodyIndent.toStringArray().forEach {
             val x1 = x + icw
+            //Log.d("debug2","$num")
+            num++
             textLine.addTextChar(charData = it, start = paddingLeft + x, end = paddingLeft + x1)
             x = x1
         }
         val words1 = words.copyOfRange(bodyIndent.length, words.size)
-        addCharsToLineMiddle(textLine, words1, textPaint, desiredWidth, x)
+        //Log.d("debug2","x is $x |$words1| $desiredWidth")
+        addCharsToLineMiddle(textLine, words1, textPaint, desiredWidth, x,lineCompressMod)
     }
 
     /**
@@ -297,21 +301,55 @@ object ChapterProvider {
         textPaint: TextPaint,
         desiredWidth: Float,
         startX: Float,
+        lineCompressMod:Int,
     ) {
         if (!ReadBookConfig.textFullJustify) {
-            addCharsToLineLast(textLine, words, textPaint, startX)
+            addCharsToLineLast(textLine, words, textPaint, startX,lineCompressMod)
             return
         }
-        val gapCount: Int = words.lastIndex
-        val d = (visibleWidth - desiredWidth) / gapCount
+
         var x = startX
+        var d = 0f
+        if(lineCompressMod==1){
+            val gapCount: Int =  words.lastIndex - 1
+            val endPuncWidth = StaticLayout.getDesiredWidth(words.get(gapCount+1), textPaint)
+            //Log.d("debug1","endPuncWidth is $endPuncWidth")
+            d = (visibleWidth- desiredWidth + endPuncWidth) / gapCount
+            Log.d("debug1","$lineCompressMod $gapCount $d ${words[words.lastIndex]}")
+        }else{
+            val gapCount: Int =  words.lastIndex
+            d = (visibleWidth - desiredWidth) / gapCount
+            Log.d("debug1","$lineCompressMod $gapCount $d ${words[words.lastIndex]} $visibleWidth $desiredWidth")
+        }
         words.forEachIndexed { index, s ->
             val cw = StaticLayout.getDesiredWidth(s, textPaint)
-            val x1 = if (index != words.lastIndex) (x + cw + d) else (x + cw)
-            textLine.addTextChar(charData = s, start = paddingLeft + x, end = paddingLeft + x1)
-            x = x1
+            var x1 = 0f
+            if(lineCompressMod==1){
+                if(index == (words.lastIndex - 1)){
+                    x1 = x + (cw/2)
+                    //Log.d("debug2","1 x is $x x1 is $x1")
+                    textLine.addTextChar(charData = s, start = paddingLeft + x, end = paddingLeft + x1)
+                }
+                else if(index == words.lastIndex){
+                    x1 = x + cw
+                    //Log.d("debug2","2 x is $x x1 is $x1")
+                    textLine.addTextChar(charData = s, start = paddingLeft + x, end = paddingLeft + x1)
+                }
+                else{
+                    x1 = x + cw + d
+                    textLine.addTextChar(charData = s, start = paddingLeft + x, end = paddingLeft + x1)
+                }
+                x = x1
+            }
+            else{
+                x1 = if(index != words.lastIndex) (x + cw + d) else (x + cw)
+                Log.d("debug1","$s $x $x1 $index ${words.lastIndex} ${x1-x}")
+                textLine.addTextChar(charData = s, start = paddingLeft + x, end = paddingLeft + x1)
+                x = x1
+            }
         }
-        exceed(textLine, words)
+        //Log.d("debug2","addCharsToLineMiddle $textLine")
+        //exceed(textLine, words)
     }
 
     /**
@@ -322,15 +360,29 @@ object ChapterProvider {
         words: Array<String>,
         textPaint: TextPaint,
         startX: Float,
+        lineCompressMod:Int,
     ) {
         var x = startX
-        words.forEach {
-            val cw = StaticLayout.getDesiredWidth(it, textPaint)
-            val x1 = x + cw
-            textLine.addTextChar(charData = it, start = paddingLeft + x, end = paddingLeft + x1)
-            x = x1
+        words.forEachIndexed {index, s ->
+            val cw = StaticLayout.getDesiredWidth(s, textPaint)
+            var x1 = 0f
+            if(lineCompressMod == 1){
+                if(index == (words.lastIndex - 1)){
+                    x1 = x + (cw/2)
+                    textLine.addTextChar(charData = s, start = paddingLeft + x, end = paddingLeft + x1)
+                }
+                else{
+                    x1 = x + cw
+                    textLine.addTextChar(charData = s, start = paddingLeft + x, end = paddingLeft + x1)
+                }
+                x = x1
+            }else{
+                x1 = x + cw
+                textLine.addTextChar(charData = s, start = paddingLeft + x, end = paddingLeft + x1)
+                x = x1
+            }
         }
-        exceed(textLine, words)
+        //exceed(textLine, words)
     }
 
     /**
@@ -339,6 +391,7 @@ object ChapterProvider {
     //todo
     private fun exceed(textLine: TextLine, words: Array<String>) {
         val endX = textLine.textChars.last().end
+        //Log.d("debug2", "end is ${endX} $visibleRight")
         if (endX > visibleRight) {
             val cc = (endX - visibleRight) / words.size
             for (i in 0..words.lastIndex) {
