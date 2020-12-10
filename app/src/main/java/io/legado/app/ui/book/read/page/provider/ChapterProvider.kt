@@ -214,7 +214,7 @@ object ChapterProvider {
             text, textPaint, visibleWidth, Layout.Alignment.ALIGN_NORMAL, 0f, 0f, true
         )*/
         val layout = TextProcess(text,textPaint)
-        Log.d("debug2","宽度:$visibleWidth 行数:${layout.lineCount}")
+        //Log.d("debug2","宽度:$visibleWidth 行数:${layout.lineCount}")
         for (lineIndex in 0 until layout.lineCount) {
             val textLine = TextLine(isTitle = isTitle)
             val words =
@@ -343,7 +343,7 @@ object ChapterProvider {
             }
             else{
                 x1 = if(index != words.lastIndex) (x + cw + d) else (x + cw)
-                Log.d("debug1","$s $x $x1 $index ${words.lastIndex} ${x1-x}")
+                //Log.d("debug1","$s $x $x1 $index ${words.lastIndex} ${x1-x}")
                 textLine.addTextChar(charData = s, start = paddingLeft + x, end = paddingLeft + x1)
                 x = x1
             }

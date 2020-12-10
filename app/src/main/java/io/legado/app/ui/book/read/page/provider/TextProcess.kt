@@ -31,38 +31,37 @@ class TextProcess(
             val cw = StaticLayout.getDesiredWidth(s, textPaint)
             lineW = lineW + cw
 
+            Log.d("debug2","$lineW ${ChapterProvider.visibleWidth} $lineW $cw")
             if(lineW > ChapterProvider.visibleWidth) {
                 //标点不能在行尾
-
-                if(words[index-1] == "“") {
+                if(banEndOfLine(words[index-1])) {
                     lindexTag = 1
                 }
                 //标点不能在行首
-                else if(words[index] == "，"
-                        || words[index] == "。"
-                        || words[index] == "："
-                        || words[index] == "？"
-                        || words[index] == "！") {
+                else if(banStartOfLine(words[index])) {
                     lindexTag = 1
                 }
                 //标点需要压缩
-                else if(words[index] == "”"){
-                    if(words[index-1] == "，"
-                            || words[index-1] == "。"
-                            || words[index-1] == "："
-                            || words[index-1] == "？"
-                            || words[index-1] == "！"){
+                else if(mayCompress(words[index])){
+                    if(banEndOfLine(words[index-1])){
                         lindexTag = 2
-                        lineCompressMod[line] = 1
                     }
                     else{
                         lindexTag = 1
                     }
                 }
                 else {
-                    lindexTag = 3
+                    lindexTag = 0
                 }
                 when(lindexTag){
+                    //模拟0 正常断行
+                    0->{
+                        lineWidth[line] = lineW-cw
+                        lineW = cw
+                        lineEnd[line] = index
+                        line++
+                        lineStart[line]= index
+                    }//模式1 当前行下移一个字
                     1->{
                         lineWidth[line] = lineW - cw - cwPre
                         lineW = cw + cwPre
@@ -70,28 +69,25 @@ class TextProcess(
                         line++
                         lineStart[line]= index - 1
                     }
+                    //模式2 标点压缩
                     2->{
                         lineWidth[line] = lineW
                         lineEnd[line] = index + 1
+                        lineCompressMod[line] = 1
                         line++
                         lineStart[line]= index + 1
                     }
-                    3->{
-                        lineWidth[line] = lineW-cw
-                        lineW = cw
-                        lineEnd[line] = index
-                        line++
-                        lineStart[line]= index
-                    }
                 }
-
                 if(line >= 99) Log.e("TextProcess","line is Max $line")
             }
-            else if(words.lastIndex==index) {
+
+            if((words.lastIndex) == index) {
+                Log.d("debug2","${s} $index")
                 lineWidth[line] = lineW
                 lineEnd[line] = words.lastIndex + 1
                 line++
             }
+            Log.d("debug2","${s} $index ${words.lastIndex} ")
             cwPre = cw
         }
 
