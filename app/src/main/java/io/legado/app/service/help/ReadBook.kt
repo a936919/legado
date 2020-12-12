@@ -4,10 +4,7 @@ import androidx.lifecycle.MutableLiveData
 import com.hankcs.hanlp.HanLP
 import io.legado.app.App
 import io.legado.app.constant.BookType
-import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
-import io.legado.app.data.entities.BookSource
-import io.legado.app.data.entities.ReadRecord
+import io.legado.app.data.entities.*
 import io.legado.app.help.*
 import io.legado.app.help.coroutine.Coroutine
 import io.legado.app.model.webBook.WebBook
@@ -52,10 +49,8 @@ object ReadBook {
         durChapterIndex = book.durChapterIndex
         durChapterPos = book.durChapterPos
         isLocalBook = book.origin == BookType.local
-        chapterSize = 0
-        prevTextChapter = null
-        curTextChapter = null
-        nextTextChapter = null
+        chapterSize = book.totalChapterNum
+        clearTextChapter()
         titleDate.postValue(book.name)
         callBack?.upPageAnim()
         upWebBook(book)
@@ -78,6 +73,19 @@ object ReadBook {
                 webBook = null
             }
         }
+    }
+
+    fun upProgress(progress: BookProgress) {
+        durChapterIndex = progress.durChapterIndex
+        durChapterPos = progress.durChapterPos
+        clearTextChapter()
+        loadContent(resetPageOffset = true)
+    }
+
+    fun clearTextChapter() {
+        prevTextChapter = null
+        curTextChapter = null
+        nextTextChapter = null
     }
 
     fun upReadStartTime() {

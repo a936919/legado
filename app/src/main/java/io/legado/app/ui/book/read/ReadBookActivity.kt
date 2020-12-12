@@ -20,10 +20,11 @@ import io.legado.app.constant.PreferKey
 import io.legado.app.constant.Status
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookProgress
 import io.legado.app.help.ReadBookConfig
 import io.legado.app.help.ReadTipConfig
 import io.legado.app.help.storage.Backup
-import io.legado.app.help.storage.SyncBookProgress
+import io.legado.app.help.storage.BookWebDav
 import io.legado.app.lib.dialogs.alert
 import io.legado.app.lib.theme.accentColor
 import io.legado.app.receiver.TimeBatteryReceiver
@@ -108,6 +109,9 @@ class ReadBookActivity : ReadBookBaseActivity(),
             upMenu()
             upView()
         }
+        viewModel.processLiveData.observe(this) {
+            sureSyncProgress(it)
+        }
         viewModel.initData(intent)
     }
 
@@ -138,7 +142,9 @@ class ReadBookActivity : ReadBookBaseActivity(),
         }
         upSystemUiVisibility()
         if (!BuildConfig.DEBUG) {
-            SyncBookProgress.uploadBookProgress()
+            ReadBook.book?.let {
+                BookWebDav.uploadBookProgress(it)
+            }
             Backup.autoBack(this)
         }
     }
@@ -216,10 +222,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
                 binding.readView.upPageAnim()
             }
             R.id.menu_book_info -> ReadBook.book?.let {
-                startActivity<BookInfoActivity>(
-                    Pair("name", it.name),
-                    Pair("author", it.author)
-                )
+                startActivity<BookInfoActivity>(Pair("name", it.name), Pair("author", it.author))
             }
             R.id.menu_toc_regex -> TocRegexDialog.show(
                 supportFragmentManager,
@@ -232,6 +235,9 @@ class ReadBookActivity : ReadBookBaseActivity(),
                 )
             }
             R.id.menu_set_charset -> showCharsetConfig()
+            R.id.menu_get_progress -> ReadBook.book?.let {
+                viewModel.syncBookProgress(it)
+            }
             R.id.menu_help -> showReadMenuHelp()
         }
         return super.onCompatOptionsItemSelected(item)
@@ -725,6 +731,16 @@ class ReadBookActivity : ReadBookBaseActivity(),
         }
     }
 
+    private fun sureSyncProgress(progress: BookProgress) {
+        alert(R.string.get_book_progress) {
+            message = getString(R.string.current_progress_exceeds_cloud)
+            okButton {
+                ReadBook.upProgress(progress)
+            }
+            noButton()
+        }.show()
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == Activity.RESULT_OK) {
@@ -814,7 +830,6 @@ class ReadBookActivity : ReadBookBaseActivity(),
         binding.readView.onDestroy()
         ReadBook.msg = null
         if (!BuildConfig.DEBUG) {
-            SyncBookProgress.uploadBookProgress()
             Backup.autoBack(this)
         }
     }
