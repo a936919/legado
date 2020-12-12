@@ -301,51 +301,24 @@ object ChapterProvider {
             addCharsToLineLast(textLine, words, textPaint, startX,lineCompressMod)
             return
         }
-
-        var x = startX
         var d = 0f
         var interval = 0f
-        if(lineCompressMod==1){
+        if(lineCompressMod>0){
             val gapCount: Int =  words.lastIndex - 1
             val endPuncWidth = StaticLayout.getDesiredWidth(words.get(gapCount+1), textPaint)
-            val interval = visibleWidth - desiredWidth + endPuncWidth
+            interval = visibleWidth - desiredWidth + endPuncWidth
             d = interval / gapCount
         }else{
             val gapCount: Int =  words.lastIndex
-            val interval =visibleWidth - desiredWidth
+            interval = visibleWidth - desiredWidth
             d = interval / gapCount
         }
-        /*间隔过大就左对齐*/
-        if(interval > (visibleWidth/10)) {
+        val defCharWidth = StaticLayout.getDesiredWidth("我",textPaint)
+        if(interval >  defCharWidth){
             addCharsToLineLast(textLine, words, textPaint, startX,lineCompressMod)
             return
         }
-
-        words.forEachIndexed { index, s ->
-            val cw = StaticLayout.getDesiredWidth(s, textPaint)
-            var x1 = 0f
-            if(lineCompressMod==1){
-                if(index == (words.lastIndex - 1)){
-                    x1 = x + (cw/2)
-                    textLine.addTextChar(charData = s, start = paddingLeft + x, end = paddingLeft + x1)
-                }
-                else if(index == words.lastIndex){
-                    x1 = x + cw
-                    textLine.addTextChar(charData = s, start = paddingLeft + x, end = paddingLeft + x1)
-                }
-                else{
-                    x1 = x + cw + d
-                    textLine.addTextChar(charData = s, start = paddingLeft + x, end = paddingLeft + x1)
-                }
-                x = x1
-            }
-            else{
-                x1 = if(index != words.lastIndex) (x + cw + d) else (x + cw)
-                textLine.addTextChar(charData = s, start = paddingLeft + x, end = paddingLeft + x1)
-                x = x1
-            }
-        }
-        //exceed(textLine, words)
+        wordsProcess(textLine,words,textPaint,startX,lineCompressMod,d);
     }
 
     /**
@@ -358,34 +331,72 @@ object ChapterProvider {
         startX: Float,
         lineCompressMod:Int,
     ) {
-        var x = startX
         val d = getDefinterval(textPaint)
+        wordsProcess(textLine,words,textPaint,startX,lineCompressMod,d);
+    }
+
+    private fun wordsProcess(
+        textLine: TextLine,
+        words: Array<String>,
+        textPaint: TextPaint,
+        startX: Float,
+        lineCompressMod:Int,
+        d: Float
+    ){
+        var x = startX
         words.forEachIndexed {index, s ->
             val cw = StaticLayout.getDesiredWidth(s, textPaint)
             var x1 = 0f
-            if(lineCompressMod == 1){
-                if(index == (words.lastIndex - 1)){
-                    x1 = x + (cw/2)
-                    textLine.addTextChar(charData = s, start = paddingLeft + x, end = paddingLeft + x1)
+            when(lineCompressMod){
+                1->{
+                    if(index == (words.lastIndex - 1))  x1 = x + (cw/2) else if(index == words.lastIndex) x1 = x + cw else x1 = x + cw + d
                 }
-                else if(index == words.lastIndex){
-                    x1 = x + cw
-                    textLine.addTextChar(charData = s, start = paddingLeft + x, end = paddingLeft + x1)
+                2->{
+                    if(index == (words.lastIndex - 2)){
+                        x  = x - (cw/2)
+                        x1 = x + cw
+                    }
+                    else if(index == (words.lastIndex - 1)){
+                        x  = x - (cw/2)
+                        x1 = x + cw + d
+                    }else if(index == words.lastIndex){
+                        x1 = x + cw
+                    }
+                    else{
+                        x1 = x + cw + d
+                    }
                 }
-                else{
-                    x1 = x + cw + d
-                    textLine.addTextChar(charData = s, start = paddingLeft + x, end = paddingLeft + x1)
+                3->{
+                    if(index == (words.lastIndex - 2)){
+                        x  = x - (cw/2)
+                        x1 = x + cw
+                    }
+                    else if(index == (words.lastIndex - 1)){
+                        x1 = x + cw + d
+                    }
+                    else if(index == words.lastIndex){
+                        x1 = x + cw
+                    }
+                    else{
+                        x1 = x + cw + d
+                    }
                 }
-                x = x1
-            }else{
-                x1 = if(index != words.lastIndex) (x + cw + d) else (x + cw)
-                textLine.addTextChar(charData = s, start = paddingLeft + x, end = paddingLeft + x1)
-                x = x1
+                else->{
+                    x1 = if(index != words.lastIndex) (x + cw + d) else (x + cw)
+                }
             }
+            textLine.addTextChar(charData = s, start = paddingLeft + x, end = paddingLeft + x1)
+            x = x1
         }
-        //exceed(textLine, words)
     }
 
+    private fun getDefinterval(textPaint: TextPaint):Float{
+        val defCharWidth = StaticLayout.getDesiredWidth("我",textPaint)
+        val f = (visibleWidth / defCharWidth).toInt().toFloat()
+        val defD = (visibleWidth % defCharWidth) / f
+        Log.d("mq-2","$visibleWidth $defCharWidth $f $defD")
+        return defD
+    }
     /**
      * 超出边界处理
      */
@@ -402,13 +413,6 @@ object ChapterProvider {
                 }
             }
         }
-    }
-
-    private fun getDefinterval(textPaint: TextPaint):Float{
-        val defCharWidth = StaticLayout.getDesiredWidth("我",textPaint)
-        val defD = (visibleWidth % defCharWidth) / (visibleWidth / defCharWidth)
-        //Log.d("mq-2","getDefinterval is $defD")
-        return defD
     }
 
     /**
