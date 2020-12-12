@@ -141,11 +141,9 @@ class ReadBookActivity : ReadBookBaseActivity(),
             timeBatteryReceiver = null
         }
         upSystemUiVisibility()
-        if (!BuildConfig.DEBUG) {
-            ReadBook.book?.let {
-                BookWebDav.uploadBookProgress(it)
-            }
-            Backup.autoBack(this)
+        ReadBook.book?.let {
+            BookWebDav.uploadBookProgress(it)
+        Backup.autoBack(this)
         }
     }
 
@@ -829,9 +827,8 @@ class ReadBookActivity : ReadBookBaseActivity(),
         textActionMenu.dismiss()
         binding.readView.onDestroy()
         ReadBook.msg = null
-        if (!BuildConfig.DEBUG) {
-            Backup.autoBack(this)
-        }
+        Backup.autoBack(this)
+
     }
 
     override fun observeLiveBus() = with(binding) {

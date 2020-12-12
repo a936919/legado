@@ -225,9 +225,7 @@ object Restore {
         }
         withContext(Main) {
             App.INSTANCE.toast(R.string.restore_success)
-            if (!BuildConfig.DEBUG) {
-                LauncherIconHelp.changeIcon(App.INSTANCE.getPrefString(PreferKey.launcherIcon))
-            }
+            LauncherIconHelp.changeIcon(App.INSTANCE.getPrefString(PreferKey.launcherIcon))
             LanguageUtils.setConfiguration(App.INSTANCE)
             App.INSTANCE.applyDayNight()
             postEvent(EventBus.SHOW_RSS, "")

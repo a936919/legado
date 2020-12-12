@@ -47,7 +47,7 @@ class App : MultiDexApplication() {
         CrashHandler(this)
         LanguageUtils.setConfiguration(this)
         db = AppDatabase.createDatabase(INSTANCE)
-        RxHttp.init(HttpHelper.client, BuildConfig.DEBUG)
+        RxHttp.init(HttpHelper.client, false)
         RxHttp.setOnParamAssembly {
             it.addHeader(AppConst.UA_NAME, AppConfig.userAgent)
         }

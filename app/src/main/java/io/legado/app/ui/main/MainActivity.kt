@@ -113,7 +113,7 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
             if (LocalConfig.isFirstOpenApp) {
                 val text = String(assets.open("help/appHelp.md").readBytes())
                 TextDialog.show(supportFragmentManager, text, TextDialog.MD)
-            } else if (!BuildConfig.DEBUG) {
+            } else  {
                 val log = String(assets.open("updateLog.md").readBytes())
                 TextDialog.show(supportFragmentManager, log, TextDialog.MD, 5000, true)
                 DefaultData.importDefaultTocRules()//版本更新时更新自带本地txt目录规则
@@ -162,9 +162,7 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
 
     override fun onPause() {
         super.onPause()
-        if (!BuildConfig.DEBUG) {
-            Backup.autoBack(this)
-        }
+        Backup.autoBack(this)
     }
 
     override fun onDestroy() {
