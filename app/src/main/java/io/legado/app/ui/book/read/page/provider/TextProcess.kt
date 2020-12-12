@@ -27,7 +27,6 @@ class TextProcess(
         lineEnd =Array(100,{it->0})
         lineCompressMod = Array(100,{it->0})
         CompressCharIndex = Array<Int>(100,{it->0})
-        lineStart[line] = 0
         var cwPre = 0f
         var breakLine = false
 
@@ -55,6 +54,7 @@ class TextProcess(
 
                 /*上述场景都解决不了的情况，就不考虑间隔效果，直接查找到能满足条件的分割字*/
                 var reCheck = false
+                var breakIndex = 0
                 if(lindexTag==3&&(Incompressible(words[index])||Incompressible(words[index-1]))){
                     reCheck= true
                 }
@@ -67,13 +67,11 @@ class TextProcess(
                     reCheck= true
                 }
 
-                if(lindexTag>2&&banEndOfLine(words[index + 1])) {
+                if(lindexTag>2&& index<words.lastIndex &&banEndOfLine(words[index + 1])) {
                     reCheck= true
                 }
 
-                var breakIndex = 0
-                if((reCheck == true) && (index<words.lastIndex) && (index>2)){
-                    cwPre = 0f
+                if(reCheck == true && index>2){
                     for(i in (index) downTo 1 ){
                         if(i==index){
                             breakIndex = 0
@@ -92,39 +90,36 @@ class TextProcess(
 
                 //Log.d("mq-3","--$line $lindexTag $breakIndex")
                 when (lindexTag) {
-                    //模式0 正常断行
-                    0 -> {
+                    0 -> {//模式0 正常断行
                         offset = cw
                         lineEnd[line] = index
                         breakCharCnt = 1
-                    }//模式1 当前行下移一个字
-                    1 -> {
+                    }
+                    1 -> {//模式1 当前行下移一个字
                         offset = cw + cwPre
                         lineEnd[line] = index - 1
                         breakCharCnt = 2
-                    }//模式2 当前行下移多个字
-                    2 -> {
+                    }
+                    2 -> {//模式2 当前行下移多个字
                         offset = cw + cwPre
                         lineEnd[line] = index - breakIndex
                         breakCharCnt = breakIndex + 1
-                    } //模式2 两个后缀标点压缩
-                    3 -> {
+                    }
+                    3 -> {//模式3 两个后缀标点压缩
                         offset = 0f
                         lineEnd[line] = index + 1
                         lineCompressMod[line] = 1
                         CompressCharIndex[line] = index - 1
                         breakCharCnt = 0
                     }
-                    //模式4 标点压缩
-                    4 -> {
+                    4 -> { //模式4 标点压缩
                         offset = 0f
                         lineEnd[line] = index + 1
                         lineCompressMod[line] = 2
                         CompressCharIndex[line] = index - 2
                         breakCharCnt = 0
                     }
-                    //模式5 标点压缩
-                    5 -> {
+                    5 -> {//模式5 标点压缩
                         offset = 0f
                         lineEnd[line] = index + 1
                         lineCompressMod[line] = 3
@@ -132,7 +127,6 @@ class TextProcess(
                         breakCharCnt = 0
                     }
                 }
-
                 breakLine = true
             }
 
@@ -190,7 +184,7 @@ class TextProcess(
     }
 
     private fun banEndOfLine(string: String):Boolean{
-        val panc = arrayOf("“","（","《","【","’","‘","(","<","[","{")
+        val panc = arrayOf("“","（","《","【","‘","‘","(","<","[","{")
         panc.forEach{
             if(it == string) return true
         }

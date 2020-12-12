@@ -313,9 +313,10 @@ object ChapterProvider {
             interval = visibleWidth - desiredWidth
             d = interval / gapCount
         }
-        val defCharWidth = StaticLayout.getDesiredWidth("我",textPaint)
-        if(interval >  defCharWidth){
+        //val defCharWidth = StaticLayout.getDesiredWidth("我",textPaint)
+        if(interval > (visibleWidth/10)){
             addCharsToLineLast(textLine, words, textPaint, startX,lineCompressMod)
+            //Log.d("mq-1","interval is $interval defCharWidth is $visibleWidth")
             return
         }
         wordsProcess(textLine,words,textPaint,startX,lineCompressMod,d);
@@ -394,7 +395,7 @@ object ChapterProvider {
         val defCharWidth = StaticLayout.getDesiredWidth("我",textPaint)
         val f = (visibleWidth / defCharWidth).toInt().toFloat()
         val defD = (visibleWidth % defCharWidth) / f
-        Log.d("mq-2","$visibleWidth $defCharWidth $f $defD")
+        //Log.d("mq-2","$visibleWidth $defCharWidth $f $defD")
         return defD
     }
     /**
