@@ -199,12 +199,8 @@ class ChangeSourceDialog : BaseDialogFragment(),
                 item.isChecked = !item.isChecked
                 initLiveData()
             }
-            R.id.book_source_manage->{
-                startActivity<BookSourceActivity>()
-                //todo startActivity<SearchActivity>(Pair("key", viewModel.name))
-            }
             R.id.menu_stop -> viewModel.stopSearch()
-            //R.id.menu_source_manage -> startActivity<BookSourceActivity>()
+            R.id.menu_source_manage -> startActivity<BookSourceActivity>()
             else -> if (item?.groupId == R.id.source_group) {//mq-
                 if (!item.isChecked) {
                     item.isChecked = true
