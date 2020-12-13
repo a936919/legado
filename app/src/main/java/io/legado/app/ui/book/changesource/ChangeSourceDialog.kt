@@ -1,7 +1,6 @@
 package io.legado.app.ui.book.changesource
 
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
@@ -26,13 +25,12 @@ import io.legado.app.ui.widget.recycler.VerticalDivider
 import io.legado.app.utils.*
 import io.legado.app.utils.viewbindingdelegate.viewBinding
 import org.jetbrains.anko.textColor
-import java.text.Collator
+
 
 
 class ChangeSourceDialog : BaseDialogFragment(),
     Toolbar.OnMenuItemClickListener,
     ChangeSourceAdapter.CallBack {
-    var groups = linkedSetOf<String>()
     companion object {
         const val tag = "changeSourceDialog"
 
@@ -49,6 +47,7 @@ class ChangeSourceDialog : BaseDialogFragment(),
     }
 
     private val binding by viewBinding(DialogChangeSourceBinding::bind)
+    private val groups = linkedSetOf<String>()
     private var callBack: CallBack? = null
     private lateinit var viewModel: ChangeSourceViewModel
     lateinit var adapter: ChangeSourceAdapter
@@ -92,6 +91,7 @@ class ChangeSourceDialog : BaseDialogFragment(),
         binding.toolBar.menu.findItem(R.id.menu_load_info)?.isChecked =
             AppConfig.changeSourceLoadInfo
         binding.toolBar.menu.findItem(R.id.menu_load_toc)?.isChecked = AppConfig.changeSourceLoadToc
+//mq-
         val isLight = ColorUtils.isColorLight(requireContext().backgroundColor)
         var string = "书源不在库中"
         callBack?.oldBook?.originName?.let{
@@ -103,6 +103,7 @@ class ChangeSourceDialog : BaseDialogFragment(),
         }
         binding.sourceName.text = string
         binding.sourceName.textColor =  requireContext().getPrimaryTextColor(isLight)
+
     }
 
     private fun initRecyclerView() {
@@ -203,14 +204,22 @@ class ChangeSourceDialog : BaseDialogFragment(),
                 //todo startActivity<SearchActivity>(Pair("key", viewModel.name))
             }
             R.id.menu_stop -> viewModel.stopSearch()
-            else -> if (item?.groupId == R.id.source_group) {
-                item.isChecked = true
-                if (item.title.toString() == getString(R.string.all_source)) {
-                    putPrefString("searchGroup", "")
-                } else {
-                    putPrefString("searchGroup", item.title.toString())
+            //R.id.menu_source_manage -> startActivity<BookSourceActivity>()
+            else -> if (item?.groupId == R.id.source_group) {//mq-
+                if (!item.isChecked) {
+                    item.isChecked = true
+                    if (item.title.toString() == getString(R.string.all_source)) {
+                        putPrefString("searchGroup", "")
+                    } else {
+                        putPrefString("searchGroup", item.title.toString())
+                    }
+                    initLiveData()
+                    /*
+                    viewModel.stopSearch()
+                    viewModel.loadDbSearchBook()
+
+                     */
                 }
-                initLiveData()
             }
         }
         return false
@@ -234,21 +243,23 @@ class ChangeSourceDialog : BaseDialogFragment(),
      * 更新分组菜单
      */
     private fun upGroupMenu() {
-
-        var menu: Menu = binding.toolBar.menu
+        val menu: Menu = binding.toolBar.menu
         val selectedGroup = getPrefString("searchGroup") ?: ""
         menu.removeGroup(R.id.source_group)
         var item = menu.add(R.id.source_group, Menu.NONE, Menu.NONE, R.string.all_source)
         if (selectedGroup == "") {
             item?.isChecked = true
         }
-        groups.sortedWith(Collator.getInstance(java.util.Locale.CHINESE))
-            .map {
-                item = menu.add(R.id.source_group, Menu.NONE, Menu.NONE, it)
-                if (it == selectedGroup) {
-                    item.isChecked = true
-                }
+
+        groups.sortedWith { o1, o2 ->
+            o1.cnCompare(o2)
+        }.map {
+            item = menu.add(R.id.source_group, Menu.NONE, Menu.NONE, it)
+            if (it == selectedGroup) {
+                item.isChecked = true
             }
+        }
+
         menu.setGroupCheckable(R.id.source_group, true, true)
     }
 

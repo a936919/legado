@@ -39,6 +39,7 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
     private val searchBooks = CopyOnWriteArraySet<SearchBook>()
     private var postTime = 0L
     private val sendRunnable = Runnable { upAdapter() }
+    private val searchGroup get() = App.INSTANCE.getPrefString("searchGroup") ?: ""
 
     @Volatile
     private var searchIndex = -1
@@ -61,7 +62,9 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
 
     fun loadDbSearchBook() {
         execute {
-            App.db.searchBookDao.getByNameAuthorEnable(name, author).let {
+            searchBooks.clear()
+            upAdapter()
+            App.db.searchBookDao.getChangeSourceSearch(name, author, searchGroup).let {
                 searchBooks.addAll(it)
                 if (it.size <= 1) {
                     upAdapter()
@@ -100,12 +103,11 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
         execute {
             val searchGroup = App.INSTANCE.getPrefString("searchGroup") ?: ""
             bookSourceList.clear()
-            if (searchGroup.isBlank()) {
+            if (searchGroup.isNullOrBlank()) {
                 bookSourceList.addAll(App.db.bookSourceDao.allEnabled)
             } else {
                 bookSourceList.addAll(App.db.bookSourceDao.getEnabledByGroup(searchGroup))
             }
-
             searchStateData.postValue(true)
             initSearchPool()
             for (i in 0 until threadCount) {
@@ -198,7 +200,8 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
             if (key.isNullOrEmpty()) {
                 loadDbSearchBook()
             } else {
-                val items = App.db.searchBookDao.getChangeSourceSearch(name, author, screenKey)
+                val items =
+                    App.db.searchBookDao.getChangeSourceSearch(name, author, screenKey, searchGroup)
                 searchBooks.clear()
                 searchBooks.addAll(items)
                 upAdapter()
