@@ -39,7 +39,6 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
     private val searchBooks = CopyOnWriteArraySet<SearchBook>()
     private var postTime = 0L
     private val sendRunnable = Runnable { upAdapter() }
-    private val searchGroup get() = App.INSTANCE.getPrefString("searchGroup") ?: ""
 
     @Volatile
     private var searchIndex = -1
@@ -62,9 +61,7 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
 
     fun loadDbSearchBook() {
         execute {
-            searchBooks.clear()
-            upAdapter()
-            App.db.searchBookDao.getChangeSourceSearch(name, author, searchGroup).let {
+            App.db.searchBookDao.getByNameAuthorEnable(name, author).let {
                 searchBooks.addAll(it)
                 if (it.size <= 1) {
                     upAdapter()
@@ -200,8 +197,7 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
             if (key.isNullOrEmpty()) {
                 loadDbSearchBook()
             } else {
-                val items =
-                    App.db.searchBookDao.getChangeSourceSearch(name, author, screenKey, searchGroup)
+                val items = App.db.searchBookDao.getChangeSourceSearch(name, author, screenKey)
                 searchBooks.clear()
                 searchBooks.addAll(items)
                 upAdapter()
