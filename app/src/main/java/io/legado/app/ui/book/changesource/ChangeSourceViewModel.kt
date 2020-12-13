@@ -197,7 +197,7 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
             if (key.isNullOrEmpty()) {
                 loadDbSearchBook()
             } else {
-                val items = App.db.searchBookDao.getChangeSourceSearch(name, author, screenKey)
+                val items = App.db.searchBookDao.getChangeSourceS(name, author, screenKey)
                 searchBooks.clear()
                 searchBooks.addAll(items)
                 upAdapter()
