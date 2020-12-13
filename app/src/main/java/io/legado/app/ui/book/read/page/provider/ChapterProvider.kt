@@ -22,6 +22,8 @@ import io.legado.app.ui.book.read.page.entities.TextPage
 import io.legado.app.utils.*
 import java.util.*
 import kotlin.collections.HashMap
+import kotlin.math.max
+import kotlin.math.min
 
 
 @Suppress("DEPRECATION")
@@ -228,7 +230,7 @@ object ChapterProvider {
                 val x = if (isTitle && ReadBookConfig.titleMode == 1)
                     (visibleWidth - layout.getLineWidth(lineIndex)) / 2
                 else 0f
-                addCharsToLineLast(textLine, words.toStringArray(), textPaint, x,lineCompressMod)
+                addCharsToLineLast(textLine, words.toStringArray(), textPaint, x,desiredWidth ,lineCompressMod)
             } else {
                 //中间行
                 textLine.text = words
@@ -267,7 +269,7 @@ object ChapterProvider {
     ) {
         var x = 0f
         if (!ReadBookConfig.textFullJustify) {
-            addCharsToLineLast(textLine, words, textPaint, x,lineCompressMod)
+            addCharsToLineLast(textLine, words, textPaint, x,desiredWidth ,lineCompressMod)
             return
         }
         val bodyIndent = ReadBookConfig.paragraphIndent
@@ -297,7 +299,7 @@ object ChapterProvider {
         lineCompressMod:Int,
     ) {
         if (!ReadBookConfig.textFullJustify) {
-            addCharsToLineLast(textLine, words, textPaint, startX,lineCompressMod)
+            addCharsToLineLast(textLine, words, textPaint, startX,desiredWidth ,lineCompressMod)
             return
         }
         var d = 0f
@@ -314,7 +316,7 @@ object ChapterProvider {
         }
         //val defCharWidth = StaticLayout.getDesiredWidth("我",textPaint)
         if(interval > (visibleWidth/10)){
-            addCharsToLineLast(textLine, words, textPaint, startX,lineCompressMod)
+            addCharsToLineLast(textLine, words, textPaint, startX,desiredWidth ,lineCompressMod)
             //Log.d("mq-1","interval is $interval defCharWidth is $visibleWidth")
             return
         }
@@ -329,12 +331,25 @@ object ChapterProvider {
         words: Array<String>,
         textPaint: TextPaint,
         startX: Float,
+        desiredWidth: Float,
         lineCompressMod:Int,
     ) {
-        val d = getDefinterval(textPaint)
+        var interval:Float
+        var gapCount:Int
+        if(lineCompressMod>0){
+            gapCount =  words.lastIndex - 1
+            val endPuncWidth = StaticLayout.getDesiredWidth(words.get(gapCount+1), textPaint)
+            interval = visibleWidth - desiredWidth + endPuncWidth
+        }else{
+            gapCount =  words.lastIndex
+            interval = visibleWidth - desiredWidth
+        }
+        /*目前改的不算严格意义的左对齐。会根据设置行宽做间隔叠加，保证上下行效果和两边间隔一致*/
+        /*存在半角字符情况下依靠中文算出的默认间隔会越界*/
+        val d = min((interval / gapCount),(getDefinterval(textPaint)))
         wordsProcess(textLine,words,textPaint,startX,lineCompressMod,d);
     }
-
+//TODO 这里lineCompressMod写的太繁琐。接口不够抽象，后面要在TextProcess里做掉。-hoodie13
     private fun wordsProcess(
         textLine: TextLine,
         words: Array<String>,

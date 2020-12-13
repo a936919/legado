@@ -5,7 +5,11 @@ import android.text.TextPaint
 import android.util.Log
 import io.legado.app.utils.toStringArray
 
-
+/*
+* 针对中文的断行排版处理-by hoodie13
+* 因为StaticLayout对标点处理不符合国人习惯，参考其接口方式自定义排版，减少原代码差异
+* 接口封的不抽象，数组用的也琐碎，因目前语法不熟悉，后面完善。
+* */
 class TextProcess(
         text:String,
         textPaint: TextPaint,
@@ -38,7 +42,7 @@ class TextProcess(
             var breakCharCnt = 0
 
             if(lineW > ChapterProvider.visibleWidth) {
-                /*禁止在行尾的标点处理 当同时出现2个的情况还没遇到，先不做处理*/
+                /*禁止在行尾的标点处理*/
                 if (index >= 1 && banEndOfLine(words[index - 1])) {
                     if (index >= 2 && banEndOfLine(words[index - 2])) lindexTag = 4//如果后面还有一个禁首标点则异常
                     else lindexTag = 1 //无异常场景
@@ -52,25 +56,19 @@ class TextProcess(
                     lindexTag = 0 //无异常场景
                 }
 
-                /*上述场景都解决不了的情况，就不考虑间隔效果，直接查找到能满足条件的分割字*/
+                /*判断上述逻辑解决不了的特殊情况*/
                 var reCheck = false
                 var breakIndex = 0
-                if(lindexTag==3&&(Incompressible(words[index])||Incompressible(words[index-1]))){
-                    reCheck= true
-                }
+                if(lindexTag==3&&(Incompressible(words[index])||Incompressible(words[index-1]))) reCheck= true
 
-                if(lindexTag==4&&(Incompressible(words[index-1])||Incompressible(words[index-2]))){
-                    reCheck= true
-                }
+                if(lindexTag==4&&(Incompressible(words[index-1])||Incompressible(words[index-2]))) reCheck= true
 
-                if(lindexTag==4&&(Incompressible(words[index])||Incompressible(words[index-2]))){
-                    reCheck= true
-                }
+                if(lindexTag==5&&(Incompressible(words[index])||Incompressible(words[index-2]))) reCheck= true
 
-                if(lindexTag>2&& index<words.lastIndex &&banEndOfLine(words[index + 1])) {
-                    reCheck= true
-                }
+                if(lindexTag>2&& index<words.lastIndex &&banEndOfLine(words[index + 1]))  reCheck= true
 
+
+                /*特殊标点使用难保证显示效果，所以不考虑间隔，直接查找到能满足条件的分割字*/
                 if(reCheck == true && index>2){
                     for(i in (index) downTo 1 ){
                         if(i==index){
@@ -140,8 +138,8 @@ class TextProcess(
                 lineStart[line + 1] = lineEnd[line]
                 lineW = offset
                 line++
-                if (lineCompressMod[line] > 0) compressWidth[line] =
-                    lineWidth[line] - cw else compressWidth[line] = lineWidth[line]
+                if (lineCompressMod[line] > 0) compressWidth[line] = lineWidth[line] - cw
+                else compressWidth[line] = lineWidth[line]
             }
             /*已到最后一个字符*/
             if ((words.lastIndex) == index) {
