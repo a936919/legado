@@ -65,7 +65,7 @@ class TextProcess(
 
                 if(lindexTag==5&&(Incompressible(words[index])||Incompressible(words[index-2]))) reCheck= true
 
-                if(lindexTag>2&& index<words.lastIndex &&banEndOfLine(words[index + 1]))  reCheck= true
+                if(lindexTag>2&& index<words.lastIndex &&banStartOfLine(words[index + 1]))  reCheck= true
 
 
                 /*特殊标点使用难保证显示效果，所以不考虑间隔，直接查找到能满足条件的分割字*/
