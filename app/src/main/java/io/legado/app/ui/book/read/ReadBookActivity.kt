@@ -143,7 +143,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
         upSystemUiVisibility()
         ReadBook.book?.let {
             BookWebDav.uploadBookProgress(it)
-        Backup.autoBack(this)
+            Backup.autoBack(this)
         }
     }
 

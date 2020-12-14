@@ -128,7 +128,7 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
         }
     }
 
-    /**
+    /**todo
      * 绘制文字
      */
     private fun drawChars(
