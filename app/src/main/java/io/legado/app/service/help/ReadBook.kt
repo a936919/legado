@@ -87,7 +87,7 @@ object ReadBook {
         curTextChapter = null
         nextTextChapter = null
     }
-
+//todo
     fun upReadStartTime() {
         Coroutine.async {
             readRecord.readTime = readRecord.readTime + System.currentTimeMillis() - readStartTime

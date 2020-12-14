@@ -29,7 +29,7 @@ import kotlin.math.min
 @Suppress("DEPRECATION")
 object ChapterProvider {
     @JvmStatic
-    private var viewWidth = 0
+    var viewWidth = 0
 
     @JvmStatic
     private var viewHeight = 0
@@ -494,7 +494,7 @@ object ChapterProvider {
             else -> Pair(bold, normal)
         }
 
-        //标题
+        //todo 标题
         val tPaint = TextPaint()
         tPaint.color = ReadBookConfig.textColor
         tPaint.letterSpacing = ReadBookConfig.letterSpacing
