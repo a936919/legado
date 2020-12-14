@@ -24,7 +24,6 @@ import io.legado.app.data.entities.BookProgress
 import io.legado.app.help.ReadBookConfig
 import io.legado.app.help.ReadTipConfig
 import io.legado.app.help.storage.Backup
-import io.legado.app.help.storage.BookWebDav
 import io.legado.app.lib.dialogs.alert
 import io.legado.app.lib.theme.accentColor
 import io.legado.app.receiver.TimeBatteryReceiver
@@ -141,10 +140,8 @@ class ReadBookActivity : ReadBookBaseActivity(),
             timeBatteryReceiver = null
         }
         upSystemUiVisibility()
-        ReadBook.book?.let {
-            BookWebDav.uploadBookProgress(it)
-            Backup.autoBack(this)
-        }
+        ReadBook.uploadProgress()
+        Backup.autoBack(this)
     }
 
     override fun onCompatCreateOptionsMenu(menu: Menu): Boolean {
@@ -612,7 +609,9 @@ class ReadBookActivity : ReadBookBaseActivity(),
             autoPageProgress += scrollOffset
             if (autoPageProgress >= binding.readView.height) {
                 autoPageProgress = 0
-                binding.readView.fillPage(PageDirection.NEXT)
+                if (!binding.readView.fillPage(PageDirection.NEXT)) {
+                    autoPageStop()
+                }
             } else {
                 binding.readView.invalidate()
             }
@@ -733,7 +732,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
         alert(R.string.get_book_progress) {
             message = getString(R.string.current_progress_exceeds_cloud)
             okButton {
-                ReadBook.upProgress(progress)
+                ReadBook.setProgress(progress)
             }
             noButton()
         }.show()

@@ -7,6 +7,7 @@ import io.legado.app.constant.BookType
 import io.legado.app.data.entities.*
 import io.legado.app.help.*
 import io.legado.app.help.coroutine.Coroutine
+import io.legado.app.help.storage.BookWebDav
 import io.legado.app.model.webBook.WebBook
 import io.legado.app.service.BaseReadAloudService
 import io.legado.app.ui.book.read.page.entities.TextChapter
@@ -21,6 +22,7 @@ import org.jetbrains.anko.getStackTraceString
 import org.jetbrains.anko.toast
 
 
+@Suppress("MemberVisibilityCanBePrivate")
 object ReadBook {
     var titleDate = MutableLiveData<String>()
     var book: Book? = null
@@ -75,7 +77,7 @@ object ReadBook {
         }
     }
 
-    fun upProgress(progress: BookProgress) {
+    fun setProgress(progress: BookProgress) {
         durChapterIndex = progress.durChapterIndex
         durChapterPos = progress.durChapterPos
         clearTextChapter()
@@ -87,7 +89,14 @@ object ReadBook {
         curTextChapter = null
         nextTextChapter = null
     }
+
 //todo
+    fun uploadProgress() {
+        book?.let {
+            BookWebDav.uploadBookProgress(it)
+        }
+    }
+
     fun upReadStartTime() {
         Coroutine.async {
             readRecord.readTime = readRecord.readTime + System.currentTimeMillis() - readStartTime
