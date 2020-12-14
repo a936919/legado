@@ -2,6 +2,7 @@ package io.legado.app.ui.book.read
 
 import android.app.Application
 import android.content.Intent
+import android.widget.Toast
 import androidx.lifecycle.MutableLiveData
 import io.legado.app.App
 import io.legado.app.R
@@ -13,6 +14,7 @@ import io.legado.app.data.entities.SearchBook
 import io.legado.app.help.AppConfig
 import io.legado.app.help.BookHelp
 import io.legado.app.help.IntentDataHelp
+import io.legado.app.help.ReadBookConfig
 import io.legado.app.help.storage.BookWebDav
 import io.legado.app.model.localBook.LocalBook
 import io.legado.app.model.webBook.WebBook
@@ -163,6 +165,7 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
     }
 
     fun syncBookProgress(book: Book) {
+        Toast.makeText(context,"获取阅读记录中", Toast.LENGTH_SHORT).show()
         execute {
             BookWebDav.getBookProgress(book)?.let { progress ->
                 if (progress.durChapterIndex < book.durChapterIndex ||

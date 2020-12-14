@@ -1,11 +1,13 @@
 package io.legado.app.service.help
 
+import android.widget.Toast
 import androidx.lifecycle.MutableLiveData
 import com.hankcs.hanlp.HanLP
 import io.legado.app.App
 import io.legado.app.constant.BookType
 import io.legado.app.data.entities.*
 import io.legado.app.help.*
+import io.legado.app.help.ReadBookConfig.context
 import io.legado.app.help.coroutine.Coroutine
 import io.legado.app.help.storage.BookWebDav
 import io.legado.app.model.webBook.WebBook
@@ -14,10 +16,7 @@ import io.legado.app.ui.book.read.page.entities.TextChapter
 import io.legado.app.ui.book.read.page.entities.TextPage
 import io.legado.app.ui.book.read.page.provider.ChapterProvider
 import io.legado.app.ui.book.read.page.provider.ImageProvider
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import org.jetbrains.anko.getStackTraceString
 import org.jetbrains.anko.toast
 
@@ -93,6 +92,7 @@ object ReadBook {
 //todo
     fun uploadProgress() {
         book?.let {
+            Toast.makeText(context,"上传阅读记录中",Toast.LENGTH_SHORT).show()
             BookWebDav.uploadBookProgress(it)
         }
     }
