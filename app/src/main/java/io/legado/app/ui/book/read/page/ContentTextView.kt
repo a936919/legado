@@ -128,8 +128,8 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
         }
     }
 
-    /**todo
-     * 绘制文字
+    /**
+     * todo 绘制文字
      */
     private fun drawChars(
         canvas: Canvas,
@@ -145,6 +145,12 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
         } else {
             textChapter?.contentPaint ?: ChapterProvider.contentPaint
         }
+        //Log.d("mq-1","${textPaint.getStrokeWidth()} ${textPaint.getStyle()} ${textPaint.isAntiAlias()} ${textPaint.isLinearText()} ${textPaint.measureText("“")}")
+        textPaint.setStrokeWidth(0.2f)
+        textPaint.setStyle(Paint.Style.FILL_AND_STROKE)
+        textPaint.setAntiAlias(true)
+        textPaint.setLinearText(true)
+
         textPaint.color =
             if (isReadAloud) context.accentColor else ReadBookConfig.textColor
         textChars.forEach {
