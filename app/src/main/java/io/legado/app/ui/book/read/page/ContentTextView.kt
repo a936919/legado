@@ -146,11 +146,11 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
             textChapter?.contentPaint ?: ChapterProvider.contentPaint
         }
         //Log.d("mq-1","${textPaint.getStrokeWidth()} ${textPaint.getStyle()} ${textPaint.isAntiAlias()} ${textPaint.isLinearText()} ${textPaint.measureText("“")}")
-        textPaint.setStrokeWidth(0.2f)
-        textPaint.setStyle(Paint.Style.FILL_AND_STROKE)
-        textPaint.setAntiAlias(true)
-        textPaint.setLinearText(true)
-
+        //textPaint.setAntiAlias(true)
+        //textPaint.setLinearText(true)
+        //Log.d("mq-1","boldSize is ${ReadBookConfig.boldSize}")
+        textPaint.style=Paint.Style.FILL_AND_STROKE
+        textPaint.strokeWidth=ReadBookConfig.boldSize
         textPaint.color =
             if (isReadAloud) context.accentColor else ReadBookConfig.textColor
         textChars.forEach {

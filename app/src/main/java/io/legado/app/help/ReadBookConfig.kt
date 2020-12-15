@@ -5,6 +5,7 @@ import android.graphics.Color.parseColor
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
+import android.util.Log
 import androidx.annotation.Keep
 import io.legado.app.App
 import io.legado.app.R
@@ -39,7 +40,6 @@ object ReadBookConfig {
     var bg: Drawable? = null
     var bgMeanColor: Int = 0
     val textColor: Int get() = durConfig.curTextColor()
-    val infoColor = Color.parseColor("#888888")
 
     init {
         initConfigs()
@@ -178,6 +178,12 @@ object ReadBookConfig {
         get() = config.textBold
         set(value) {
             config.textBold = value
+        }
+
+    var boldSize:Float
+        get() = config.boldSize
+        set(value) {
+            config.boldSize = value
         }
 
     var textSize: Int
@@ -322,6 +328,7 @@ object ReadBookConfig {
         if (shareLayout) {
             exportConfig.textFont = shareConfig.textFont
             exportConfig.textBold = shareConfig.textBold
+            exportConfig.boldSize = shareConfig.boldSize
             exportConfig.textSize = shareConfig.textSize
             exportConfig.letterSpacing = shareConfig.letterSpacing
             exportConfig.lineSpacingExtra = shareConfig.lineSpacingExtra
@@ -376,6 +383,7 @@ object ReadBookConfig {
         private var pageAnimEInk: Int = 3,
         var textFont: String = "",//字体
         var textBold: Int = 0,//是否粗体字 0:正常, 1:粗体, 2:细体
+        var boldSize: Float = 0f,//字重，0.1跨度增加
         var textSize: Int = 20,//文字大小
         var letterSpacing: Float = 0.1f,//字间距
         var lineSpacingExtra: Int = 12,//行间距

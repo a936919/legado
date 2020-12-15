@@ -85,6 +85,7 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
         }
         dsbLineSize.valueFormat = { ((it - 10) / 10f).toString() }
         dsbParagraphSpacing.valueFormat = { (it / 10f).toString() }
+        dsbBoldSize.valueFormat = {(it/10f).toString()}
         styleAdapter = StyleAdapter()
         rvStyle.adapter = styleAdapter
         styleAdapter.addFooterView {
@@ -158,6 +159,10 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
             ReadBookConfig.lineSpacingExtra = it
             postEvent(EventBus.UP_CONFIG, true)
         }
+        dsbBoldSize.onChanged = {
+            ReadBookConfig.boldSize = it/10f
+            postEvent(EventBus.UP_CONFIG, true)
+        }
         dsbParagraphSpacing.onChanged = {
             ReadBookConfig.paragraphSpacing = it
             postEvent(EventBus.UP_CONFIG, true)
@@ -194,6 +199,7 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
             dsbTextLetterSpacing.progress = (it.letterSpacing * 100).toInt() + 50
             dsbLineSize.progress = it.lineSpacingExtra
             dsbParagraphSpacing.progress = it.paragraphSpacing
+            dsbBoldSize.progress = (it.boldSize*10).toInt()
         }
     }
 
