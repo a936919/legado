@@ -11,7 +11,6 @@ import androidx.appcompat.widget.PopupMenu
 import androidx.appcompat.widget.SearchView
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.LiveData
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import io.legado.app.App
@@ -209,10 +208,7 @@ class RssSourceActivity : VMBaseActivity<ActivityRssSourceBinding, RssSourceView
                 App.db.rssSourceDao.liveSearch("%$key%")
             }
         sourceLiveData?.observe(this, {
-            val diffResult = DiffUtil
-                .calculateDiff(DiffCallBack(adapter.getItems(), it))
-            adapter.setItems(it, diffResult)
-            upCountView()
+            adapter.setItems(it)
         })
     }
 
@@ -224,7 +220,7 @@ class RssSourceActivity : VMBaseActivity<ActivityRssSourceBinding, RssSourceView
     override fun upCountView() {
         binding.selectActionBar.upCountView(
             adapter.getSelection().size,
-            adapter.getActualItemCount()
+            adapter.itemCount
         )
     }
 

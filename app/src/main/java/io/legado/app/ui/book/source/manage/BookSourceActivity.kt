@@ -11,7 +11,6 @@ import androidx.appcompat.widget.PopupMenu
 import androidx.appcompat.widget.SearchView
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.LiveData
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
@@ -153,7 +152,7 @@ class BookSourceActivity : VMBaseActivity<ActivityBookSourceBinding, BookSourceV
         adapter = BookSourceAdapter(this, this)
         binding.recyclerView.adapter = adapter
         // When this page is opened, it is in selection mode
-        val dragSelectTouchHelper: DragSelectTouchHelper =
+        val dragSelectTouchHelper =
             DragSelectTouchHelper(adapter.dragSelectCallback).setSlideArea(16, 50)
         dragSelectTouchHelper.attachToRecyclerView(binding.recyclerView)
         dragSelectTouchHelper.activeSlideSelect()
@@ -207,10 +206,7 @@ class BookSourceActivity : VMBaseActivity<ActivityBookSourceBinding, BookSourceV
                     Sort.Update -> data.sortedBy { it.lastUpdateTime }
                     else -> data.reversed()
                 }
-            val diffResult = DiffUtil
-                .calculateDiff(DiffCallBack(ArrayList(adapter.getItems()), sourceList))
-            adapter.setItems(sourceList, diffResult)
-            upCountView()
+            adapter.setItems(sourceList)
         })
     }
 
@@ -402,7 +398,7 @@ class BookSourceActivity : VMBaseActivity<ActivityBookSourceBinding, BookSourceV
 
     override fun upCountView() {
         binding.selectActionBar
-            .upCountView(adapter.getSelection().size, adapter.getActualItemCount())
+            .upCountView(adapter.getSelection().size, adapter.itemCount)
     }
 
     override fun onQueryTextChange(newText: String?): Boolean {

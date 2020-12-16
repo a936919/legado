@@ -100,7 +100,7 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
         execute {
             val searchGroup = App.INSTANCE.getPrefString("searchGroup") ?: ""
             bookSourceList.clear()
-            if (searchGroup.isNullOrBlank()) {
+            if (searchGroup.isBlank()) {
                 bookSourceList.addAll(App.db.bookSourceDao.allEnabled)
             } else {
                 bookSourceList.addAll(App.db.bookSourceDao.getEnabledByGroup(searchGroup))

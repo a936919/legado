@@ -164,19 +164,20 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
         }
     }
 
-    fun syncBookProgress(book: Book) {
-        Toast.makeText(context,"获取阅读记录中", Toast.LENGTH_SHORT).show()
+    fun syncBookProgress(book: Book, syncBookProgress: Boolean = AppConfig.syncBookProgress) {
+        if (syncBookProgress)
+            Toast.makeText(context,"获取阅读记录中", Toast.LENGTH_SHORT).show()
         execute {
-            BookWebDav.getBookProgress(book)?.let { progress ->
-                if (progress.durChapterIndex < book.durChapterIndex ||
-                    (progress.durChapterIndex == book.durChapterIndex && progress.durChapterPos < book.durChapterPos)
-                ) {
-                    processLiveData.postValue(progress)
-                } else {
-                    ReadBook.setProgress(progress)
+                BookWebDav.getBookProgress(book)?.let { progress ->
+                    if (progress.durChapterIndex < book.durChapterIndex ||
+                        (progress.durChapterIndex == book.durChapterIndex && progress.durChapterPos < book.durChapterPos)
+                    ) {
+                        processLiveData.postValue(progress)
+                    } else {
+                        ReadBook.setProgress(progress)
+                    }
                 }
             }
-        }
     }
 
     fun changeTo(newBook: Book) {

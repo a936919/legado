@@ -16,26 +16,14 @@ import java.util.*
  * 通用的adapter 可添加header，footer，以及不同类型item
  */
 @Suppress("unused", "MemberVisibilityCanBePrivate")
-abstract class CommonRecyclerAdapter<ITEM, VB : ViewBinding>(protected val context: Context) :
+abstract class RecyclerAdapter<ITEM, VB : ViewBinding>(protected val context: Context) :
     RecyclerView.Adapter<ItemViewHolder>() {
-
-    constructor(context: Context, vararg delegates: ItemViewDelegate<ITEM, VB>) : this(context) {
-        addItemViewDelegates(*delegates)
-    }
-
-    constructor(
-        context: Context,
-        vararg delegates: Pair<Int, ItemViewDelegate<ITEM, VB>>
-    ) : this(context) {
-        addItemViewDelegates(*delegates)
-    }
 
     val inflater: LayoutInflater = LayoutInflater.from(context)
 
     private val headerItems: SparseArray<(parent: ViewGroup) -> ViewBinding> by lazy { SparseArray() }
     private val footerItems: SparseArray<(parent: ViewGroup) -> ViewBinding> by lazy { SparseArray() }
 
-    private val itemDelegates: HashMap<Int, ItemViewDelegate<ITEM, VB>> = hashMapOf()
     private val items: MutableList<ITEM> = mutableListOf()
 
     private val lock = Object()
@@ -56,28 +44,6 @@ abstract class CommonRecyclerAdapter<ITEM, VB : ViewBinding>(protected val conte
     fun bindToRecyclerView(recyclerView: RecyclerView) {
         recyclerView.adapter = this
     }
-
-    fun <DELEGATE : ItemViewDelegate<ITEM, VB>> addItemViewDelegate(
-        viewType: Int,
-        delegate: DELEGATE
-    ) {
-        itemDelegates[viewType] = delegate
-    }
-
-    fun addItemViewDelegate(delegate: ItemViewDelegate<ITEM, VB>) {
-        itemDelegates[itemDelegates.size] = delegate
-    }
-
-    fun addItemViewDelegates(vararg delegates: ItemViewDelegate<ITEM, VB>) {
-        delegates.forEach {
-            addItemViewDelegate(it)
-        }
-    }
-
-    fun addItemViewDelegates(vararg delegates: Pair<Int, ItemViewDelegate<ITEM, VB>>) =
-        delegates.forEach {
-            addItemViewDelegate(it.first, it.second)
-        }
 
     fun addHeaderView(header: ((parent: ViewGroup) -> ViewBinding)) {
         synchronized(lock) {
@@ -122,6 +88,7 @@ abstract class CommonRecyclerAdapter<ITEM, VB : ViewBinding>(protected val conte
                 this.items.addAll(items)
             }
             notifyDataSetChanged()
+            onCurrentListChanged()
         }
     }
 
@@ -134,6 +101,7 @@ abstract class CommonRecyclerAdapter<ITEM, VB : ViewBinding>(protected val conte
                 this.items.addAll(items)
             }
             diffResult.dispatchUpdatesTo(this)
+            onCurrentListChanged()
         }
     }
 
@@ -144,6 +112,7 @@ abstract class CommonRecyclerAdapter<ITEM, VB : ViewBinding>(protected val conte
                 this.items[position] = item
                 notifyItemChanged(position + getHeaderCount())
             }
+            onCurrentListChanged()
         }
     }
 
@@ -153,6 +122,7 @@ abstract class CommonRecyclerAdapter<ITEM, VB : ViewBinding>(protected val conte
             if (this.items.add(item)) {
                 notifyItemInserted(oldSize + getHeaderCount())
             }
+            onCurrentListChanged()
         }
     }
 
@@ -161,6 +131,7 @@ abstract class CommonRecyclerAdapter<ITEM, VB : ViewBinding>(protected val conte
             if (this.items.addAll(position, newItems)) {
                 notifyItemRangeInserted(position + getHeaderCount(), newItems.size)
             }
+            onCurrentListChanged()
         }
     }
 
@@ -174,6 +145,7 @@ abstract class CommonRecyclerAdapter<ITEM, VB : ViewBinding>(protected val conte
                     notifyItemRangeInserted(oldSize + getHeaderCount(), newItems.size)
                 }
             }
+            onCurrentListChanged()
         }
     }
 
@@ -182,6 +154,7 @@ abstract class CommonRecyclerAdapter<ITEM, VB : ViewBinding>(protected val conte
             if (this.items.removeAt(position) != null) {
                 notifyItemRemoved(position + getHeaderCount())
             }
+            onCurrentListChanged()
         }
     }
 
@@ -190,6 +163,7 @@ abstract class CommonRecyclerAdapter<ITEM, VB : ViewBinding>(protected val conte
             if (this.items.remove(item)) {
                 notifyItemRemoved(this.items.indexOf(item) + getHeaderCount())
             }
+            onCurrentListChanged()
         }
     }
 
@@ -198,6 +172,7 @@ abstract class CommonRecyclerAdapter<ITEM, VB : ViewBinding>(protected val conte
             if (this.items.removeAll(items)) {
                 notifyDataSetChanged()
             }
+            onCurrentListChanged()
         }
     }
 
@@ -208,9 +183,9 @@ abstract class CommonRecyclerAdapter<ITEM, VB : ViewBinding>(protected val conte
                 val srcPosition = oldPosition + getHeaderCount()
                 val targetPosition = newPosition + getHeaderCount()
                 Collections.swap(this.items, srcPosition, targetPosition)
-                notifyItemChanged(srcPosition)
-                notifyItemChanged(targetPosition)
+                notifyItemMoved(srcPosition, targetPosition)
             }
+            onCurrentListChanged()
         }
     }
 
@@ -221,6 +196,7 @@ abstract class CommonRecyclerAdapter<ITEM, VB : ViewBinding>(protected val conte
                 this.items[index] = item
                 notifyItemChanged(index)
             }
+            onCurrentListChanged()
         }
 
     fun updateItem(position: Int, payload: Any) =
@@ -243,11 +219,11 @@ abstract class CommonRecyclerAdapter<ITEM, VB : ViewBinding>(protected val conte
             }
         }
 
-    fun clearItems() =
-        synchronized(lock) {
-            this.items.clear()
-            notifyDataSetChanged()
-        }
+    fun clearItems() = synchronized(lock) {
+        this.items.clear()
+        notifyDataSetChanged()
+        onCurrentListChanged()
+    }
 
     fun isEmpty() = items.isEmpty()
 
@@ -287,6 +263,10 @@ abstract class CommonRecyclerAdapter<ITEM, VB : ViewBinding>(protected val conte
         } ?: 0
     }
 
+    open fun onCurrentListChanged() {
+
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = when {
         viewType < TYPE_HEADER_VIEW + getHeaderCount() -> {
             ItemViewHolder(headerItems.get(viewType).invoke(parent))
@@ -300,8 +280,7 @@ abstract class CommonRecyclerAdapter<ITEM, VB : ViewBinding>(protected val conte
             val holder = ItemViewHolder(getViewBinding(parent))
 
             @Suppress("UNCHECKED_CAST")
-            itemDelegates.getValue(viewType)
-                .registerListener(holder, (holder.binding as VB))
+            registerListener(holder, (holder.binding as VB))
 
             if (itemClickListener != null) {
                 holder.itemView.setOnClickListener {
@@ -335,8 +314,7 @@ abstract class CommonRecyclerAdapter<ITEM, VB : ViewBinding>(protected val conte
     ) {
         if (!isHeader(holder.layoutPosition) && !isFooter(holder.layoutPosition)) {
             getItem(holder.layoutPosition - getHeaderCount())?.let {
-                itemDelegates.getValue(getItemViewType(holder.layoutPosition))
-                    .convert(holder, (holder.binding as VB), it, payloads)
+                convert(holder, (holder.binding as VB), it, payloads)
             }
         }
     }
@@ -385,6 +363,22 @@ abstract class CommonRecyclerAdapter<ITEM, VB : ViewBinding>(protected val conte
             }
         }
     }
+
+    /**
+     * 如果使用了事件回调,回调里不要直接使用item,会出现不更新的问题,
+     * 使用getItem(holder.layoutPosition)来获取item
+     */
+    abstract fun convert(
+        holder: ItemViewHolder,
+        binding: VB,
+        item: ITEM,
+        payloads: MutableList<Any>
+    )
+
+    /**
+     * 注册事件
+     */
+    abstract fun registerListener(holder: ItemViewHolder, binding: VB)
 
     companion object {
         private const val TYPE_HEADER_VIEW = Int.MIN_VALUE

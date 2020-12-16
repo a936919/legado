@@ -14,7 +14,7 @@ import io.legado.app.App
 import io.legado.app.R
 import io.legado.app.base.BaseDialogFragment
 import io.legado.app.base.adapter.ItemViewHolder
-import io.legado.app.base.adapter.SimpleRecyclerAdapter
+import io.legado.app.base.adapter.RecyclerAdapter
 import io.legado.app.constant.PreferKey
 import io.legado.app.data.entities.HttpTTS
 import io.legado.app.databinding.DialogHttpTtsEditBinding
@@ -128,7 +128,7 @@ class SpeakEngineDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickListener 
     }
 
     inner class Adapter(context: Context) :
-        SimpleRecyclerAdapter<HttpTTS, ItemHttpTtsBinding>(context) {
+        RecyclerAdapter<HttpTTS, ItemHttpTtsBinding>(context) {
 
         override fun getViewBinding(parent: ViewGroup): ItemHttpTtsBinding {
             return ItemHttpTtsBinding.inflate(inflater, parent, false)
@@ -151,7 +151,7 @@ class SpeakEngineDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickListener 
                 cbName.onClick {
                     getItem(holder.layoutPosition)?.let { httpTTS ->
                         engineId = httpTTS.id
-                        notifyItemRangeChanged(0, getActualItemCount())
+                        notifyItemRangeChanged(0, itemCount)
                     }
                 }
                 ivEdit.onClick {

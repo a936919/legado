@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.View
 import androidx.core.view.isGone
 import androidx.lifecycle.LiveData
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -117,9 +116,7 @@ class BooksFragment : BaseFragment(R.layout.fragment_books),
                     3 -> list.sortedBy { it.order }
                     else -> list.sortedByDescending { it.durChapterTime }
                 }
-                val diffResult = DiffUtil
-                    .calculateDiff(BooksDiffCallBack(booksAdapter.getItems(), books))
-                booksAdapter.setItems(books, diffResult)
+                booksAdapter.setItems(books)
             }
         }
     }
@@ -137,7 +134,7 @@ class BooksFragment : BaseFragment(R.layout.fragment_books),
     }
 
     fun getBooksCount(): Int {
-        return booksAdapter.getActualItemCount()
+        return booksAdapter.itemCount
     }
 
     override fun open(book: Book) {

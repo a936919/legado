@@ -16,8 +16,8 @@ import androidx.recyclerview.widget.RecyclerView
 import io.legado.app.App
 import io.legado.app.R
 import io.legado.app.base.BaseDialogFragment
+import io.legado.app.base.adapter.DiffRecyclerAdapter
 import io.legado.app.base.adapter.ItemViewHolder
-import io.legado.app.base.adapter.SimpleRecyclerAdapter
 import io.legado.app.data.entities.BookGroup
 import io.legado.app.databinding.DialogEditTextBinding
 import io.legado.app.databinding.DialogRecyclerViewBinding
@@ -31,8 +31,6 @@ import io.legado.app.ui.widget.recycler.VerticalDivider
 import io.legado.app.utils.*
 import io.legado.app.utils.viewbindingdelegate.viewBinding
 import org.jetbrains.anko.sdk27.listeners.onClick
-import java.util.*
-import kotlin.collections.ArrayList
 
 class GroupManageDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickListener {
     private lateinit var viewModel: GroupViewModel
@@ -77,9 +75,7 @@ class GroupManageDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickListener 
 
     private fun initData() {
         App.db.bookGroupDao.liveDataAll().observe(viewLifecycleOwner, {
-            val diffResult =
-                DiffUtil.calculateDiff(GroupDiffCallBack(ArrayList(adapter.getItems()), it))
-            adapter.setItems(it, diffResult)
+            adapter.setItems(it)
         })
     }
 
@@ -140,39 +136,28 @@ class GroupManageDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickListener 
         }.show()
     }
 
-    private class GroupDiffCallBack(
-        private val oldItems: List<BookGroup>,
-        private val newItems: List<BookGroup>
-    ) : DiffUtil.Callback() {
-
-        override fun getOldListSize(): Int {
-            return oldItems.size
-        }
-
-        override fun getNewListSize(): Int {
-            return newItems.size
-        }
-
-        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            val oldItem = oldItems[oldItemPosition]
-            val newItem = newItems[newItemPosition]
-            return oldItem.groupId == newItem.groupId
-        }
-
-        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            val oldItem = oldItems[oldItemPosition]
-            val newItem = newItems[newItemPosition]
-            return oldItem.groupName == newItem.groupName
-                    && oldItem.show == newItem.show
-        }
-
-    }
-
     private inner class GroupAdapter(context: Context) :
-        SimpleRecyclerAdapter<BookGroup, ItemGroupManageBinding>(context),
+        DiffRecyclerAdapter<BookGroup, ItemGroupManageBinding>(context),
         ItemTouchCallback.Callback {
 
         private var isMoved = false
+
+        override val diffItemCallback: DiffUtil.ItemCallback<BookGroup>
+            get() = object : DiffUtil.ItemCallback<BookGroup>() {
+
+                override fun areItemsTheSame(oldItem: BookGroup, newItem: BookGroup): Boolean {
+                    return oldItem.groupId == newItem.groupId
+                }
+
+                override fun areContentsTheSame(
+                    oldItem: BookGroup,
+                    newItem: BookGroup
+                ): Boolean {
+                    return oldItem.groupName == newItem.groupName
+                            && oldItem.show == newItem.show
+                }
+
+            }
 
         override fun getViewBinding(parent: ViewGroup): ItemGroupManageBinding {
             return ItemGroupManageBinding.inflate(inflater, parent, false)
@@ -208,8 +193,7 @@ class GroupManageDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickListener 
         }
 
         override fun onMove(srcPosition: Int, targetPosition: Int): Boolean {
-            Collections.swap(getItems(), srcPosition, targetPosition)
-            notifyItemMoved(srcPosition, targetPosition)
+            swapItem(srcPosition, targetPosition)
             isMoved = true
             return true
         }
