@@ -101,16 +101,18 @@
 * 默认的字体目录更改
 * 默认访问路径改为Books
 * 其他配置默认更改
-## kotlin学习
-* 读完参考书，完成关键练习
+## 自学习
+* 读完kotlin参考书，完成关键练习
   * **Activity**
   * **菜单**
   * 数据库
 * 熟悉legado代码整体框架
 * 熟悉legado各模块代码
-* 阅读StaticLayout.java源码
-## 周边
 * 学习反编译，收集一些好的资源。
+* 学完kotlin，简单的过一下java的语法，方便源码阅读
+* 简单了解下python语法，发现calibre是python写的，学完了解下calibre转化格式的源码，增加自定义css功能。
+* 阅读StaticLayout.java源码
+
 # legado原内容
 
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
