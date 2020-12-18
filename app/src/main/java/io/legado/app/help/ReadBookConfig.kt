@@ -25,7 +25,7 @@ object ReadBookConfig {
     val context get() = App.INSTANCE
     val configFilePath = FileUtils.getPath(context.filesDir, configFileName)
     val shareConfigFilePath = FileUtils.getPath(context.filesDir, shareConfigFileName)
-    val configList: ArrayList<Config> = arrayListOf()
+    var configList: ArrayList<Config> = arrayListOf()
     lateinit var shareConfig: Config
     var durConfig
         get() = getConfig(styleSelect)

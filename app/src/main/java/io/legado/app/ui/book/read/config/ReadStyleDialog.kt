@@ -106,6 +106,7 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
     private fun initData() {
         binding.cbShareLayout.isChecked = ReadBookConfig.shareLayout
         upView()
+        ReadBookConfig.configList.sortBy { it.name }
         styleAdapter.setItems(ReadBookConfig.configList)
     }
 
