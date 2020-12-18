@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
+//todo 看看能不能解析出标点的xMin
 public class QueryTTF {
     private class Header {
         public int majorVersion;
