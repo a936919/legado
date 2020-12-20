@@ -60,18 +60,22 @@ class ReadRssViewModel(application: Application) : BaseViewModel(application),
                                 if (!ruleContent.isNullOrBlank()) {
                                     loadContent(rssArticle, ruleContent)
                                 } else {
-                                    loadUrl(rssArticle)
+                                    loadUrl(rssArticle.link, rssArticle.origin)
                                 }
-                            } ?: loadUrl(rssArticle)
+                            } ?: loadUrl(rssArticle.link, rssArticle.origin)
                         }
                     }
                 } else {
-                    val analyzeUrl = AnalyzeUrl(
-                        origin,
-                        useWebView = true,
-                        headerMapF = rssSource?.getHeaderMap()
-                    )
-                    urlLiveData.postValue(analyzeUrl)
+                    val ruleContent = rssSource?.ruleContent
+                    if (ruleContent.isNullOrBlank()) {
+                        loadUrl(origin, origin)
+                    } else {
+                        val rssArticle = RssArticle()
+                        rssArticle.origin = origin
+                        rssArticle.link = origin
+                        rssArticle.title = rssSource!!.sourceName
+                        loadContent(rssArticle, ruleContent)
+                    }
                 }
             }
         }.onFinally {
@@ -79,10 +83,10 @@ class ReadRssViewModel(application: Application) : BaseViewModel(application),
         }
     }
 
-    private fun loadUrl(rssArticle: RssArticle) {
+    private fun loadUrl(url: String, baseUrl: String) {
         val analyzeUrl = AnalyzeUrl(
-            rssArticle.link,
-            baseUrl = rssArticle.origin,
+            ruleUrl = url,
+            baseUrl = baseUrl,
             useWebView = true,
             headerMapF = rssSource?.getHeaderMap()
         )

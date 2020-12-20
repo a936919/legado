@@ -2,19 +2,17 @@ package io.legado.app.ui.book.read
 
 import android.app.Application
 import android.content.Intent
+
 import android.widget.Toast
-import androidx.lifecycle.MutableLiveData
 import io.legado.app.App
 import io.legado.app.R
 import io.legado.app.base.BaseViewModel
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
 import io.legado.app.data.entities.BookProgress
-import io.legado.app.data.entities.SearchBook
 import io.legado.app.help.AppConfig
 import io.legado.app.help.BookHelp
 import io.legado.app.help.IntentDataHelp
-import io.legado.app.help.ReadBookConfig
 import io.legado.app.help.storage.BookWebDav
 import io.legado.app.model.localBook.LocalBook
 import io.legado.app.model.webBook.WebBook
@@ -28,7 +26,6 @@ import kotlinx.coroutines.withContext
 class ReadBookViewModel(application: Application) : BaseViewModel(application) {
     var isInitFinish = false
     var searchContentQuery = ""
-    val processLiveData = MutableLiveData<BookProgress>()
 
     fun initData(intent: Intent) {
         execute {
@@ -164,15 +161,21 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
         }
     }
 
-    fun syncBookProgress(book: Book, syncBookProgress: Boolean = AppConfig.syncBookProgress) {
+    fun syncBookProgress(
+        book: Book,
+        syncBookProgress: Boolean = AppConfig.syncBookProgress,
+        alertSync: ((progress: BookProgress) -> Unit)? = null
+    ) {
         if (syncBookProgress)
             Toast.makeText(context,"获取阅读记录中", Toast.LENGTH_SHORT).show()
-        execute {
-                BookWebDav.getBookProgress(book)?.let { progress ->
+            execute {
+                BookWebDav.getBookProgress(book)
+            }.onSuccess {
+                it?.let { progress ->
                     if (progress.durChapterIndex < book.durChapterIndex ||
                         (progress.durChapterIndex == book.durChapterIndex && progress.durChapterPos < book.durChapterPos)
                     ) {
-                        processLiveData.postValue(progress)
+                        alertSync?.invoke(progress)
                     } else {
                         ReadBook.setProgress(progress)
                     }
@@ -215,9 +218,8 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
         execute {
             App.db.bookSourceDao.allTextEnabled.forEach { source ->
                 try {
-                    val variableBook = SearchBook()
                     WebBook(source)
-                        .searchBookSuspend(this, name, variableBook = variableBook)
+                        .searchBookSuspend(this, name)
                         .getOrNull(0)?.let {
                             if (it.name == name && (it.author == author || author == "")) {
                                 val book = it.toBook()
