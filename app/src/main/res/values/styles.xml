@@ -36,7 +36,8 @@
         <item name="android:enforceStatusBarContrast" tools:ignore="NewApi">false</item>
         <item name="android:enforceNavigationBarContrast" tools:ignore="NewApi">false</item>
     </style>
-
+    <style name="Titlebar" parent="@style/TextAppearance.AppCompat.Title">
+        <item name="android:textSize">17sp</item></style>
     <style name="AppTheme.AppBarOverlay.Light" parent="ThemeOverlay.AppCompat.Light">
         <item name="colorAccent">@color/md_grey_900</item>
     </style>
