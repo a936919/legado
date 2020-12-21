@@ -1,11 +1,11 @@
 package io.legado.app.ui.book.changesource
 
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.FragmentManager
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import io.legado.app.App
@@ -31,6 +31,7 @@ import org.jetbrains.anko.textColor
 class ChangeSourceDialog : BaseDialogFragment(),
     Toolbar.OnMenuItemClickListener,
     ChangeSourceAdapter.CallBack {
+
     companion object {
         const val tag = "changeSourceDialog"
 
@@ -78,7 +79,7 @@ class ChangeSourceDialog : BaseDialogFragment(),
         initLiveData()
         viewModel.loadDbSearchBook()
     }
-//todo
+
     private fun showTitle() {
         binding.toolBar.title = viewModel.name
         binding.toolBar.subtitle = getString(R.string.author_show, viewModel.author)
@@ -160,14 +161,8 @@ class ChangeSourceDialog : BaseDialogFragment(),
             binding.toolBar.menu.applyTint(requireContext())
         })
         viewModel.searchBooksLiveData.observe(viewLifecycleOwner, {
-            var items = it
-            val searchGroup = App.INSTANCE.getPrefString("searchGroup") ?: ""
-            if(searchGroup != "") items = items.filter {filterEnable(it,searchGroup)}
-            val diffResult = DiffUtil.calculateDiff(DiffCallBack(adapter.getItems(), items))
-            adapter.setItems(items)
-            diffResult.dispatchUpdatesTo(adapter)
+            adapter.setItems(it)
         })
-
         App.db.bookSourceDao.liveGroupEnabled().observe(this, {
             groups.clear()
             it.map { group ->
@@ -177,13 +172,6 @@ class ChangeSourceDialog : BaseDialogFragment(),
         })
     }
 
-    private fun filterEnable(searchBook:SearchBook,searchGroup:String):Boolean{
-        val sourcebook = App.db.bookSourceDao.getEnableByName(searchBook.originName)
-        for (i in 0 until  sourcebook.size) {
-            sourcebook[i].bookSourceGroup?.let {if(it.contains(searchGroup)) return true}
-        }
-        return false
-    }
     private val stopMenuItem: MenuItem?
         get() = binding.toolBar.menu.findItem(R.id.menu_stop)
 
@@ -192,16 +180,15 @@ class ChangeSourceDialog : BaseDialogFragment(),
             R.id.menu_load_toc -> {
                 putPrefBoolean(PreferKey.changeSourceLoadToc, !item.isChecked)
                 item.isChecked = !item.isChecked
-                initLiveData()
             }
             R.id.menu_load_info -> {
                 putPrefBoolean(PreferKey.changeSourceLoadInfo, !item.isChecked)
                 item.isChecked = !item.isChecked
-                initLiveData()
             }
             R.id.menu_stop -> viewModel.stopSearch()
             R.id.menu_source_manage -> startActivity<BookSourceActivity>()
-            else -> if (item?.groupId == R.id.source_group) {//mq-
+            else -> if (item?.groupId == R.id.source_group) {
+                Log.d("mq-1","${item.isChecked}")
                 if (!item.isChecked) {
                     item.isChecked = true
                     if (item.title.toString() == getString(R.string.all_source)) {
@@ -209,12 +196,8 @@ class ChangeSourceDialog : BaseDialogFragment(),
                     } else {
                         putPrefString("searchGroup", item.title.toString())
                     }
-                    initLiveData()
-                    /*
-                    viewModel.stopSearch()
+                    //viewModel.stopSearch()
                     viewModel.loadDbSearchBook()
-
-                     */
                 }
             }
         }
@@ -242,12 +225,6 @@ class ChangeSourceDialog : BaseDialogFragment(),
         val menu: Menu = binding.toolBar.menu
         val selectedGroup = getPrefString("searchGroup")
         menu.removeGroup(R.id.source_group)
-/* todo
-*        var item = menu.add(R.id.source_group, Menu.NONE, Menu.NONE, R.string.all_source)
-*       if (selectedGroup == "") {
-*            item?.isChecked = true
-*        }
-*/
         val allItem = menu.add(R.id.source_group, Menu.NONE, Menu.NONE, R.string.all_source)
         var hasSelectedGroup = false
         groups.sortedWith { o1, o2 ->
@@ -260,7 +237,6 @@ class ChangeSourceDialog : BaseDialogFragment(),
                 }
             }
         }
-
         menu.setGroupCheckable(R.id.source_group, true, true)
         if (!hasSelectedGroup) {
             allItem.isChecked = true

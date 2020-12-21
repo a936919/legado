@@ -40,7 +40,7 @@ class ReadMenu @JvmOverloads constructor(
     private lateinit var menuTopOut: Animation
     private lateinit var menuBottomIn: Animation
     private lateinit var menuBottomOut: Animation
-    private val bgColor: Int = ColorUtils.withAlpha( Color.parseColor("#212121"),0.9f)//ColorUtils.shiftColor(ReadBookConfig.bgMeanColor, 1.02f)
+    private var bgColor: Int = ColorUtils.withAlpha( Color.parseColor("#212121"),0.9f)//ColorUtils.shiftColor(ReadBookConfig.bgMeanColor, 1.02f)
     private val textColor:Int =  context.getPrimaryTextColor(ColorUtils.isColorLight(bgColor))
     private val iconColor:Int =  Color.parseColor("#388e3c")
     private var bottomBackgroundList: ColorStateList = Selector.colorBuild()
@@ -126,12 +126,11 @@ class ReadMenu @JvmOverloads constructor(
         binding.bottomMenu.visible()
         binding.titleBar.startAnimation(menuTopIn)
         binding.bottomMenu.startAnimation(menuBottomIn)
-        updateBg()
+        //updateBg()
     }
 
 
     private fun updateBg(){
-        /*
         if(bgColor!=ReadBookConfig.bgMeanColor)
         {
             bgColor = ReadBookConfig.bgMeanColor
@@ -144,7 +143,7 @@ class ReadMenu @JvmOverloads constructor(
             binding.fabAutoPage.backgroundTintList = bottomBackgroundList
             binding.fabReplaceRule.backgroundTintList = bottomBackgroundList
             binding.fabNightTheme.backgroundTintList = bottomBackgroundList
-        }*/
+        }
     }
 
     fun runMenuOut(onMenuOutEnd: (() -> Unit)? = null) {

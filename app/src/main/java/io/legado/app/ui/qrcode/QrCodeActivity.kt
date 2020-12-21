@@ -66,19 +66,19 @@ class QrCodeActivity : BaseActivity<ActivityQrcodeCaptureBinding>(), QRCodeView.
             .rationale(R.string.qr_per)
             .onGranted {
                 binding.zXingView.visibility = View.VISIBLE
-                //tTODO 显示扫描框，并开始识别
+                //TODO 显示扫描框，并开始识别
                 binding.zXingView.startSpotAndShowRect()
             }.request()
     }
 
     override fun onStop() {
-        //tTODO 关闭摄像头预览，并且隐藏扫描框
+        //TODO 关闭摄像头预览，并且隐藏扫描框
         binding.zXingView.stopCamera()
         super.onStop()
     }
 
     override fun onDestroy() {
-        //tTODO 销毁二维码扫描控件
+        //TODO 销毁二维码扫描控件
         binding.zXingView.onDestroy()
         super.onDestroy()
     }
@@ -101,7 +101,7 @@ class QrCodeActivity : BaseActivity<ActivityQrcodeCaptureBinding>(), QRCodeView.
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         data?.data?.let {
-            //tTODO 显示扫描框，并开始识别
+            //TODO 显示扫描框，并开始识别
             binding.zXingView.startSpotAndShowRect()
 
             if (resultCode == Activity.RESULT_OK && requestCode == requestQrImage) {

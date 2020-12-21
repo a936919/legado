@@ -143,7 +143,7 @@ object BookWebDav {
             }
         }
     }
-//todo
+
     fun uploadBookProgress(book: Book) {
         Coroutine.async {
             val bookProgress = BookProgress(

@@ -1,11 +1,9 @@
 package io.legado.app.help
 
 import android.graphics.Color
-import android.graphics.Color.parseColor
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
-import android.util.Log
 import androidx.annotation.Keep
 import io.legado.app.App
 import io.legado.app.R
@@ -25,7 +23,7 @@ object ReadBookConfig {
     val context get() = App.INSTANCE
     val configFilePath = FileUtils.getPath(context.filesDir, configFileName)
     val shareConfigFilePath = FileUtils.getPath(context.filesDir, shareConfigFileName)
-    var configList: ArrayList<Config> = arrayListOf()
+    val configList: ArrayList<Config> = arrayListOf()
     lateinit var shareConfig: Config
     var durConfig
         get() = getConfig(styleSelect)

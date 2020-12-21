@@ -49,7 +49,7 @@ open class WelcomeActivity : BaseActivity<ActivityWelcomeBinding>() {
                 else -> null
             }
         }
-        binding.root.postDelayed({ startMainActivity() }, 100)
+        binding.root.postDelayed({ startMainActivity() }, 500)
     }
 
     private fun startMainActivity() {

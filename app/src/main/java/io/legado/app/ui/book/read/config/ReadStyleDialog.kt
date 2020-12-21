@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.*
 import androidx.core.view.get
 import io.legado.app.R
-import io.legado.app.R.id.root_view
 import io.legado.app.base.BaseDialogFragment
 import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.base.adapter.RecyclerAdapter

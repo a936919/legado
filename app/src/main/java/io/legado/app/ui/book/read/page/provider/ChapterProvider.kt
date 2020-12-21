@@ -204,7 +204,6 @@ object ChapterProvider {
     ): Float {
         var durY = if (isTitle) y + titleTopSpacing else y
         val layout = TextProcess(text,textPaint)
-        //Log.d("debug2","宽度:$visibleWidth 行数:${layout.lineCount}")
         for (lineIndex in 0 until layout.lineCount) {
             val textLine = TextLine(isTitle = isTitle)
             val words =

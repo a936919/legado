@@ -47,7 +47,7 @@ class TitleBar @JvmOverloads constructor(
     private val navigationIconTint: ColorStateList?
     private val navigationIconTintMode: Int
     private val attachToActivity: Boolean
-//todo
+
     init {
         val a = context.obtainStyledAttributes(
             attrs, R.styleable.TitleBar,
