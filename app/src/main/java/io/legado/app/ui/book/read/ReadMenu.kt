@@ -1,6 +1,5 @@
 package io.legado.app.ui.book.read
 
-import android.app.Activity
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -121,7 +120,6 @@ class ReadMenu @JvmOverloads constructor(
 
     fun runMenuIn() {
         this.visible()
-
         binding.titleBar.visible()
         binding.bottomMenu.visible()
         binding.titleBar.startAnimation(menuTopIn)

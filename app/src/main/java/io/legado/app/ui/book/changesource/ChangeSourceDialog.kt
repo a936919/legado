@@ -188,7 +188,6 @@ class ChangeSourceDialog : BaseDialogFragment(),
             R.id.menu_stop -> viewModel.stopSearch()
             R.id.menu_source_manage -> startActivity<BookSourceActivity>()
             else -> if (item?.groupId == R.id.source_group) {
-                Log.d("mq-1","${item.isChecked}")
                 if (!item.isChecked) {
                     item.isChecked = true
                     if (item.title.toString() == getString(R.string.all_source)) {
