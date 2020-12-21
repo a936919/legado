@@ -39,11 +39,12 @@ class ReadMenu @JvmOverloads constructor(
     private lateinit var menuTopOut: Animation
     private lateinit var menuBottomIn: Animation
     private lateinit var menuBottomOut: Animation
-    private val bgColor: Int = ColorUtils.shiftColor(ReadBookConfig.bgMeanColor, 1.01f) //context.primaryColor////context.bottomBackground
-    private val textColor:Int =  context.accentColor//Int = Color.parseColor("#795548")//context.getPrimaryTextColor(ColorUtils.isColorLight(bgColor))
+    private val bgColor: Int = ColorUtils.withAlpha( Color.parseColor("#212121"),0.9f)//ColorUtils.shiftColor(ReadBookConfig.bgMeanColor, 1.02f)
+    private val textColor:Int =  context.getPrimaryTextColor(ColorUtils.isColorLight(bgColor))
+    private val iconColor:Int = Color.parseColor("#388e3c")//context.accentColor
     private var bottomBackgroundList: ColorStateList = Selector.colorBuild()
-        .setDefaultColor(bgColor)
-        .setPressedColor(ColorUtils.darkenColor(bgColor))
+        .setDefaultColor(iconColor)
+        .setPressedColor(ColorUtils.darkenColor(iconColor))
         .create()
     private var onMenuOutEnd: (() -> Unit)? = null
     val showBrightnessView get() = context.getPrefBoolean(PreferKey.showBrightnessView, true)
@@ -318,8 +319,6 @@ class ReadMenu @JvmOverloads constructor(
             binding.tvChapterName.gone()
             binding.tvChapterUrl.gone()
         }
-        binding.tvChapterName.gone()
-        binding.tvChapterUrl.gone()
     }
 
     fun setSeekPage(seek: Int) {

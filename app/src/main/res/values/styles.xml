@@ -36,8 +36,7 @@
         <item name="android:enforceStatusBarContrast" tools:ignore="NewApi">false</item>
         <item name="android:enforceNavigationBarContrast" tools:ignore="NewApi">false</item>
     </style>
-    <style name="Titlebar" parent="@style/TextAppearance.AppCompat.Title">
-        <item name="android:textSize">17sp</item></style>
+
     <style name="AppTheme.AppBarOverlay.Light" parent="ThemeOverlay.AppCompat.Light">
         <item name="colorAccent">@color/md_grey_900</item>
     </style>
@@ -68,7 +67,7 @@
     <style name="Style.MenuItemText" parent="@android:style/TextAppearance.Widget.IconMenu.Item">
         <item name="android:textColor">@color/menu_color_default</item>
         <item name="android:textSize">16sp</item>
-    </style>
+        </style>
 
     <style name="Style.PopupMenu" parent="Widget.AppCompat.PopupMenu">
         <item name="android:popupBackground">@drawable/bg_popup_menu</item>
@@ -86,7 +85,10 @@
     <style name="ToolbarTitle" parent="@style/TextAppearance.Widget.AppCompat.Toolbar.Title">
         <item name="android:textSize">20sp</item>
     </style>
-
+    <style name="ReadTitlebar" parent="@style/TextAppearance.AppCompat.Title">
+        <item name="android:textSize">17sp</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
     //*******************Widget Style**********************************//
 
     <style name="Style.Shadow.Top" parent="android:Widget">
