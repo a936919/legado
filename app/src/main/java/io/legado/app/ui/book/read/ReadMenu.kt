@@ -1,5 +1,6 @@
 package io.legado.app.ui.book.read
 
+import android.app.Activity
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -41,7 +42,7 @@ class ReadMenu @JvmOverloads constructor(
     private lateinit var menuBottomOut: Animation
     private val bgColor: Int = ColorUtils.withAlpha( Color.parseColor("#212121"),0.9f)//ColorUtils.shiftColor(ReadBookConfig.bgMeanColor, 1.02f)
     private val textColor:Int =  context.getPrimaryTextColor(ColorUtils.isColorLight(bgColor))
-    private val iconColor:Int = Color.parseColor("#388e3c")//context.accentColor
+    private val iconColor:Int =  Color.parseColor("#388e3c")
     private var bottomBackgroundList: ColorStateList = Selector.colorBuild()
         .setDefaultColor(iconColor)
         .setPressedColor(ColorUtils.darkenColor(iconColor))
@@ -64,7 +65,7 @@ class ReadMenu @JvmOverloads constructor(
         initAnimation()
         val brightnessBackground = GradientDrawable()
         brightnessBackground.cornerRadius = 5F.dp
-        brightnessBackground.setColor(ColorUtils.adjustAlpha(bgColor, 0.5f))
+        brightnessBackground.setColor(ColorUtils.adjustAlpha(iconColor, 0.5f))
         llBrightness.background = brightnessBackground
         llBottomBg.setBackgroundColor(bgColor)
         titleBar.setBackgroundColor(bgColor)
