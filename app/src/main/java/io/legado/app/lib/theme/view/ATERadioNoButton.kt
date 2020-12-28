@@ -33,7 +33,7 @@ class ATERadioNoButton(context: Context, attrs: AttributeSet) :
             isInEditMode -> Unit
             isBottomBackground -> {
                 val isLight = ColorUtils.isColorLight(context.bottomBackground)
-                val textColor = context.getPrimaryTextColor(isLight)
+                val textColor = context.getCompatColor(R.color.readText)
                 background = Selector.shapeBuild()
                     .setCornerRadius(2.dp)
                     .setStrokeWidth(2.dp)

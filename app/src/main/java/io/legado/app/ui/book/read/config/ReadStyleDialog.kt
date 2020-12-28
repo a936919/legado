@@ -19,10 +19,7 @@ import io.legado.app.lib.theme.getPrimaryTextColor
 import io.legado.app.service.help.ReadBook
 import io.legado.app.ui.book.read.ReadBookActivity
 import io.legado.app.ui.widget.font.FontSelectDialog
-import io.legado.app.utils.ColorUtils
-import io.legado.app.utils.dp
-import io.legado.app.utils.getIndexById
-import io.legado.app.utils.postEvent
+import io.legado.app.utils.*
 import io.legado.app.utils.viewbindingdelegate.viewBinding
 import org.jetbrains.anko.sdk27.listeners.onCheckedChange
 import org.jetbrains.anko.sdk27.listeners.onClick
@@ -69,13 +66,14 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
     }
 
     private fun initView() = with(binding) {
-        val bg = ReadBookConfig.bgMeanColor
-        val isLight = ColorUtils.isColorLight(bg)
-        val textColor = requireContext().getPrimaryTextColor(isLight)
+        val bg = getCompatColor(R.color.readBG)
+        //val isLight = ColorUtils.isColorLight(bg)
+        val textColor = getCompatColor(R.color.readText)
         rootView.setBackgroundColor(bg)
         tvPageAnim.setTextColor(textColor)
         tvBgTs.setTextColor(textColor)
         tvShareLayout.setTextColor(textColor)
+        tvTextFont.setTextColor(textColor)
         dsbTextSize.valueFormat = {
             (it + 5).toString()
         }
@@ -245,7 +243,7 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
                 ivStyle.onClick {
                     if (ivStyle.isInView) {
                         changeBg(holder.layoutPosition)
-                        changeRootViewBg()
+                        //changeRootViewBg()
                     }
                 }
                 ivStyle.onLongClick {

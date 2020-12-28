@@ -1,16 +1,19 @@
 package io.legado.app.ui.widget
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.FrameLayout
 import android.widget.SeekBar
 import io.legado.app.R
 import io.legado.app.databinding.ViewDetailSeekBarBinding
+import io.legado.app.lib.theme.Selector
 import io.legado.app.lib.theme.bottomBackground
 import io.legado.app.lib.theme.getPrimaryTextColor
 import io.legado.app.ui.widget.seekbar.SeekBarChangeListener
 import io.legado.app.utils.ColorUtils
+import io.legado.app.utils.getCompatColor
 import io.legado.app.utils.progressAdd
 import org.jetbrains.anko.sdk27.listeners.onClick
 
@@ -45,11 +48,16 @@ class DetailSeekBar @JvmOverloads constructor(
         typedArray.recycle()
         if (isBottomBackground && !isInEditMode) {
             val isLight = ColorUtils.isColorLight(context.bottomBackground)
-            val textColor = context.getPrimaryTextColor(isLight)
+            val textColor = context.getCompatColor(R.color.readText)
+            var colorList: ColorStateList = Selector.colorBuild()
+                    .setDefaultColor(textColor)
+                    .setPressedColor(ColorUtils.darkenColor(textColor))
+                    .create()
             binding.tvSeekTitle.setTextColor(textColor)
             binding.ivSeekPlus.setColorFilter(textColor)
             binding.ivSeekReduce.setColorFilter(textColor)
             binding.tvSeekValue.setTextColor(textColor)
+            binding.seekBar.progressBackgroundTintList = colorList
         }
         binding.ivSeekPlus.onClick {
             binding.seekBar.progressAdd(1)

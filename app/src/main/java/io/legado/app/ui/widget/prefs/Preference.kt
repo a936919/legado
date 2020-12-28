@@ -17,6 +17,7 @@ import io.legado.app.lib.theme.bottomBackground
 import io.legado.app.lib.theme.getPrimaryTextColor
 import io.legado.app.lib.theme.getSecondaryTextColor
 import io.legado.app.utils.ColorUtils
+import io.legado.app.utils.getCompatColor
 import org.jetbrains.anko.layoutInflater
 import org.jetbrains.anko.sdk27.listeners.onLongClick
 import kotlin.math.roundToInt
@@ -59,9 +60,9 @@ class Preference(context: Context, attrs: AttributeSet) :
             }
             if (isBottomBackground && !tvTitle.isInEditMode) {
                 val isLight = ColorUtils.isColorLight(context.bottomBackground)
-                val pTextColor = context.getPrimaryTextColor(isLight)
+                val pTextColor = context.getCompatColor(R.color.readText)
                 tvTitle.setTextColor(pTextColor)
-                val sTextColor = context.getSecondaryTextColor(isLight)
+                val sTextColor = context.getCompatColor(R.color.readBG)
                 tvSummary?.setTextColor(sTextColor)
             }
             val iconView = it.findViewById(R.id.preference_icon)
