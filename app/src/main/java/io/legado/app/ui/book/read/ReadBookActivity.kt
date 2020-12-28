@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.content.res.Configuration
+import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -158,11 +159,13 @@ class ReadBookActivity : ReadBookBaseActivity(),
      */
     private fun upMenu() {
         val menu = menu
+        val textColor:Int = getCompatColor(R.color.readText)?:0
         val book = ReadBook.book
         if (menu != null && book != null) {
             val onLine = !book.isLocalBook()
             for (i in 0 until menu.size) {
                 val item = menu[i]
+                item.icon?.setTint(textColor)
                 when (item.groupId) {
                     R.id.menu_group_on_line,
                     R.id.menu_group_on_line_ns -> item.isVisible = onLine

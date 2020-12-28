@@ -39,9 +39,10 @@ class ReadMenu @JvmOverloads constructor(
     private lateinit var menuTopOut: Animation
     private lateinit var menuBottomIn: Animation
     private lateinit var menuBottomOut: Animation
-    private var bgColor: Int = ColorUtils.withAlpha( Color.parseColor("#212121"),0.9f)//ColorUtils.shiftColor(ReadBookConfig.bgMeanColor, 1.02f)
-    private val textColor:Int =  context.getPrimaryTextColor(ColorUtils.isColorLight(bgColor))
-    private val iconColor:Int =  Color.parseColor("#388e3c")
+    private var bgColor: Int = context.getCompatColor(R.color.readBG)//ColorUtils.withAlpha( Color.parseColor("#292323"),0.95f)//ColorUtils.shiftColor(ReadBookConfig.bgMeanColor, 1.02f)
+    private val textColor:Int = context.getCompatColor(R.color.readText) //context.getPrimaryTextColor(ColorUtils.isColorLight(bgColor))
+    private val iconColor:Int = context.getCompatColor(R.color.readIconBG)
+    private val iconTextColor:Int = context.getCompatColor(R.color.readIconText)
     private var bottomBackgroundList: ColorStateList = Selector.colorBuild()
         .setDefaultColor(iconColor)
         .setPressedColor(ColorUtils.darkenColor(iconColor))
@@ -70,13 +71,13 @@ class ReadMenu @JvmOverloads constructor(
         titleBar.setBackgroundColor(bgColor)
         titleBar.setTitleTextColor(textColor)
         fabSearch.backgroundTintList = bottomBackgroundList
-        fabSearch.setColorFilter(textColor)
+        fabSearch.setColorFilter(iconTextColor)
         fabAutoPage.backgroundTintList = bottomBackgroundList
-        fabAutoPage.setColorFilter(textColor)
+        fabAutoPage.setColorFilter(iconTextColor)
         fabReplaceRule.backgroundTintList = bottomBackgroundList
-        fabReplaceRule.setColorFilter(textColor)
+        fabReplaceRule.setColorFilter(iconTextColor)
         fabNightTheme.backgroundTintList = bottomBackgroundList
-        fabNightTheme.setColorFilter(textColor)
+        fabNightTheme.setColorFilter(iconTextColor)
         tvPre.setTextColor(textColor)
         tvNext.setTextColor(textColor)
         ivCatalog.setColorFilter(textColor)
