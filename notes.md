@@ -18,3 +18,11 @@ context.getPrimaryTextColor(ColorUtils.isColorLight(bgColor))
 ```kotlin
 val isLight = ColorUtils.isColorLight(bg)
 ```
+
+```
+git pull git://github.com/gedoor/legado.git master
+git add //conflict file
+git commit -m "resolve the conflict"
+git push origin master
+git push -f origin master
+```
