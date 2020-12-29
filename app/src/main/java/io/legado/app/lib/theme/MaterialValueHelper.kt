@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import io.legado.app.R
 import io.legado.app.utils.ColorUtils
+import io.legado.app.utils.getCompatColor
 
 /**
  * @author Karim Abou Zeid (kabouzeid)
@@ -114,3 +115,9 @@ val Fragment.isDarkTheme: Boolean
 
 val Context.elevation: Float
     get() = ThemeStore.elevation(this)
+
+val Context.readBg: Int
+    get() = getCompatColor(R.color.readBG)
+
+val Context.readText: Int
+    get() = getCompatColor(R.color.readText)

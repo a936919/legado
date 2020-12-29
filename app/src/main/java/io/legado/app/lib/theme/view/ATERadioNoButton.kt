@@ -4,10 +4,7 @@ import android.content.Context
 import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatRadioButton
 import io.legado.app.R
-import io.legado.app.lib.theme.Selector
-import io.legado.app.lib.theme.accentColor
-import io.legado.app.lib.theme.bottomBackground
-import io.legado.app.lib.theme.getPrimaryTextColor
+import io.legado.app.lib.theme.*
 import io.legado.app.utils.ColorUtils
 import io.legado.app.utils.dp
 import io.legado.app.utils.getCompatColor
@@ -32,8 +29,7 @@ class ATERadioNoButton(context: Context, attrs: AttributeSet) :
         when {
             isInEditMode -> Unit
             isBottomBackground -> {
-                val isLight = ColorUtils.isColorLight(context.bottomBackground)
-                val textColor = context.getCompatColor(R.color.readText)
+                val textColor = context.readText
                 background = Selector.shapeBuild()
                     .setCornerRadius(2.dp)
                     .setStrokeWidth(2.dp)

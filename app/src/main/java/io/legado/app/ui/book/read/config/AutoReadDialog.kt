@@ -10,11 +10,14 @@ import io.legado.app.databinding.DialogAutoReadBinding
 import io.legado.app.help.ReadBookConfig
 import io.legado.app.lib.theme.bottomBackground
 import io.legado.app.lib.theme.getPrimaryTextColor
+import io.legado.app.lib.theme.readBg
+import io.legado.app.lib.theme.readText
 import io.legado.app.service.BaseReadAloudService
 import io.legado.app.service.help.ReadAloud
 import io.legado.app.ui.book.read.ReadBookActivity
 import io.legado.app.ui.widget.seekbar.SeekBarChangeListener
 import io.legado.app.utils.ColorUtils
+import io.legado.app.utils.getCompatColor
 import io.legado.app.utils.viewbindingdelegate.viewBinding
 import org.jetbrains.anko.sdk27.listeners.onClick
 
@@ -53,9 +56,8 @@ class AutoReadDialog : BaseDialogFragment() {
     }
 
     override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) {
-        val bg = ReadBookConfig.bgMeanColor//requireContext().bottomBackground
-        val isLight = ColorUtils.isColorLight(bg)
-        val textColor = requireContext().getPrimaryTextColor(isLight)
+        val bg = requireContext().readBg
+        val textColor = requireContext().readText
         binding.root.setBackgroundColor(bg)
         binding.tvReadSpeedTitle.setTextColor(textColor)
         binding.tvReadSpeed.setTextColor(textColor)

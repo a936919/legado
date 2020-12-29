@@ -15,9 +15,9 @@ import io.legado.app.constant.PreferKey
 import io.legado.app.help.ReadBookConfig
 import io.legado.app.lib.theme.ATH
 import io.legado.app.lib.theme.bottomBackground
+import io.legado.app.lib.theme.readBg
 import io.legado.app.ui.book.read.ReadBookActivity
 import io.legado.app.utils.dp
-import io.legado.app.utils.getCompatColor
 import io.legado.app.utils.getPrefBoolean
 import io.legado.app.utils.postEvent
 
@@ -45,7 +45,7 @@ class MoreConfigDialog : DialogFragment() {
     ): View {
         (activity as ReadBookActivity).bottomDialog++
         val view = LinearLayout(context)
-        view.setBackgroundColor(getCompatColor(R.color.readBG))//view.setBackgroundColor(requireContext().bottomBackground)
+        view.setBackgroundColor(requireContext().readBg)
         view.id = R.id.tag1
         container?.addView(view)
         return view

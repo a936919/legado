@@ -24,6 +24,7 @@ import io.legado.app.ui.widget.seekbar.SeekBarChangeListener
 import io.legado.app.utils.*
 import org.jetbrains.anko.sdk27.listeners.onClick
 import org.jetbrains.anko.sdk27.listeners.onLongClick
+import org.jetbrains.anko.seekBar
 
 /**
  * 阅读界面菜单
@@ -332,7 +333,7 @@ class ReadMenu @JvmOverloads constructor(
             fabAutoPage.setImageResource(R.drawable.ic_auto_page)
             fabAutoPage.contentDescription = context.getString(R.string.auto_next_page)
         }
-        fabAutoPage.setColorFilter(textColor)
+        fabAutoPage.setColorFilter(iconTextColor)
     }
 
     interface CallBack {

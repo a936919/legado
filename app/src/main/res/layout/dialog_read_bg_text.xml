@@ -19,7 +19,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/style_name"
-            android:textColor="@color/primaryText"
+            android:textColor="@color/readText"
             android:textSize="16sp" />
 
         <TextView
@@ -28,7 +28,7 @@
             android:layout_height="wrap_content"
             android:paddingLeft="6dp"
             android:paddingRight="6dp"
-            android:textColor="@color/secondaryText"
+            android:textColor="@color/readText"
             tools:text="文字" />
 
         <ImageView
@@ -36,7 +36,7 @@
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:src="@drawable/ic_edit"
-            app:tint="@color/secondaryText"
+            app:tint="@color/readText"
             android:contentDescription="@string/edit" />
 
     </LinearLayout>

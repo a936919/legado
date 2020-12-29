@@ -11,6 +11,7 @@ import io.legado.app.databinding.ViewDetailSeekBarBinding
 import io.legado.app.lib.theme.Selector
 import io.legado.app.lib.theme.bottomBackground
 import io.legado.app.lib.theme.getPrimaryTextColor
+import io.legado.app.lib.theme.readText
 import io.legado.app.ui.widget.seekbar.SeekBarChangeListener
 import io.legado.app.utils.ColorUtils
 import io.legado.app.utils.getCompatColor
@@ -48,7 +49,7 @@ class DetailSeekBar @JvmOverloads constructor(
         typedArray.recycle()
         if (isBottomBackground && !isInEditMode) {
             val isLight = ColorUtils.isColorLight(context.bottomBackground)
-            val textColor = context.getCompatColor(R.color.readText)
+            val textColor = context.readText
             var colorList: ColorStateList = Selector.colorBuild()
                     .setDefaultColor(textColor)
                     .setPressedColor(ColorUtils.darkenColor(textColor))

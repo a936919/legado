@@ -12,6 +12,8 @@ import io.legado.app.help.AppConfig
 import io.legado.app.help.ReadBookConfig
 import io.legado.app.lib.theme.bottomBackground
 import io.legado.app.lib.theme.getPrimaryTextColor
+import io.legado.app.lib.theme.readBg
+import io.legado.app.lib.theme.readText
 import io.legado.app.service.BaseReadAloudService
 import io.legado.app.service.help.ReadAloud
 import io.legado.app.service.help.ReadBook
@@ -32,7 +34,7 @@ class ReadAloudDialog : BaseDialogFragment() {
         super.onStart()
         dialog?.window?.let {
             it.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-            it.setBackgroundDrawableResource(R.color.background)
+            it.setBackgroundDrawableResource(R.color.readBG)
             it.decorView.setPadding(0, 0, 0, 0)
             val attr = it.attributes
             attr.dimAmount = 0.0f
@@ -58,9 +60,8 @@ class ReadAloudDialog : BaseDialogFragment() {
     }
 
     override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) {
-        val bg = ReadBookConfig.bgMeanColor//requireContext().bottomBackground
-        val isLight = ColorUtils.isColorLight(bg)
-        val textColor = requireContext().getPrimaryTextColor(isLight)
+        val bg = requireContext().readBg
+        val textColor = requireContext().readText
         with(binding) {
             rootView.setBackgroundColor(bg)
             tvPre.setTextColor(textColor)
@@ -81,6 +82,7 @@ class ReadAloudDialog : BaseDialogFragment() {
             ivSetting.setColorFilter(textColor)
             tvSetting.setTextColor(textColor)
             cbTtsFollowSys.setTextColor(textColor)
+
         }
         initOnChange()
         initData()
@@ -145,7 +147,7 @@ class ReadAloudDialog : BaseDialogFragment() {
         }
         val bg = requireContext().bottomBackground
         val isLight = ColorUtils.isColorLight(bg)
-        val textColor = requireContext().getPrimaryTextColor(isLight)
+        val textColor = requireContext().readText
         binding.ivPlayPause.setColorFilter(textColor)
     }
 

@@ -20,9 +20,7 @@ import io.legado.app.help.ReadBookConfig
 import io.legado.app.help.permission.Permissions
 import io.legado.app.help.permission.PermissionsCompat
 import io.legado.app.lib.dialogs.alert
-import io.legado.app.lib.theme.bottomBackground
-import io.legado.app.lib.theme.getPrimaryTextColor
-import io.legado.app.lib.theme.getSecondaryTextColor
+import io.legado.app.lib.theme.*
 import io.legado.app.ui.book.read.ReadBookActivity
 import io.legado.app.ui.filepicker.FilePicker
 import io.legado.app.ui.filepicker.FilePickerDialog
@@ -86,9 +84,9 @@ class BgTextConfigDialog : BaseDialogFragment(), FilePickerDialog.CallBack {
     }
 
     private fun initView() {
-        val bg = ReadBookConfig.bgMeanColor
+        val bg = requireContext().readBg
         val isLight = ColorUtils.isColorLight(bg)
-        primaryTextColor = requireContext().getPrimaryTextColor(isLight)
+        primaryTextColor = requireContext().readText
         secondaryTextColor = requireContext().getSecondaryTextColor(isLight)
         binding.rootView.setBackgroundColor(bg)
         binding.swDarkStatusIcon.setTextColor(primaryTextColor)

@@ -14,7 +14,6 @@ import androidx.preference.PreferenceViewHolder
 import io.legado.app.R
 import io.legado.app.lib.theme.accentColor
 import io.legado.app.lib.theme.bottomBackground
-import io.legado.app.lib.theme.getPrimaryTextColor
 import io.legado.app.lib.theme.getSecondaryTextColor
 import io.legado.app.utils.ColorUtils
 import io.legado.app.utils.getCompatColor
@@ -62,7 +61,7 @@ class Preference(context: Context, attrs: AttributeSet) :
                 val isLight = ColorUtils.isColorLight(context.bottomBackground)
                 val pTextColor = context.getCompatColor(R.color.readText)
                 tvTitle.setTextColor(pTextColor)
-                val sTextColor = context.getCompatColor(R.color.readBG)
+                val sTextColor = context.getSecondaryTextColor(isLight)
                 tvSummary?.setTextColor(sTextColor)
             }
             val iconView = it.findViewById(R.id.preference_icon)
