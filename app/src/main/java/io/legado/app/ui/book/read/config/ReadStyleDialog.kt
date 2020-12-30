@@ -67,7 +67,6 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
     }
 
     private fun initView() = with(binding) {
-        val bg = requireContext().readCfgBottomBg
         dsbTextSize.valueFormat = {
             (it + 5).toString()
         }
