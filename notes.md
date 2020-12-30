@@ -10,6 +10,7 @@ menu里,需要设置app:iconTint，设置成android:iconTint没用。。。。�
 #### 2020-12-28
 ```kotlin
 ReadBookConfig.bgMeanColor
+ReadBookConfig.textColor
 requireContext().getPrimaryTextColor(isLight)
 ColorUtils.withAlpha( Color.parseColor("#292323"),0.95f)
 context.getPrimaryTextColor(ColorUtils.isColorLight(bgColor))
@@ -19,6 +20,7 @@ context.getPrimaryTextColor(ColorUtils.isColorLight(bgColor))
 val isLight = ColorUtils.isColorLight(bg)
 ColorUtils.withAlpha( Color.parseColor("#292323"),0.95f)
 ColorUtils.shiftColor(ReadBookConfig.bgMeanColor, 1.02f)
+
 ```
 
 ```

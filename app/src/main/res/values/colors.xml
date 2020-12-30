@@ -111,4 +111,5 @@
     <!-- 阅读界面背景色 -->
     <color name="readCfgBg">#292323</color>
     <color name="readCfgText">#BEBCBD</color>
+    <color name="readCfgTextDark">#4A5F4C</color>
 </resources>
