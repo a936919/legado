@@ -12,7 +12,6 @@ import androidx.appcompat.widget.SearchView
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import io.legado.app.App
 import io.legado.app.R
@@ -147,7 +146,6 @@ class BookSourceActivity : VMBaseActivity<ActivityBookSourceBinding, BookSourceV
 
     private fun initRecyclerView() {
         ATH.applyEdgeEffectColor(binding.recyclerView)
-        binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.addItemDecoration(VerticalDivider(this))
         adapter = BookSourceAdapter(this, this)
         binding.recyclerView.adapter = adapter
@@ -206,7 +204,7 @@ class BookSourceActivity : VMBaseActivity<ActivityBookSourceBinding, BookSourceV
                     Sort.Update -> data.sortedBy { it.lastUpdateTime }
                     else -> data.reversed()
                 }
-            adapter.setItems(sourceList)
+            adapter.setItems(sourceList, adapter.diffItemCallback)
         })
     }
 
