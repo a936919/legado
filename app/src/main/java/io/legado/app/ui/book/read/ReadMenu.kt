@@ -40,8 +40,8 @@ class ReadMenu @JvmOverloads constructor(
     private lateinit var menuTopOut: Animation
     private lateinit var menuBottomIn: Animation
     private lateinit var menuBottomOut: Animation
-    private var bgColor: Int = context.getCompatColor(R.color.readBG)
-    private val textColor:Int = context.getCompatColor(R.color.readText)
+    private var bgColor: Int = context.readCfgBottomBg
+    private val textColor:Int = context.readCfgBottomText
     private val iconColor:Int = context.accentColor
     private val iconTextColor:Int = context.getPrimaryTextColor(ColorUtils.isColorLight(iconColor))
     private var bottomBackgroundList: ColorStateList = Selector.colorBuild()
@@ -69,8 +69,8 @@ class ReadMenu @JvmOverloads constructor(
         brightnessBackground.setColor(ColorUtils.adjustAlpha(iconColor, 0.5f))
         llBrightness.background = brightnessBackground
         llBottomBg.setBackgroundColor(bgColor)
-        titleBar.setBackgroundColor(bgColor)
-        titleBar.setTitleTextColor(textColor)
+        titleBar.setBackgroundColor(context.readCfgTopBg)
+        titleBar.setTitleTextColor(context.readCfgTopText)
         fabSearch.backgroundTintList = bottomBackgroundList
         fabSearch.setColorFilter(iconTextColor)
         fabAutoPage.backgroundTintList = bottomBackgroundList

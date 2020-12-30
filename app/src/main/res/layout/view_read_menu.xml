@@ -249,7 +249,7 @@
                         android:layout_height="25dp"
                         android:layout_gravity="center_vertical"
                         android:layout_weight="1"
-                        android:progressBackgroundTint="@color/readText" />
+                        android:progressBackgroundTint="@color/readCfgText" />
 
                     <TextView
                         android:id="@+id/tv_next"

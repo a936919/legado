@@ -9,12 +9,9 @@ import android.widget.SeekBar
 import io.legado.app.R
 import io.legado.app.databinding.ViewDetailSeekBarBinding
 import io.legado.app.lib.theme.Selector
-import io.legado.app.lib.theme.bottomBackground
-import io.legado.app.lib.theme.getPrimaryTextColor
-import io.legado.app.lib.theme.readText
+import io.legado.app.lib.theme.readCfgBottomText
 import io.legado.app.ui.widget.seekbar.SeekBarChangeListener
 import io.legado.app.utils.ColorUtils
-import io.legado.app.utils.getCompatColor
 import io.legado.app.utils.progressAdd
 import org.jetbrains.anko.sdk27.listeners.onClick
 
@@ -48,8 +45,7 @@ class DetailSeekBar @JvmOverloads constructor(
         binding.seekBar.max = typedArray.getInteger(R.styleable.DetailSeekBar_max, 0)
         typedArray.recycle()
         if (isBottomBackground && !isInEditMode) {
-            val isLight = ColorUtils.isColorLight(context.bottomBackground)
-            val textColor = context.readText
+            val textColor = context.readCfgBottomText
             var colorList: ColorStateList = Selector.colorBuild()
                     .setDefaultColor(textColor)
                     .setPressedColor(ColorUtils.darkenColor(textColor))

@@ -84,9 +84,9 @@ class BgTextConfigDialog : BaseDialogFragment(), FilePickerDialog.CallBack {
     }
 
     private fun initView() {
-        val bg = requireContext().readBg
+        val bg = requireContext().readCfgBottomBg
         val isLight = ColorUtils.isColorLight(bg)
-        primaryTextColor = requireContext().readText
+        primaryTextColor = requireContext().readCfgBottomText
         secondaryTextColor = requireContext().getSecondaryTextColor(isLight)
         binding.rootView.setBackgroundColor(bg)
         binding.swDarkStatusIcon.setTextColor(primaryTextColor)

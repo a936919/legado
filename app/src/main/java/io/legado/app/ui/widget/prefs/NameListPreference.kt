@@ -6,10 +6,7 @@ import android.widget.TextView
 import androidx.preference.ListPreference
 import androidx.preference.PreferenceViewHolder
 import io.legado.app.R
-import io.legado.app.lib.theme.bottomBackground
-import io.legado.app.lib.theme.getPrimaryTextColor
-import io.legado.app.lib.theme.readText
-import io.legado.app.utils.ColorUtils
+import io.legado.app.lib.theme.readCfgBottomText
 
 
 class NameListPreference(context: Context, attrs: AttributeSet) : ListPreference(context, attrs) {
@@ -38,7 +35,7 @@ class NameListPreference(context: Context, attrs: AttributeSet) : ListPreference
         if (v is TextView) {
             v.text = entry
             if (isBottomBackground) {
-                val pTextColor = context.readText
+                val pTextColor = context.readCfgBottomText
                 v.setTextColor(pTextColor)
             }
         }

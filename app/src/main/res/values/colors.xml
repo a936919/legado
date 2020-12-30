@@ -109,8 +109,6 @@
     <color name="ate_navigation_drawer_selected_dark">#202020</color>
 
     <!-- 阅读界面背景色 -->
-    <color name="readBG">#292323</color>
-    <color name="readText">#BEBCBD</color>
-    <color name="readIconBG">#388e3c</color>
-    <color name="readIconText">#ffffff</color>
+    <color name="readCfgBg">#292323</color>
+    <color name="readCfgText">#BEBCBD</color>
 </resources>

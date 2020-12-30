@@ -116,8 +116,14 @@ val Fragment.isDarkTheme: Boolean
 val Context.elevation: Float
     get() = ThemeStore.elevation(this)
 
-val Context.readBg: Int
-    get() = getCompatColor(R.color.readBG)
+val Context.readCfgTopBg: Int
+    get() = ThemeStore.primaryColor(this)
 
-val Context.readText: Int
-    get() = getCompatColor(R.color.readText)
+val Context.readCfgTopText: Int
+    get() = this.getCompatColor(R.color.readCfgText)
+
+val Context.readCfgBottomBg: Int
+    get() = this.readCfgTopBg
+
+val Context.readCfgBottomText: Int
+    get() = this.readCfgTopText

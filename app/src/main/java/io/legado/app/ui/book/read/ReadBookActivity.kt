@@ -27,6 +27,7 @@ import io.legado.app.help.ReadTipConfig
 import io.legado.app.help.storage.Backup
 import io.legado.app.lib.dialogs.alert
 import io.legado.app.lib.theme.accentColor
+import io.legado.app.lib.theme.readCfgTopText
 import io.legado.app.receiver.TimeBatteryReceiver
 import io.legado.app.service.BaseReadAloudService
 import io.legado.app.service.help.ReadAloud
@@ -159,7 +160,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
      */
     private fun upMenu() {
         val menu = menu
-        val textColor:Int = getCompatColor(R.color.readText)?:0
+        val textColor:Int = readCfgTopText?:0
         val book = ReadBook.book
         if (menu != null && book != null) {
             val onLine = !book.isLocalBook()

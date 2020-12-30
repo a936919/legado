@@ -15,6 +15,7 @@ import io.legado.app.R
 import io.legado.app.lib.theme.accentColor
 import io.legado.app.lib.theme.bottomBackground
 import io.legado.app.lib.theme.getSecondaryTextColor
+import io.legado.app.lib.theme.readCfgBottomText
 import io.legado.app.utils.ColorUtils
 import io.legado.app.utils.getCompatColor
 import org.jetbrains.anko.layoutInflater
@@ -59,7 +60,7 @@ class Preference(context: Context, attrs: AttributeSet) :
             }
             if (isBottomBackground && !tvTitle.isInEditMode) {
                 val isLight = ColorUtils.isColorLight(context.bottomBackground)
-                val pTextColor = context.getCompatColor(R.color.readText)
+                val pTextColor = context.readCfgBottomText
                 tvTitle.setTextColor(pTextColor)
                 val sTextColor = context.getSecondaryTextColor(isLight)
                 tvSummary?.setTextColor(sTextColor)

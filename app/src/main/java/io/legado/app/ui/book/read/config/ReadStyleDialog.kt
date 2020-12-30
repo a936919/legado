@@ -14,9 +14,8 @@ import io.legado.app.databinding.ItemReadStyleBinding
 import io.legado.app.help.ReadBookConfig
 import io.legado.app.lib.dialogs.selector
 import io.legado.app.lib.theme.accentColor
-import io.legado.app.lib.theme.bottomBackground
-import io.legado.app.lib.theme.readBg
-import io.legado.app.lib.theme.readText
+import io.legado.app.lib.theme.readCfgBottomBg
+import io.legado.app.lib.theme.readCfgBottomText
 import io.legado.app.service.help.ReadBook
 import io.legado.app.ui.book.read.ReadBookActivity
 import io.legado.app.ui.widget.font.FontSelectDialog
@@ -67,8 +66,8 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
     }
 
     private fun initView() = with(binding) {
-        val bg = requireContext().readBg
-        val textColor = requireContext().readText
+        val bg = requireContext().readCfgBottomBg
+        val textColor = requireContext().readCfgBottomText
         rootView.setBackgroundColor(bg)
         tvPageAnim.setTextColor(textColor)
         tvBgTs.setTextColor(textColor)
