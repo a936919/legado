@@ -40,10 +40,10 @@ class ReadMenu @JvmOverloads constructor(
     private lateinit var menuTopOut: Animation
     private lateinit var menuBottomIn: Animation
     private lateinit var menuBottomOut: Animation
-    private var bgColor: Int = context.getCompatColor(R.color.readBG)//ColorUtils.withAlpha( Color.parseColor("#292323"),0.95f)//ColorUtils.shiftColor(ReadBookConfig.bgMeanColor, 1.02f)
-    private val textColor:Int = context.getCompatColor(R.color.readText) //context.getPrimaryTextColor(ColorUtils.isColorLight(bgColor))
-    private val iconColor:Int = context.getCompatColor(R.color.readIconBG)
-    private val iconTextColor:Int = context.getCompatColor(R.color.readIconText)
+    private var bgColor: Int = context.getCompatColor(R.color.readBG)
+    private val textColor:Int = context.getCompatColor(R.color.readText)
+    private val iconColor:Int = context.accentColor
+    private val iconTextColor:Int = context.getPrimaryTextColor(ColorUtils.isColorLight(iconColor))
     private var bottomBackgroundList: ColorStateList = Selector.colorBuild()
         .setDefaultColor(iconColor)
         .setPressedColor(ColorUtils.darkenColor(iconColor))

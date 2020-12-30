@@ -17,6 +17,8 @@ context.getPrimaryTextColor(ColorUtils.isColorLight(bgColor))
 #### 2020-12-29
 ```kotlin
 val isLight = ColorUtils.isColorLight(bg)
+ColorUtils.withAlpha( Color.parseColor("#292323"),0.95f)
+ColorUtils.shiftColor(ReadBookConfig.bgMeanColor, 1.02f)
 ```
 
 ```
