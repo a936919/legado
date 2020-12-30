@@ -68,6 +68,5 @@ object AppConst {
         "androidx.appcompat.view.menu.ListMenuItemView"
     )
 
-    val sysElevation = App.INSTANCE.resources.getDimension(R.dimen.design_appbar_elevation).toInt()
-    //todo  mtrl_btn_disabled_elevation
+    val sysElevation = App.INSTANCE.resources.getDimension(R.dimen.mtrl_btn_disabled_elevation).toInt()
 }

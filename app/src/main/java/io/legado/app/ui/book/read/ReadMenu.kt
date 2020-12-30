@@ -41,10 +41,10 @@ class ReadMenu @JvmOverloads constructor(
     private lateinit var menuBottomIn: Animation
     private lateinit var menuBottomOut: Animation
     private var bgColor: Int = context.readCfgBottomBg
-    private val textColor:Int = context.readCfgBottomText
+    private var textColor:Int = context.readCfgBottomText
     private val iconColor:Int = context.accentColor
     private val iconTextColor:Int = context.getPrimaryTextColor(ColorUtils.isColorLight(iconColor))
-    private var bottomBackgroundList: ColorStateList = Selector.colorBuild()
+    private val bottomBackgroundList: ColorStateList = Selector.colorBuild()
         .setDefaultColor(iconColor)
         .setPressedColor(ColorUtils.darkenColor(iconColor))
         .create()
@@ -52,6 +52,7 @@ class ReadMenu @JvmOverloads constructor(
     val showBrightnessView get() = context.getPrefBoolean(PreferKey.showBrightnessView, true)
 
     init {
+        initReadCfgColor()
         initView()
         upBrightnessState()
         bindEvent()
@@ -68,9 +69,6 @@ class ReadMenu @JvmOverloads constructor(
         brightnessBackground.cornerRadius = 5F.dp
         brightnessBackground.setColor(ColorUtils.adjustAlpha(iconColor, 0.5f))
         llBrightness.background = brightnessBackground
-        llBottomBg.setBackgroundColor(bgColor)
-        titleBar.setBackgroundColor(context.readCfgTopBg)
-        titleBar.setTitleTextColor(context.readCfgTopText)
         fabSearch.backgroundTintList = bottomBackgroundList
         fabSearch.setColorFilter(iconTextColor)
         fabAutoPage.backgroundTintList = bottomBackgroundList
@@ -79,6 +77,17 @@ class ReadMenu @JvmOverloads constructor(
         fabReplaceRule.setColorFilter(iconTextColor)
         fabNightTheme.backgroundTintList = bottomBackgroundList
         fabNightTheme.setColorFilter(iconTextColor)
+        vwBg.onClick { }
+        vwNavigationBar.onClick { }
+        seekBrightness.progress = context.getPrefInt("brightness", 100)
+    }
+
+    private fun initReadCfgColor()=with(binding) {
+        titleBar.setBackgroundColor(context.readCfgTopBg)
+        titleBar.setTitleTextColor(context.readCfgTopText)
+        UIUtils.setToolbarMoreIconCustomColor(titleBar.toolbar,context.readCfgTopText)
+        UIUtils.setToolbarBackIconCustomColor(titleBar.toolbar,context.readCfgTopText)
+        llBottomBg.setBackgroundColor(bgColor)
         tvPre.setTextColor(textColor)
         tvNext.setTextColor(textColor)
         ivCatalog.setColorFilter(textColor)
@@ -89,9 +98,6 @@ class ReadMenu @JvmOverloads constructor(
         tvFont.setTextColor(textColor)
         ivSetting.setColorFilter(textColor)
         tvSetting.setTextColor(textColor)
-        vwBg.onClick { }
-        vwNavigationBar.onClick { }
-        seekBrightness.progress = context.getPrefInt("brightness", 100)
     }
 
     fun upBrightnessState() {
@@ -126,23 +132,16 @@ class ReadMenu @JvmOverloads constructor(
         binding.bottomMenu.visible()
         binding.titleBar.startAnimation(menuTopIn)
         binding.bottomMenu.startAnimation(menuBottomIn)
-        //updateBg()
+        updateBg()
     }
 
 
     private fun updateBg(){
-        if(bgColor!=ReadBookConfig.bgMeanColor)
+        if(bgColor!=context.readCfgBottomBg)
         {
-            bgColor = ReadBookConfig.bgMeanColor
-            bottomBackgroundList = Selector.colorBuild()
-                .setDefaultColor(bgColor)
-                .setPressedColor(ColorUtils.darkenColor(bgColor))
-                .create()
-            binding.llBottomBg.setBackgroundColor(bgColor)
-            binding.fabSearch.backgroundTintList = bottomBackgroundList
-            binding.fabAutoPage.backgroundTintList = bottomBackgroundList
-            binding.fabReplaceRule.backgroundTintList = bottomBackgroundList
-            binding.fabNightTheme.backgroundTintList = bottomBackgroundList
+            bgColor = context.readCfgBottomBg
+            textColor = context.readCfgBottomText
+            initReadCfgColor()
         }
     }
 
@@ -304,9 +303,11 @@ class ReadMenu @JvmOverloads constructor(
     fun upBookView() {
         ReadBook.curTextChapter?.let {
             binding.tvChapterName.text = it.title
+            binding.tvChapterName.setTextColor(context.readCfgTopText)
             binding.tvChapterName.visible()
             if (!ReadBook.isLocalBook) {
                 binding.tvChapterUrl.text = it.url
+                binding.tvChapterUrl.setTextColor(context.readCfgTopText)
                 binding.tvChapterUrl.visible()
             } else {
                 binding.tvChapterUrl.gone()

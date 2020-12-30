@@ -55,6 +55,7 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
 
     override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) {
         initView()
+        initReadCfgColor()
         initData()
         initViewEvent()
     }
@@ -67,12 +68,6 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
 
     private fun initView() = with(binding) {
         val bg = requireContext().readCfgBottomBg
-        val textColor = requireContext().readCfgBottomText
-        rootView.setBackgroundColor(bg)
-        tvPageAnim.setTextColor(textColor)
-        tvBgTs.setTextColor(textColor)
-        tvShareLayout.setTextColor(textColor)
-        tvTextFont.setTextColor(textColor)
         dsbTextSize.valueFormat = {
             (it + 5).toString()
         }
@@ -88,8 +83,8 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
             ItemReadStyleBinding.inflate(layoutInflater, it, false).apply {
                 ivStyle.setPadding(6.dp, 6.dp, 6.dp, 6.dp)
                 ivStyle.setText(null)
-                ivStyle.setColorFilter(textColor)
-                ivStyle.borderColor = textColor
+                ivStyle.setColorFilter(requireContext().readCfgBottomText)
+                ivStyle.borderColor = requireContext().readCfgBottomText
                 ivStyle.setImageResource(R.drawable.ic_add)
                 root.onClick {
                     ReadBookConfig.configList.add(ReadBookConfig.Config())
@@ -97,6 +92,16 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
                 }
             }
         }
+    }
+
+    private fun initReadCfgColor() = with(binding) {
+        val bg = requireContext().readCfgBottomBg
+        val textColor = requireContext().readCfgBottomText
+        rootView.setBackgroundColor(bg)
+        tvPageAnim.setTextColor(textColor)
+        tvBgTs.setTextColor(textColor)
+        tvShareLayout.setTextColor(textColor)
+        tvTextFont.setTextColor(textColor)
     }
 
     private fun initData() {
@@ -242,7 +247,7 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
                 ivStyle.onClick {
                     if (ivStyle.isInView) {
                         changeBg(holder.layoutPosition)
-                        //changeRootViewBg()
+                        initReadCfgColor()
                     }
                 }
                 ivStyle.onLongClick {
@@ -254,10 +259,5 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
                 }
             }
         }
-
-        private fun changeRootViewBg(){
-            binding.rootView.setBackgroundColor(ReadBookConfig.bgMeanColor)
-        }
-
     }
 }

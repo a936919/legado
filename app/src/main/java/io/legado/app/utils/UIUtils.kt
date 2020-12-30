@@ -25,6 +25,17 @@ object UIUtils {
         }
     }
 
+    /** 设置返回图标和颜色  */
+    fun setToolbarBackIconCustomColor(toolbar: Toolbar?, color: Int? = null) {
+        toolbar ?: return
+        val navigationIcon = ContextCompat.getDrawable(toolbar.context, R.drawable.ic_baseline_arrow_back_ios_24)
+        if (navigationIcon != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (color != null) {
+                navigationIcon.colorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_ATOP)
+            }
+            toolbar.navigationIcon = navigationIcon
+        }
+    }
 
     fun getMenuColor(
         context: Context,
