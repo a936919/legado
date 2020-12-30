@@ -30,3 +30,8 @@ git commit -m "resolve the conflict"
 git push origin master
 git push -f origin master
 ```
+#### 2020-12-30
+```kotlin
+colorControlNormal
+val upArrow = ContextCompat.getDrawable(this, R.drawable.abc_ic_ab_back_material)
+```

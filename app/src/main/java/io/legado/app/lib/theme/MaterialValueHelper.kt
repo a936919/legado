@@ -123,7 +123,7 @@ val Context.elevation: Float
 fun Context.getReadCfgTextColor(Bg: Int) = if(ColorUtils.isColorLight(Bg)) this.getCompatColor(R.color.readCfgTextDark) else this.getCompatColor(R.color.readCfgText)
 
 val Context.readCfgTopBg: Int
-    get() = ThemeStore.primaryColor(this)
+    get() = ReadBookConfig.bgMeanColor//ThemeStore.primaryColor(this)
 
 val Context.readCfgTopText: Int
     get() = this.getReadCfgTextColor(this.readCfgTopBg)

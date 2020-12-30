@@ -307,7 +307,7 @@ private constructor(private val mContext: Context) : ThemeStoreInterface {
                 ATHUtils.resolveFloat(
                     context,
                     android.R.attr.elevation,
-                    context.resources.getDimension(R.dimen.design_appbar_elevation)
+                    context.resources.getDimension(R.dimen.mtrl_btn_disabled_elevation)
                 )
             )
         }

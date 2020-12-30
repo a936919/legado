@@ -24,11 +24,13 @@ import io.legado.app.lib.dialogs.selector
 import io.legado.app.lib.theme.ATH
 import io.legado.app.lib.theme.ThemeStore
 import io.legado.app.lib.theme.backgroundColor
+import io.legado.app.lib.theme.readCfgTopBg
 import io.legado.app.service.help.CacheBook
 import io.legado.app.service.help.ReadBook
 import io.legado.app.ui.book.read.config.BgTextConfigDialog
 import io.legado.app.ui.book.read.config.ClickActionConfigDialog
 import io.legado.app.ui.book.read.config.PaddingConfigDialog
+import io.legado.app.utils.ColorUtils
 import io.legado.app.utils.getPrefString
 import io.legado.app.utils.getViewModel
 import io.legado.app.utils.requestInputMethod
@@ -111,10 +113,12 @@ abstract class ReadBookBaseActivity :
         if (toolBarHide) {
             ATH.setLightStatusBar(this, ReadBookConfig.durConfig.curStatusIconDark())
         } else {
+            ATH.setLightStatusBar(this, ColorUtils.isColorLight(readCfgTopBg))
+/*
             ATH.setLightStatusBarAuto(
                 this,
                 ThemeStore.statusBarColor(this, AppConfig.isTransparentStatusBar)
-            )
+            )*/
         }
     }
 
