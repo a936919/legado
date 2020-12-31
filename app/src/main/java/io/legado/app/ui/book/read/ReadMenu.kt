@@ -140,8 +140,7 @@ class ReadMenu @JvmOverloads constructor(
 
 
     private fun updateBg(){
-        if(bgColor!=context.readCfgBottomBg)
-        {
+        if(bgColor!=context.readCfgBottomBg) {
             bgColor = context.readCfgBottomBg
             textColor = context.readCfgBottomText
             initReadCfgColor()
@@ -304,7 +303,6 @@ class ReadMenu @JvmOverloads constructor(
     }
 
     fun upBookView() {
-        /*
         ReadBook.curTextChapter?.let {
             binding.tvChapterName.text = it.title
             binding.tvChapterName.setTextColor(context.readCfgTopText)
@@ -320,12 +318,12 @@ class ReadMenu @JvmOverloads constructor(
             binding.seekReadPage.progress = ReadBook.durPageIndex()
             binding.tvPre.isEnabled = ReadBook.durChapterIndex != 0
             binding.tvNext.isEnabled = ReadBook.durChapterIndex != ReadBook.chapterSize - 1
+            binding.tvChapterName.gone()
+            binding.tvChapterUrl.gone()
         } ?: let {
             binding.tvChapterName.gone()
             binding.tvChapterUrl.gone()
-        }*/
-        binding.tvChapterName.gone()
-        binding.tvChapterUrl.gone()
+        }
     }
 
     fun setSeekPage(seek: Int) {

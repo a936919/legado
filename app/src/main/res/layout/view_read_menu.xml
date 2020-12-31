@@ -21,6 +21,7 @@
         android:theme="?attr/actionBarStyle"
         app:titleTextAppearance="@style/ReadTitlebar"
         app:layout_constraintTop_toTopOf="parent">
+
             <LinearLayout
                 android:id="@+id/charpter"
                 android:layout_width="match_parent"
@@ -53,6 +54,7 @@
                     android:paddingTop="0dp"
                     android:visibility="visible" />
             </LinearLayout>
+
             <View
                 android:id="@+id/vw_bg_fg1"
                 android:layout_width="match_parent"
