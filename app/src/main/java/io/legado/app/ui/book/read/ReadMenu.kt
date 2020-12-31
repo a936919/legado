@@ -77,6 +77,9 @@ class ReadMenu @JvmOverloads constructor(
         fabReplaceRule.setColorFilter(iconTextColor)
         fabNightTheme.backgroundTintList = bottomBackgroundList
         fabNightTheme.setColorFilter(iconTextColor)
+        fabReplaceRule.invisible()
+        fabAutoPage.invisible()
+        fabSearch.invisible()
         vwBg.onClick { }
         vwNavigationBar.onClick { }
         seekBrightness.progress = context.getPrefInt("brightness", 100)
@@ -301,6 +304,7 @@ class ReadMenu @JvmOverloads constructor(
     }
 
     fun upBookView() {
+        /*
         ReadBook.curTextChapter?.let {
             binding.tvChapterName.text = it.title
             binding.tvChapterName.setTextColor(context.readCfgTopText)
@@ -319,7 +323,9 @@ class ReadMenu @JvmOverloads constructor(
         } ?: let {
             binding.tvChapterName.gone()
             binding.tvChapterUrl.gone()
-        }
+        }*/
+        binding.tvChapterName.gone()
+        binding.tvChapterUrl.gone()
     }
 
     fun setSeekPage(seek: Int) {

@@ -175,6 +175,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
                     R.id.menu_group_text -> item.isVisible = book.isLocalTxt()
                     R.id.menu_group_login ->
                         item.isVisible = !ReadBook.webBook?.bookSource?.loginUrl.isNullOrEmpty()
+                    R.id.ReplaceRule -> item.isVisible = true
                     else -> when (item.itemId) {
                         R.id.menu_enable_replace -> item.isChecked = book.getUseReplaceRule()
                         R.id.menu_re_segment -> item.isChecked = book.getReSegment()
@@ -260,6 +261,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
                 }
             }
             R.id.menu_help -> showReadMenuHelp()
+            R.id.ReplaceRule -> openReplaceRule()
         }
         return super.onCompatOptionsItemSelected(item)
     }

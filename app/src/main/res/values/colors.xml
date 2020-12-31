@@ -27,6 +27,7 @@
 
     <color name="btn_bg_press">#63ACACAC</color>
     <color name="btn_bg_press_2">#63858585</color>
+    <color name="btn_bg_press_3">#257f7f7f</color>
     <color name="btn_bg_press_tp">#632C2C2C</color>
 
     <color name="tv_btn_normal_black">#737373</color>
@@ -111,5 +112,5 @@
     <!-- 阅读界面背景色 -->
     <color name="readCfgBg">#292323</color>
     <color name="readCfgText">#BEBCBD</color>
-    <color name="readCfgTextDark">#4A5F4C</color>
+    <color name="readCfgTextDark">#212121</color>
 </resources>
