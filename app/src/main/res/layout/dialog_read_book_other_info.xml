@@ -47,8 +47,8 @@
             <TextView
                 android:id="@+id/book_author"
                 android:text="作者"
-                android:textSize="14sp"
-                android:layout_marginBottom="12dp"
+                android:textSize="16sp"
+                android:layout_marginBottom="8dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
             <TextView
