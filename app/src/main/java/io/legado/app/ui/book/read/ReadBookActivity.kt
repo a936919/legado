@@ -704,6 +704,10 @@ class ReadBookActivity : ReadBookBaseActivity(),
         ReadStyleDialog().show(supportFragmentManager, "readStyle")
     }
 
+    override fun showBookOtherInfo(){
+        BookOtherInfoDialog().show(supportFragmentManager, "bookOtherInfo")
+    }
+
     /**
      * 显示更多设置
      */

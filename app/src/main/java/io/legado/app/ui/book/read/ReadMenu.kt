@@ -227,7 +227,7 @@ class ReadMenu @JvmOverloads constructor(
                 callBack.openChapterList()
             }
         }
-
+/*
         //朗读
         llReadAloud.onClick {
             runMenuOut {
@@ -237,6 +237,12 @@ class ReadMenu @JvmOverloads constructor(
         llReadAloud.onLongClick {
             runMenuOut { callBack.showReadAloudDialog() }
             true
+        }*/
+
+        llReadAloud.onClick {
+            runMenuOut {
+                callBack.showBookOtherInfo()
+            }
         }
         //界面
         llFont.onClick {
@@ -353,6 +359,7 @@ class ReadMenu @JvmOverloads constructor(
         fun upSystemUiVisibility()
         fun onClickReadAloud()
         fun showReadMenuHelp()
+        fun showBookOtherInfo()
     }
 
 }
