@@ -295,8 +295,8 @@ object ChapterProvider {
             addCharsToLineLast(textLine, words, textPaint, startX,desiredWidth ,lineCompressMod)
             return
         }
-        var d = 0f
-        var interval = 0f
+        var d:Float
+        var interval:Float
         if(lineCompressMod>TextProcess.CPS_MOD_NULL){
             val gapCount: Int =  words.lastIndex - 1
             val endPuncWidth = StaticLayout.getDesiredWidth(words.get(gapCount+1), textPaint)
@@ -307,8 +307,6 @@ object ChapterProvider {
             interval = visibleWidth - desiredWidth
             d = interval / gapCount
         }
-        val defCharWidth = StaticLayout.getDesiredWidth("我",textPaint)
-        //Log.d("mq-1","interval: $interval defCharWidth: $defCharWidth visibleWidth is $visibleWidth desiredWidth: $desiredWidth")
         /*间隔太大左对齐*/
         if(interval > (visibleWidth/6)){
             addCharsToLineLast(textLine, words, textPaint, startX,desiredWidth ,lineCompressMod)
@@ -355,7 +353,7 @@ object ChapterProvider {
         var x = startX
         words.forEachIndexed {index, s ->
             val cw = StaticLayout.getDesiredWidth(s, textPaint)
-            var x1 = 0f
+            var x1:Float
             when(lineCompressMod){
                 TextProcess.CPS_MOD_1->{
                     if(index == (words.lastIndex - 1))  x1 = x + (cw/2) else if(index == words.lastIndex) x1 = x + cw else x1 = x + cw + d
