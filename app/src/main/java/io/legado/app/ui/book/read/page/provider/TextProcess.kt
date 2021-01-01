@@ -14,29 +14,31 @@ class TextProcess(
         text:String,
         textPaint: TextPaint,
 )  {
-    var lineStart = Array<Int>(100,{it->0})
-    var lineEnd =Array<Int>(100,{it->0})
-    var lineWidth =Array<Float>(100,{it->0f})
-    var compressWidth =Array<Float>(100,{it->0f})
-    var lineCompressMod = Array<Int>(100,{it->0})
-    var CompressCharIndex = Array<Int>(100,{it->0})
+    var lineStart = IntArray(100)
+    var lineEnd =IntArray(100)
+    var lineWidth = FloatArray(100)
+    var compressWidth =FloatArray(100)
+    var lineCompressMod = IntArray(100)
+    var CompressCharIndex =IntArray(100)
     var lineCount = 0
+    enum class BreakMod{NORMAL, BREAK_ONE_CHAR, BREAK_MORE_CHAR, CPS_1, CPS_2, CPS_3,}
+    companion object{
+        const val CPS_MOD_NULL = 0
+        const val CPS_MOD_1 = 1
+        const val CPS_MOD_2 = 2
+        const val CPS_MOD_3 = 3
+    }
 
     init{
         var line = 0
         var words = text.toStringArray()
         var lineW = 0f
-        var lindexTag = 0
-        lineStart = Array(100,{it->0})
-        lineEnd =Array(100,{it->0})
-        lineCompressMod = Array(100,{it->0})
-        CompressCharIndex = Array<Int>(100,{it->0})
         var cwPre = 0f
-        var breakLine = false
 
         words.forEachIndexed { index, s ->
             val cw = StaticLayout.getDesiredWidth(s, textPaint)
-            breakLine = false
+            var lindexTag:BreakMod
+            var breakLine = false
             lineW = lineW + cw
             var offset = 0f
             var breakCharCnt = 0
@@ -44,32 +46,33 @@ class TextProcess(
             if(lineW > ChapterProvider.visibleWidth) {
                 /*禁止在行尾的标点处理*/
                 if (index >= 1 && banEndOfLine(words[index - 1])) {
-                    if (index >= 2 && banEndOfLine(words[index - 2])) lindexTag = 4//如果后面还有一个禁首标点则异常
-                    else lindexTag = 1 //无异常场景
+                    if (index >= 2 && banEndOfLine(words[index - 2])) lindexTag = BreakMod.CPS_2//如果后面还有一个禁首标点则异常
+                    else lindexTag = BreakMod.BREAK_ONE_CHAR //无异常场景
                 }
                 /*禁止在行首的标点处理*/
                 else if (banStartOfLine(words[index])) {
-                    if (index >= 1 && banStartOfLine(words[index - 1])) lindexTag = 3//如果后面还有一个禁首标点则异常，不过三个连续行尾标点的用法不通用
-                    else if (index >= 2 && banEndOfLine(words[index - 2])) lindexTag = 5//如果后面还有一个禁首标点则异常
-                    else lindexTag = 1 //无异常场景
+                    if (index >= 1 && banStartOfLine(words[index - 1])) lindexTag = BreakMod.CPS_1//如果后面还有一个禁首标点则异常，不过三个连续行尾标点的用法不通用
+                    else if (index >= 2 && banEndOfLine(words[index - 2])) lindexTag = BreakMod.CPS_3//如果后面还有一个禁首标点则异常
+                    else lindexTag = BreakMod.BREAK_ONE_CHAR //无异常场景
                 } else {
-                    lindexTag = 0 //无异常场景
+                    lindexTag = BreakMod.NORMAL //无异常场景
                 }
 
                 /*判断上述逻辑解决不了的特殊情况*/
                 var reCheck = false
                 var breakIndex = 0
-                if(lindexTag==3&&(Incompressible(words[index])||Incompressible(words[index-1]))) reCheck= true
+                if(lindexTag==BreakMod.CPS_1&&(Incompressible(words[index])||Incompressible(words[index-1]))) reCheck= true
 
-                if(lindexTag==4&&(Incompressible(words[index-1])||Incompressible(words[index-2]))) reCheck= true
+                if(lindexTag==BreakMod.CPS_2&&(Incompressible(words[index-1])||Incompressible(words[index-2]))) reCheck= true
 
-                if(lindexTag==5&&(Incompressible(words[index])||Incompressible(words[index-2]))) reCheck= true
+                if(lindexTag==BreakMod.CPS_3&&(Incompressible(words[index])||Incompressible(words[index-2]))) reCheck= true
 
-                if(lindexTag>2&& index<words.lastIndex &&banStartOfLine(words[index + 1]))  reCheck= true
+                if(lindexTag>BreakMod.BREAK_MORE_CHAR&& index<words.lastIndex &&banStartOfLine(words[index + 1]))  reCheck= true
 
 
                 /*特殊标点使用难保证显示效果，所以不考虑间隔，直接查找到能满足条件的分割字*/
                 if(reCheck == true && index>2){
+                    lindexTag = BreakMod.NORMAL
                     for(i in (index) downTo 1 ){
                         if(i==index){
                             breakIndex = 0
@@ -80,47 +83,49 @@ class TextProcess(
                             cwPre = cwPre + StaticLayout.getDesiredWidth(words[i], textPaint)
                         }
                         if(!banStartOfLine(words[i])&&!banEndOfLine(words[i - 1])) {
-                            lindexTag = 2
+                            lindexTag = BreakMod.BREAK_MORE_CHAR
                             break
                         }
                     }
                 }
 
-                //Log.d("mq-3","--$line $lindexTag $breakIndex")
                 when (lindexTag) {
-                    0 -> {//模式0 正常断行
+                    BreakMod.NORMAL -> {//模式0 正常断行
                         offset = cw
                         lineEnd[line] = index
+                        lineCompressMod[line] = CPS_MOD_NULL
                         breakCharCnt = 1
                     }
-                    1 -> {//模式1 当前行下移一个字
+                    BreakMod.BREAK_ONE_CHAR -> {//模式1 当前行下移一个字
                         offset = cw + cwPre
                         lineEnd[line] = index - 1
+                        lineCompressMod[line] = CPS_MOD_NULL
                         breakCharCnt = 2
                     }
-                    2 -> {//模式2 当前行下移多个字
+                    BreakMod.BREAK_MORE_CHAR -> {//模式2 当前行下移多个字
                         offset = cw + cwPre
                         lineEnd[line] = index - breakIndex
+                        lineCompressMod[line] = CPS_MOD_NULL
                         breakCharCnt = breakIndex + 1
                     }
-                    3 -> {//模式3 两个后缀标点压缩
+                    BreakMod.CPS_1 -> {//模式3 两个后缀标点压缩
                         offset = 0f
                         lineEnd[line] = index + 1
-                        lineCompressMod[line] = 1
+                        lineCompressMod[line] = CPS_MOD_1
                         CompressCharIndex[line] = index - 1
                         breakCharCnt = 0
                     }
-                    4 -> { //模式4 标点压缩
+                    BreakMod.CPS_2 -> { //模式4 标点压缩
                         offset = 0f
                         lineEnd[line] = index + 1
-                        lineCompressMod[line] = 2
+                        lineCompressMod[line] = CPS_MOD_2
                         CompressCharIndex[line] = index - 2
                         breakCharCnt = 0
                     }
-                    5 -> {//模式5 标点压缩
+                    BreakMod.CPS_3 -> {//模式5 标点压缩
                         offset = 0f
                         lineEnd[line] = index + 1
-                        lineCompressMod[line] = 3
+                        lineCompressMod[line] = CPS_MOD_3
                         CompressCharIndex[line] = index - 2
                         breakCharCnt = 0
                     }
@@ -130,7 +135,6 @@ class TextProcess(
 
             if (line >= 99) Log.e("TextProcess", "line is Max $line")
             if (words[index] == "\n") Log.d("mq-1", "have break $s $index")
-            //Log.d("mq-1","char:$s index:$index ${words.lastIndex} ")
 
             /*当前行写满情况下的断行*/
             if (breakLine == true) {
@@ -159,7 +163,9 @@ class TextProcess(
             }
             cwPre = cw
         }
+
         lineCount = line
+
         if(false){
             for(i in 0 until line){
                 val s = lineStart[i]

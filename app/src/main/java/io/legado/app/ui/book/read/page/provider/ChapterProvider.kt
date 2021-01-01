@@ -297,7 +297,7 @@ object ChapterProvider {
         }
         var d = 0f
         var interval = 0f
-        if(lineCompressMod>0){
+        if(lineCompressMod>TextProcess.CPS_MOD_NULL){
             val gapCount: Int =  words.lastIndex - 1
             val endPuncWidth = StaticLayout.getDesiredWidth(words.get(gapCount+1), textPaint)
             interval = visibleWidth - desiredWidth + endPuncWidth
@@ -330,7 +330,7 @@ object ChapterProvider {
     ) {
         var interval:Float
         var gapCount:Int
-        if(lineCompressMod>0){
+        if(lineCompressMod>TextProcess.CPS_MOD_NULL){
             gapCount =  words.lastIndex - 1
             val endPuncWidth = StaticLayout.getDesiredWidth(words.get(gapCount+1), textPaint)
             interval = visibleWidth - desiredWidth + endPuncWidth
@@ -357,10 +357,10 @@ object ChapterProvider {
             val cw = StaticLayout.getDesiredWidth(s, textPaint)
             var x1 = 0f
             when(lineCompressMod){
-                1->{
+                TextProcess.CPS_MOD_1->{
                     if(index == (words.lastIndex - 1))  x1 = x + (cw/2) else if(index == words.lastIndex) x1 = x + cw else x1 = x + cw + d
                 }
-                2->{
+                TextProcess.CPS_MOD_2->{
                     if(index == (words.lastIndex - 2)){
                         x  = x - (cw/2)
                         x1 = x + cw
@@ -375,7 +375,7 @@ object ChapterProvider {
                         x1 = x + cw + d
                     }
                 }
-                3->{
+                TextProcess.CPS_MOD_3->{
                     if(index == (words.lastIndex - 2)){
                         x  = x - (cw/2)
                         x1 = x + cw
