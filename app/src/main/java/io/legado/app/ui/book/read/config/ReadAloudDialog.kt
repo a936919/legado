@@ -59,6 +59,7 @@ class ReadAloudDialog : BaseDialogFragment() {
     override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) {
         val bg = requireContext().readCfgBottomBg
         val textColor = requireContext().readCfgBottomText
+        val secondtextColor = ColorUtils.withAlpha(textColor,0.5f)
         with(binding) {
             rootView.setBackgroundColor(bg)
             tvPre.setTextColor(textColor)
@@ -71,13 +72,13 @@ class ReadAloudDialog : BaseDialogFragment() {
             tvTimer.setTextColor(textColor)
             tvTtsSpeed.setTextColor(textColor)
             ivCatalog.setColorFilter(textColor)
-            tvCatalog.setTextColor(textColor)
+            tvCatalog.setTextColor(secondtextColor)
             ivMainMenu.setColorFilter(textColor)
-            tvMainMenu.setTextColor(textColor)
+            tvMainMenu.setTextColor(secondtextColor)
             ivToBackstage.setColorFilter(textColor)
-            tvToBackstage.setTextColor(textColor)
+            tvToBackstage.setTextColor(secondtextColor)
             ivSetting.setColorFilter(textColor)
-            tvSetting.setTextColor(textColor)
+            tvSetting.setTextColor(secondtextColor)
             cbTtsFollowSys.setTextColor(textColor)
 
         }

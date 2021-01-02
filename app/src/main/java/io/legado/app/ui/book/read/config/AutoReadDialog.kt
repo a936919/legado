@@ -14,6 +14,7 @@ import io.legado.app.service.BaseReadAloudService
 import io.legado.app.service.help.ReadAloud
 import io.legado.app.ui.book.read.ReadBookActivity
 import io.legado.app.ui.widget.seekbar.SeekBarChangeListener
+import io.legado.app.utils.ColorUtils
 import io.legado.app.utils.viewbindingdelegate.viewBinding
 import org.jetbrains.anko.sdk27.listeners.onClick
 
@@ -54,17 +55,18 @@ class AutoReadDialog : BaseDialogFragment() {
     override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) {
         val bg = requireContext().readCfgBottomBg
         val textColor = requireContext().readCfgBottomText
+        val secondtextColor = ColorUtils.withAlpha(textColor,0.5f)
         binding.root.setBackgroundColor(bg)
         binding.tvReadSpeedTitle.setTextColor(textColor)
         binding.tvReadSpeed.setTextColor(textColor)
         binding.ivCatalog.setColorFilter(textColor)
-        binding.tvCatalog.setTextColor(textColor)
+        binding.tvCatalog.setTextColor(secondtextColor)
         binding.ivMainMenu.setColorFilter(textColor)
-        binding.tvMainMenu.setTextColor(textColor)
+        binding.tvMainMenu.setTextColor(secondtextColor)
         binding.ivAutoPageStop.setColorFilter(textColor)
-        binding.tvAutoPageStop.setTextColor(textColor)
+        binding.tvAutoPageStop.setTextColor(secondtextColor)
         binding.ivSetting.setColorFilter(textColor)
-        binding.tvSetting.setTextColor(textColor)
+        binding.tvSetting.setTextColor(secondtextColor)
         initOnChange()
         initData()
         initEvent()
