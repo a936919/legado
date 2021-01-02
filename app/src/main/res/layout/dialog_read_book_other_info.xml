@@ -12,12 +12,12 @@
         android:background="@color/btn_bg_press_3" />
     <!--book info-->
     <LinearLayout
-        android:layout_marginTop="20dp"
-        android:layout_marginBottom="20dp"
-        android:layout_marginRight="20dp"
-        android:layout_marginLeft="20dp"
+        android:id="@+id/ll_book_info"
+        android:clickable="true"
+        android:background="@drawable/selector_fillet_bg"
+        android:padding="20dp"
         android:orientation="horizontal"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <!--cover-->
         <io.legado.app.ui.widget.image.CoverImageView
@@ -40,28 +40,32 @@
             <TextView
                 android:id="@+id/book_name"
                 android:text="书名"
-                android:textSize="20sp"
+                android:textSize="18sp"
                 android:layout_marginBottom="4dp"
+                android:singleLine="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
             <TextView
                 android:id="@+id/book_author"
                 android:text="作者"
-                android:textSize="16sp"
+                android:textSize="14sp"
                 android:layout_marginBottom="8dp"
+                android:singleLine="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
             <TextView
                 android:id="@+id/read_time"
-                android:text="已读1小时20分"
+                android:text="已读"
                 android:layout_marginBottom="4dp"
                 android:textSize="14sp"
+                android:singleLine="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
             <TextView
                 android:id="@+id/read_all_time"
-                android:text="总时间：1小时20分"
+                android:text="总时间"
                 android:textSize="14sp"
+                android:singleLine="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
         </LinearLayout>
@@ -88,6 +92,9 @@
             android:layout_weight="1" />
         <!--朗读-->
         <LinearLayout
+            android:id="@+id/ll_read_aloud"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
             android:orientation="vertical"
             android:layout_width="50dp"
             android:layout_height="50dp">
@@ -113,6 +120,9 @@
             android:layout_weight="2" />
         <!--自动翻页-->
         <LinearLayout
+            android:id="@+id/ll_read_page"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
             android:orientation="vertical"
             android:layout_width="50dp"
             android:layout_height="50dp">
@@ -137,33 +147,11 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="2" />
-        <!--书签-->
-        <LinearLayout
-            android:orientation="vertical"
-            android:layout_width="50dp"
-            android:layout_height="50dp">
-            <androidx.appcompat.widget.AppCompatImageView
-                android:id="@+id/iv_book_mark"
-                android:layout_width="28dp"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:layout_gravity="center"
-                android:src="@drawable/ic_bookmark" />
-            <TextView
-                android:id="@+id/tv_book_mark"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="书签"
-                android:textSize="11sp"
-                android:layout_gravity="center"
-                />
-        </LinearLayout>
-        <View
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="2" />
         <!--搜索-->
         <LinearLayout
+            android:id="@+id/ll_search"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
             android:orientation="vertical"
             android:layout_width="50dp"
             android:layout_height="50dp">
@@ -186,47 +174,12 @@
         <View
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="1" />
-    </LinearLayout>
-
-
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_marginTop="10dp"
-        android:layout_marginBottom="20dp"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-        <View
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1" />
-        <!--访问原址-->
-        <LinearLayout
-            android:orientation="vertical"
-            android:layout_width="50dp"
-            android:layout_height="50dp">
-            <androidx.appcompat.widget.AppCompatImageView
-                android:id="@+id/iv_access_url"
-                android:layout_width="28dp"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:layout_gravity="center"
-                android:src="@drawable/ic_add_online" />
-            <TextView
-                android:id="@+id/tv_access_url"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="访问网站"
-                android:textSize="11sp"
-                android:layout_gravity="center"
-                />
-        </LinearLayout>
-        <View
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
             android:layout_weight="2" />
         <!--同步进度-->
         <LinearLayout
+            android:id="@+id/ll_get_progress"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
             android:orientation="vertical"
             android:layout_width="50dp"
             android:layout_height="50dp">
@@ -250,9 +203,83 @@
         <View
             android:layout_width="0dp"
             android:layout_height="match_parent"
+            android:layout_weight="1" />
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="20dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <View
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+        <!--作者相关-->
+        <LinearLayout
+            android:id="@+id/ll_author_other"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:orientation="vertical"
+            android:layout_width="50dp"
+            android:layout_height="50dp">
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/iv_author_other"
+                android:layout_width="28dp"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_profile_line" />
+            <TextView
+                android:id="@+id/tv_author_other"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="作者相关"
+                android:textSize="11sp"
+                android:layout_gravity="center"
+                />
+        </LinearLayout>
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="2" />
+        <!--访问原址-->
+        <LinearLayout
+            android:id="@+id/ll_access_url"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:orientation="vertical"
+            android:layout_width="50dp"
+            android:layout_height="50dp">
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/iv_access_url"
+                android:layout_width="28dp"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_add_online" />
+            <TextView
+                android:id="@+id/tv_access_url"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="访问网站"
+                android:textSize="11sp"
+                android:layout_gravity="center"
+                />
+        </LinearLayout>
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
             android:layout_weight="2" />
         <!--刷新-->
         <LinearLayout
+            android:id="@+id/ll_refresh"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
             android:orientation="vertical"
             android:layout_width="50dp"
             android:layout_height="50dp">
@@ -278,6 +305,9 @@
             android:layout_weight="2" />
         <!--离线缓存-->
         <LinearLayout
+            android:id="@+id/ll_download"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
             android:orientation="vertical"
             android:layout_width="50dp"
             android:layout_height="50dp">

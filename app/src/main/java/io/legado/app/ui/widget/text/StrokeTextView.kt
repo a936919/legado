@@ -50,7 +50,6 @@ open class StrokeTextView(context: Context, attrs: AttributeSet?) :
                 )
             }
             isBottomBackground -> {
-                val isLight = ColorUtils.isColorLight(context.bottomBackground)
                 background = Selector.shapeBuild()
                     .setCornerRadius(radius)
                     .setStrokeWidth(1.dp)

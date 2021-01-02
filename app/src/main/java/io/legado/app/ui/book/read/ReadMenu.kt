@@ -305,7 +305,7 @@ class ReadMenu @JvmOverloads constructor(
     }
 
     fun setTitle(title: String) {
-        binding.titleBar.title = title
+        binding.titleBar.title = ""
     }
 
     fun upBookView() {

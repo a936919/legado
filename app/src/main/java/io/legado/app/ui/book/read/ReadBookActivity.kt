@@ -8,6 +8,7 @@ import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.*
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import androidx.core.view.get
@@ -72,6 +73,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
     ReadBook.CallBack,
     AutoReadDialog.CallBack,
     TocRegexDialog.CallBack,
+    BookOtherInfoDialog.CallBack,
     ColorPickerDialogListener {
 
     private val requestCodeChapterList = 568
@@ -161,7 +163,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
      */
     private fun upMenu() {
         val menu = menu
-        val textColor:Int = readCfgTopText?:0
+        val textColor:Int = readCfgTopText
         val book = ReadBook.book
         if (menu != null && book != null) {
             val onLine = !book.isLocalBook()
@@ -175,11 +177,19 @@ class ReadBookActivity : ReadBookBaseActivity(),
                     R.id.menu_group_text -> item.isVisible = book.isLocalTxt()
                     R.id.menu_group_login ->
                         item.isVisible = !ReadBook.webBook?.bookSource?.loginUrl.isNullOrEmpty()
-                    R.id.ReplaceRule -> item.isVisible = true
                     else -> when (item.itemId) {
                         R.id.menu_enable_replace -> item.isChecked = book.getUseReplaceRule()
                         R.id.menu_re_segment -> item.isChecked = book.getReSegment()
+                        R.id.ReplaceRule -> item.isVisible = true
                     }
+                }
+
+                when(item.itemId){
+                    R.id.menu_refresh,
+                    R.id.menu_download,
+                    R.id.menu_get_progress,
+                    R.id.menu_book_info,
+                    R.id.menu_help->item.isVisible = false
                 }
             }
         }
@@ -514,6 +524,26 @@ class ReadBookActivity : ReadBookBaseActivity(),
             }
         }
         return false
+    }
+
+    override fun synProgress() {
+        ReadBook.book?.let {
+            viewModel.syncBookProgress(it) { progress ->
+                sureSyncProgress(progress)
+            }
+        }
+    }
+
+    override fun refreshBook(){
+        ReadBook.book?.let {
+            ReadBook.curTextChapter = null
+            binding.readView.upContent()
+            viewModel.refreshContent(it)
+        }
+    }
+
+    override fun downloadBook() {
+        showDownloadDialog()
     }
 
     override fun loadChapterList(book: Book) {

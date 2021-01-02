@@ -12,27 +12,30 @@ import io.legado.app.App
 import io.legado.app.R
 import io.legado.app.base.BaseDialogFragment
 import io.legado.app.data.entities.Book
+import io.legado.app.data.entities.BookProgress
 import io.legado.app.databinding.DialogReadBookOtherInfoBinding
 import io.legado.app.help.BlurTransformation
 import io.legado.app.help.ImageLoader
 import io.legado.app.lib.theme.readCfgBottomBg
 import io.legado.app.lib.theme.readCfgBottomText
 import io.legado.app.service.help.ReadBook
+import io.legado.app.ui.book.info.BookInfoActivity
 import io.legado.app.ui.book.info.BookInfoViewModel
 import io.legado.app.ui.book.read.ReadBookActivity
 import io.legado.app.ui.book.read.page.entities.TextPage
+import io.legado.app.ui.book.search.SearchActivity
 import io.legado.app.ui.widget.image.CoverImageView
-import io.legado.app.utils.ColorUtils
-import io.legado.app.utils.getViewModel
-import io.legado.app.utils.gone
+import io.legado.app.utils.*
 import io.legado.app.utils.viewbindingdelegate.viewBinding
-import io.legado.app.utils.visible
+import org.jetbrains.anko.sdk27.listeners.onClick
+import org.jetbrains.anko.startActivity
 
 class BookOtherInfoDialog : BaseDialogFragment()  {
-    private var callBack: ReadAloudDialog.CallBack? = null
+    private var callBack: BookOtherInfoDialog.CallBack? = null
     private val binding by viewBinding(DialogReadBookOtherInfoBinding::bind)
     val viewModel: BookInfoViewModel
         get() = getViewModel(BookInfoViewModel::class.java)
+    val book = ReadBook.book
 
     override fun onStart() {
         super.onStart()
@@ -59,23 +62,28 @@ class BookOtherInfoDialog : BaseDialogFragment()  {
         savedInstanceState: Bundle?
     ): View? {
         (activity as ReadBookActivity).bottomDialog++
-        //callBack = activity as? CallBack
-        //viewModel.bookData.observe(this, { showBook(it) })
+        callBack = activity as? CallBack
         return inflater.inflate(R.layout.dialog_read_book_other_info, container)
     }
 
     override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) {
+        initView()
+        if(book!=null) showBook(book)
+        initEvent()
+    }
+
+    private fun initView(){
         val bg = requireContext().readCfgBottomBg
         val textColor = requireContext().readCfgBottomText
         val secondtextColor = ColorUtils.withAlpha(textColor,0.5f)
         binding.apply {
-             root.setBackgroundColor(bg)
+            root.setBackgroundColor(bg)
             bookName.setTextColor(textColor)
             bookAuthor.setTextColor(secondtextColor)
             readTime.setTextColor(textColor)
             readAllTime.setTextColor(textColor)
 
-            ivBookMark.setColorFilter(textColor)
+            ivAuthorOther.setColorFilter(textColor)
             ivReadAloud.setColorFilter(textColor)
             ivReadPage.setColorFilter(textColor)
             ivSearch.setColorFilter(textColor)
@@ -84,7 +92,7 @@ class BookOtherInfoDialog : BaseDialogFragment()  {
             ivGetProgress.setColorFilter(textColor)
             ivRefresh.setColorFilter(textColor)
 
-            tvBookMark.setTextColor(secondtextColor)
+            tvAuthorOther.setTextColor(secondtextColor)
             tvReadAloud.setTextColor(secondtextColor)
             tvReadPage.setTextColor(secondtextColor)
             tvSearch.setTextColor(secondtextColor)
@@ -93,17 +101,51 @@ class BookOtherInfoDialog : BaseDialogFragment()  {
             tvGetProgress.setTextColor(secondtextColor)
             tvRefresh.setTextColor(secondtextColor)
         }
-        val book = ReadBook.book
-        if(book!=null) showBook(book)
+    }
+
+    private fun initEvent() {
+        binding.apply {
+            llBookInfo.onClick {
+                ReadBook.book?.let {
+                    startActivity<BookInfoActivity>(Pair("name", it.name), Pair("author", it.author))
+                }
+            }
+            llSearch.onClick {
+                callBack?.openSearchActivity(null)
+            }
+            llReadPage.onClick {
+                callBack?.autoPage()
+                dismiss()
+            }
+            llReadAloud.onClick {
+                callBack?.onClickReadAloud()
+                dismiss()
+            }
+            llGetProgress.onClick {
+                callBack?.synProgress()
+            }
+            llAuthorOther.onClick {
+                startActivity<SearchActivity>(Pair("key", book?.author))
+            }
+            llAccessUrl.onClick {
+                requireContext().openUrl(ReadBook.curTextChapter?.url.toString())
+            }
+            llRefresh.onClick {
+                callBack?.refreshBook()
+            }
+            llDownload.onClick {
+                callBack?.downloadBook()
+            }
+        }
     }
 
     private fun showBook(book: Book) = with(binding) {
         showCover(book)
         bookName.text = book.name
         bookAuthor.text = book.getRealAuthor()
-        readTime.text="阅读  ${formatDuring( System.currentTimeMillis()-ReadBook.readStartTime)}"
+        readTime.text="当前已读  ${formatDuring( System.currentTimeMillis()-ReadBook.readStartTime)}"
         val readTime =  App.db.readRecordDao.getReadTime(book.name) ?: 0
-        readAllTime.text="本书共阅读  ${formatDuring(readTime)}"
+        readAllTime.text="本书共读  ${formatDuring(readTime)}"
     }
 
     private fun showCover(book: Book) {
@@ -132,6 +174,11 @@ class BookOtherInfoDialog : BaseDialogFragment()  {
     }
 
     interface CallBack {
-        fun showMenuBar()
+        fun openSearchActivity(searchWord: String?)
+        fun autoPage()
+        fun onClickReadAloud()
+        fun synProgress()
+        fun refreshBook()
+        fun downloadBook()
     }
 }
