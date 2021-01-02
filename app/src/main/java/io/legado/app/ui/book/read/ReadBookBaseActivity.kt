@@ -111,16 +111,7 @@ abstract class ReadBookBaseActivity :
             }
         }
         upSystemUiVisibilityO(isInMultiWindow, toolBarHide)
-        if (toolBarHide) {
-            ATH.setLightStatusBar(this, ReadBookConfig.durConfig.curStatusIconDark())
-        } else {
-            ATH.setLightStatusBar(this, ColorUtils.isColorLight(readCfgTopBg))
-/*
-            ATH.setLightStatusBarAuto(
-                this,
-                ThemeStore.statusBarColor(this, AppConfig.isTransparentStatusBar)
-            )*/
-        }
+        ATH.setLightStatusBar(this, ColorUtils.isColorLight(readCfgTopBg))
     }
 
     @Suppress("DEPRECATION")
@@ -210,6 +201,10 @@ abstract class ReadBookBaseActivity :
             val alertBinding = DialogBookmarkBinding.inflate(layoutInflater).apply {
                 editBookText.setText(bookmark.bookText)
                 editView.setText(bookmark.content)
+                editBookText.textSize = 15f
+                editView.textSize = 15f
+                editBookText.maxLines= 6
+                editView.maxLines= 6
             }
             customView = alertBinding.root
             yesButton {
