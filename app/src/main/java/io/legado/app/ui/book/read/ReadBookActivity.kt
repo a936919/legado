@@ -206,6 +206,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
                     ChangeSourceDialog.show(supportFragmentManager, it.name, it.author)
                 }
             }
+            R.id.menu_source_edit-> openSourceEditActivity()
             R.id.menu_refresh -> {
                 if (ReadBook.bookSource == null) {
                     upContent()

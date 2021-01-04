@@ -38,4 +38,5 @@ val upArrow = ContextCompat.getDrawable(this, R.drawable.abc_ic_ab_back_material
 ```
 src\main\java\io\legado\app\utils\MenuExtensions.kt//设置图标颜色
 src\main\java\io\legado\app\constant\AppConst.kt//设置全局阴影
+src\main\java\io\legado\app\ui\main\bookshelf\books\BooksFragment.kt//打开书籍
 ```

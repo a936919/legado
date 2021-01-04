@@ -3,6 +3,7 @@ package io.legado.app.ui.book.read.page
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.drawable.Drawable
+import android.util.Log
 import android.view.LayoutInflater
 import android.widget.FrameLayout
 import androidx.core.view.isGone
@@ -49,6 +50,7 @@ class PageView(context: Context) : FrameLayout(context) {
         if (!isInEditMode) {
             //设置背景防止切换背景时文字重叠
             setBackgroundColor(context.getCompatColor(R.color.background))
+            Log.d("mq-1","PageView ${ReadBook?.book?.name}")
             upStyle()
         }
         binding.contentTextView.upView = {

@@ -1,6 +1,7 @@
 package io.legado.app.ui.main.bookshelf.books
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.core.view.isGone
 import androidx.lifecycle.LiveData
@@ -138,6 +139,7 @@ class BooksFragment : BaseFragment(R.layout.fragment_books),
     }
 
     override fun open(book: Book) {
+        Log.d("mq-1","book is ${book.name},${book.isComic()}")
         when (book.type) {
             BookType.audio ->
                 startActivity<AudioPlayActivity>(Pair("bookUrl", book.bookUrl))

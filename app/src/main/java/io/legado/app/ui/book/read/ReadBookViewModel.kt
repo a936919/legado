@@ -2,6 +2,7 @@ package io.legado.app.ui.book.read
 
 import android.app.Application
 import android.content.Intent
+import android.util.Log
 
 import android.widget.Toast
 import io.legado.app.App
@@ -49,6 +50,7 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
     }
 
     private fun initBook(book: Book) {
+        Log.d("mq-1","initBook ${ReadBook.book?.name},${book.name}")
         if (ReadBook.book?.bookUrl != book.bookUrl) {
             ReadBook.resetData(book)
             isInitFinish = true

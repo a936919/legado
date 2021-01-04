@@ -22,6 +22,11 @@
             android:title="@string/offline_cache"
             app:showAsAction="never" />
 
+        <item
+            android:id="@+id/menu_source_edit"
+            android:title="编辑书源"
+            app:showAsAction="never" />
+
     </group>
 
     <group android:id="@+id/menu_group_text">

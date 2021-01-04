@@ -47,12 +47,13 @@ object ReadBookConfig {
 
     @Synchronized
     fun getConfig(index: Int): Config {
+        /*
         if(iscomic()){
             for (i in 0 until  configList.size) {
                 if(configList[i]?.name == "comic")
                 return configList[i]
             }
-        }
+        }*/
 
         if (configList.size < 5) {
             resetAll()
@@ -329,7 +330,7 @@ object ReadBookConfig {
             config.showFooterLine = value
         }
 
-    private fun iscomic():Boolean{
+    fun iscomic():Boolean{
         val book = ReadBook.book
         if(book!=null&&book.isComic()) return true
         return false
