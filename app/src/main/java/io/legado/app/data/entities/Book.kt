@@ -56,6 +56,12 @@ data class Book(
     var readConfig: ReadConfig? = null
 ) : Parcelable, BaseBook {
 
+    fun isComic():Boolean{
+        val bookSource = App.db.bookSourceDao.getBookSource(origin)
+        if(bookSource?.bookSourceComment == "comic") return true
+        return false
+    }
+
     fun isLocalBook(): Boolean {
         return origin == BookType.local
     }

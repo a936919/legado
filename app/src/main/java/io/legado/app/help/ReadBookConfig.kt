@@ -9,6 +9,7 @@ import io.legado.app.App
 import io.legado.app.R
 import io.legado.app.constant.PreferKey
 import io.legado.app.help.coroutine.Coroutine
+import io.legado.app.service.help.ReadBook
 import io.legado.app.ui.book.read.page.provider.ChapterProvider
 import io.legado.app.utils.*
 import java.io.File
@@ -46,6 +47,13 @@ object ReadBookConfig {
 
     @Synchronized
     fun getConfig(index: Int): Config {
+        if(iscomic()){
+            for (i in 0 until  configList.size) {
+                if(configList[i]?.name == "comic")
+                return configList[i]
+            }
+        }
+
         if (configList.size < 5) {
             resetAll()
         }
@@ -320,6 +328,12 @@ object ReadBookConfig {
         set(value) {
             config.showFooterLine = value
         }
+
+    private fun iscomic():Boolean{
+        val book = ReadBook.book
+        if(book!=null&&book.isComic()) return true
+        return false
+    }
 
     fun getExportConfig(): Config {
         val exportConfig = GSON.fromJsonObject<Config>(GSON.toJson(durConfig))!!
