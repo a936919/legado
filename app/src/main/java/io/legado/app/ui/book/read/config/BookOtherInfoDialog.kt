@@ -128,7 +128,6 @@ class BookOtherInfoDialog : BaseDialogFragment()  {
                 startActivity<SearchActivity>(Pair("key", book?.author))
             }
             llAccessUrl.onClick {
-                mqLog.d("url ${ReadBook.curTextChapter?.url}")
                 val localBook = ReadBook?.book?.isLocalBook()?:true
                 if(localBook||ReadBook.curTextChapter?.url==null){
                     requireContext().openUrl("https://www.baidu.com/s?wd=${ReadBook?.book?.name}")

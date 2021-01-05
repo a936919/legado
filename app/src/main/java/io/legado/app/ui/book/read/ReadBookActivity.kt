@@ -991,6 +991,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
 
 
     override fun enableComicMode() {
+        //mqLog.d("bakSelect is ${ReadBookConfig.bakSelect} styleSelect is ${ReadBookConfig.styleSelect}")
         var select:Int = ReadBookConfig.bakSelect
         if(ReadBook.isComicBook()){
             if(ReadBookConfig.getComicSelect()>=0){
