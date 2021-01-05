@@ -82,8 +82,6 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
             ItemReadStyleBinding.inflate(layoutInflater, it, false).apply {
                 ivStyle.setPadding(6.dp, 6.dp, 6.dp, 6.dp)
                 ivStyle.setText(null)
-                ivStyle.setColorFilter(requireContext().readCfgBottomText)
-                ivStyle.borderColor = requireContext().readCfgBottomText
                 ivStyle.setImageResource(R.drawable.ic_add)
                 root.onClick {
                     ReadBookConfig.configList.add(ReadBookConfig.Config())
@@ -101,6 +99,34 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
         tvBgTs.setTextColor(textColor)
         tvShareLayout.setTextColor(textColor)
         tvTextFont.setTextColor(textColor)
+        tvTextFont.upBackground()
+        textFontWeightConverter.setTextColor(textColor)
+        textFontWeightConverter.upBackground()
+        tvTextIndent.setTextColor(textColor)
+        tvTextIndent.upBackground()
+        chineseConverter.setTextColor(textColor)
+        chineseConverter.upBackground()
+        tvPadding.setTextColor(textColor)
+        tvPadding.upBackground()
+        tvTip.setTextColor(textColor)
+        tvTip.upBackground()
+        dsbTextSize.upBackground()
+        dsbBoldSize.upBackground()
+        dsbLineSize.upBackground()
+        dsbParagraphSpacing.upBackground()
+        dsbTextLetterSpacing.upBackground()
+        rbAnim0.initTheme()
+        rbAnim1.initTheme()
+        rbNoAnim.initTheme()
+        rbNoAnim.initTheme()
+        rbScrollAnim.initTheme()
+        rbSimulationAnim.initTheme()
+        styleAdapter.addFooterView {
+            ItemReadStyleBinding.inflate(layoutInflater, it, false).apply {
+                ivStyle.setColorFilter(requireContext().readCfgBottomText)
+                ivStyle.borderColor = requireContext().readCfgBottomText
+            }
+        }
     }
 
     private fun initData() {

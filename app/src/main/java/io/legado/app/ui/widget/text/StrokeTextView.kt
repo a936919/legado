@@ -30,7 +30,7 @@ open class StrokeTextView(context: Context, attrs: AttributeSet?) :
         upBackground()
     }
 
-    private fun upBackground() {
+    fun upBackground() {
         when {
             isInEditMode -> {
                 background = Selector.shapeBuild()

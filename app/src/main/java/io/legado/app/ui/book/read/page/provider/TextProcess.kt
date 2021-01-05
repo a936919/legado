@@ -78,8 +78,7 @@ class TextProcess(
                         if(i==index){
                             breakIndex = 0
                             cwPre = 0f
-                        }
-                        else{
+                        } else{
                             breakIndex++
                             cwPre = cwPre + StaticLayout.getDesiredWidth(words[i], textPaint)
                         }

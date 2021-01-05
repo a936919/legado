@@ -45,16 +45,7 @@ class DetailSeekBar @JvmOverloads constructor(
         binding.seekBar.max = typedArray.getInteger(R.styleable.DetailSeekBar_max, 0)
         typedArray.recycle()
         if (isBottomBackground && !isInEditMode) {
-            val textColor = context.readCfgBottomText
-            var colorList: ColorStateList = Selector.colorBuild()
-                    .setDefaultColor(textColor)
-                    .setPressedColor(ColorUtils.darkenColor(textColor))
-                    .create()
-            binding.tvSeekTitle.setTextColor(textColor)
-            binding.ivSeekPlus.setColorFilter(textColor)
-            binding.ivSeekReduce.setColorFilter(textColor)
-            binding.tvSeekValue.setTextColor(textColor)
-            binding.seekBar.progressBackgroundTintList = colorList
+            upBackground()
         }
         binding.ivSeekPlus.onClick {
             binding.seekBar.progressAdd(1)
@@ -65,6 +56,20 @@ class DetailSeekBar @JvmOverloads constructor(
             onChanged?.invoke(binding.seekBar.progress)
         }
         binding.seekBar.setOnSeekBarChangeListener(this)
+    }
+
+    fun upBackground(){
+        val textColor = context.readCfgBottomText
+        var colorList: ColorStateList = Selector.colorBuild()
+                .setDefaultColor(textColor)
+                .setPressedColor(ColorUtils.darkenColor(textColor))
+                .create()
+        binding.tvSeekTitle.setTextColor(textColor)
+        binding.ivSeekPlus.setColorFilter(textColor)
+        binding.ivSeekReduce.setColorFilter(textColor)
+        binding.tvSeekValue.setTextColor(textColor)
+        binding.seekBar.progressBackgroundTintList = colorList
+
     }
 
     private fun upValue(progress: Int = binding.seekBar.progress) {

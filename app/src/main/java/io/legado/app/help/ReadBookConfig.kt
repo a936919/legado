@@ -159,7 +159,7 @@ object ReadBookConfig {
     val textBottomJustify get() = context.getPrefBoolean(PreferKey.textBottomJustify, true)
     var hideStatusBar = context.getPrefBoolean(PreferKey.hideStatusBar)
     var hideNavigationBar = context.getPrefBoolean(PreferKey.hideNavigationBar)
-    var bakSelect:Int = styleSelect
+    var bakSelect:Int = context.getPrefInt(PreferKey.readStyleSelect)
 
     val config get() = if (shareLayout) shareConfig else durConfig
 

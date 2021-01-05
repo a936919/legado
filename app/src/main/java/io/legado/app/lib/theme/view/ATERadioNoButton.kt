@@ -25,7 +25,7 @@ class ATERadioNoButton(context: Context, attrs: AttributeSet) :
         initTheme()
     }
 
-    private fun initTheme() {
+    fun initTheme() {
         when {
             isInEditMode -> Unit
             isBottomBackground -> {

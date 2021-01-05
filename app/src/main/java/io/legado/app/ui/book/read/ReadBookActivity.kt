@@ -80,7 +80,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
     private val requestCodeReplace = 312
     private val requestCodeSearchResult = 123
     private val requestCodeEditSource = 111
-    private var menu: Menu? = null
+    var menu: Menu? = null
     private val textActionMenu: TextActionMenu by lazy {
         TextActionMenu(this, this)
     }
@@ -991,15 +991,13 @@ class ReadBookActivity : ReadBookBaseActivity(),
 
 
     override fun enableComicMode() {
-        mqLog.d("bakSelect is ${ReadBookConfig.bakSelect} styleSelect is ${ReadBookConfig.styleSelect}")
         var select:Int = ReadBookConfig.bakSelect
         if(ReadBook.isComicBook()){
             if(ReadBookConfig.getComicSelect()>=0){
                 select = ReadBookConfig.getComicSelect()
             }
             binding.readView.curPage.upSelectAble(false)
-        }
-        else{
+        } else{
             var selectAble = getPrefBoolean(PreferKey.textSelectAble, true)
             binding.readView.curPage.upSelectAble(selectAble)
         }
@@ -1009,6 +1007,6 @@ class ReadBookActivity : ReadBookBaseActivity(),
             upView()
             postEvent(EventBus.UP_CONFIG, true)
         }
+        upPageAnim()
     }
-
 }

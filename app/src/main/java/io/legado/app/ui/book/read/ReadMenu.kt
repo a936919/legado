@@ -10,7 +10,9 @@ import android.view.WindowManager
 import android.view.animation.Animation
 import android.widget.FrameLayout
 import android.widget.SeekBar
+import androidx.core.view.get
 import androidx.core.view.isVisible
+import androidx.core.view.size
 import io.legado.app.App
 import io.legado.app.R
 import io.legado.app.constant.PreferKey
@@ -101,6 +103,14 @@ class ReadMenu @JvmOverloads constructor(
         tvFont.setTextColor(textColor)
         ivSetting.setColorFilter(textColor)
         tvSetting.setTextColor(textColor)
+        val menu = (context as ReadBookActivity).menu
+        if (menu != null){
+            for (i in 0 until menu.size){
+                val item = menu[i]
+                item.icon?.setTint(textColor)
+            }
+        }
+
     }
 
     fun upBrightnessState() {
