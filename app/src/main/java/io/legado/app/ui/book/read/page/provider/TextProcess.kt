@@ -180,7 +180,7 @@ class TextProcess(
     }
 
     private fun banStartOfLine(string: String):Boolean{
-        val panc = arrayOf("，","。","：","？","！","、","”","’","）","》","}","】",")",">","]","}",",",".","?","!",":","」")
+        val panc = arrayOf("，","。","：","？","！","、","”","’","）","》","}","】",")",">","]","}",",",".","?","!",":","」","；",";")
         panc.forEach{
             if(it == string) return true
         }
