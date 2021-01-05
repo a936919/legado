@@ -988,4 +988,27 @@ class ReadBookActivity : ReadBookBaseActivity(),
             keepScreenOn(window, false)
         }
     }
+
+
+    override fun enableComicMode() {
+        mqLog.d("bakSelect is ${ReadBookConfig.bakSelect} styleSelect is ${ReadBookConfig.styleSelect}")
+        var select:Int = ReadBookConfig.bakSelect
+        if(ReadBook.isComicBook()){
+            if(ReadBookConfig.getComicSelect()>=0){
+                select = ReadBookConfig.getComicSelect()
+            }
+            binding.readView.curPage.upSelectAble(false)
+        }
+        else{
+            var selectAble = getPrefBoolean(PreferKey.textSelectAble, true)
+            binding.readView.curPage.upSelectAble(selectAble)
+        }
+        if (select != ReadBookConfig.styleSelect) {
+            ReadBookConfig.styleSelect = select
+            ReadBookConfig.upBg()
+            upView()
+            postEvent(EventBus.UP_CONFIG, true)
+        }
+    }
+
 }

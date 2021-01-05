@@ -50,7 +50,6 @@ class PageView(context: Context) : FrameLayout(context) {
         if (!isInEditMode) {
             //设置背景防止切换背景时文字重叠
             setBackgroundColor(context.getCompatColor(R.color.background))
-            Log.d("mq-1","PageView ${ReadBook?.book?.name}")
             upStyle()
         }
         binding.contentTextView.upView = {

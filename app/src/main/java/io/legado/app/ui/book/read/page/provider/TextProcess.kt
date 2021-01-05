@@ -3,6 +3,7 @@ package io.legado.app.ui.book.read.page.provider
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.Log
+import io.legado.app.utils.mqLog
 import io.legado.app.utils.toStringArray
 
 /*
@@ -133,8 +134,8 @@ class TextProcess(
                 breakLine = true
             }
 
-            if (line >= 99) Log.e("TextProcess", "line is Max $line")
-            if (words[index] == "\n") Log.d("mq-1", "have break $s $index")
+            if (line >= 99) mqLog.e("line is Max $line")
+            if (words[index] == "\n") mqLog.e("have break $s $index")
 
             /*当前行写满情况下的断行*/
             if (breakLine == true) {
@@ -171,10 +172,10 @@ class TextProcess(
                 val s = lineStart[i]
                 val e = lineEnd[i]
                 val t = text.substring(s, e)
-                Log.d("mq-1","-----------------------line Info---------------------------")
-                Log.d("mq-1","line: $i lineS:${lineStart[i]} lineE:${lineEnd[i]} width: ${e-s} lineWidth: ${lineWidth[i]} compresMod: ${lineCompressMod[i]}")
-                Log.d("mq-1","$t")
-                Log.d("mq-1","-----------------------line Info---------------------------")
+                mqLog.d("-----------------------line Info---------------------------")
+                mqLog.d("line: $i lineS:${lineStart[i]} lineE:${lineEnd[i]} width: ${e-s} lineWidth: ${lineWidth[i]} compresMod: ${lineCompressMod[i]}")
+                mqLog.d("$t")
+                mqLog.d("-----------------------line Info---------------------------")
             }
         }
     }

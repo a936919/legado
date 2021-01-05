@@ -174,6 +174,7 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
         val oldIndex = ReadBookConfig.styleSelect
         if (index != oldIndex) {
             ReadBookConfig.styleSelect = index
+            ReadBookConfig.bakSelect = index
             ReadBookConfig.upBg()
             upView()
             styleAdapter.notifyItemChanged(oldIndex)

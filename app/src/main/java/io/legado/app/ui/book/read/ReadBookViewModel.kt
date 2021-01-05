@@ -46,11 +46,11 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
             if (ReadBook.inBookshelf) {
                 ReadBook.saveRead()
             }
+            ReadBook.callBack?.enableComicMode()
         }
     }
 
     private fun initBook(book: Book) {
-        Log.d("mq-1","initBook ${ReadBook.book?.name},${book.name}")
         if (ReadBook.book?.bookUrl != book.bookUrl) {
             ReadBook.resetData(book)
             isInitFinish = true

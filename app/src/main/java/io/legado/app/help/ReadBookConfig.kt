@@ -47,13 +47,6 @@ object ReadBookConfig {
 
     @Synchronized
     fun getConfig(index: Int): Config {
-        /*
-        if(iscomic()){
-            for (i in 0 until  configList.size) {
-                if(configList[i]?.name == "comic")
-                return configList[i]
-            }
-        }*/
 
         if (configList.size < 5) {
             resetAll()
@@ -166,6 +159,7 @@ object ReadBookConfig {
     val textBottomJustify get() = context.getPrefBoolean(PreferKey.textBottomJustify, true)
     var hideStatusBar = context.getPrefBoolean(PreferKey.hideStatusBar)
     var hideNavigationBar = context.getPrefBoolean(PreferKey.hideNavigationBar)
+    var bakSelect:Int = styleSelect
 
     val config get() = if (shareLayout) shareConfig else durConfig
 
@@ -330,11 +324,6 @@ object ReadBookConfig {
             config.showFooterLine = value
         }
 
-    fun iscomic():Boolean{
-        val book = ReadBook.book
-        if(book!=null&&book.isComic()) return true
-        return false
-    }
 
     fun getExportConfig(): Config {
         val exportConfig = GSON.fromJsonObject<Config>(GSON.toJson(durConfig))!!
@@ -375,6 +364,14 @@ object ReadBookConfig {
             exportConfig.footerMode = shareConfig.footerMode
         }
         return exportConfig
+    }
+
+    fun getComicSelect():Int{
+        for (i in 0 until  configList.size) {
+            if(configList[i]?.name == "comic")
+                return i
+        }
+        return -1
     }
 
     @Keep

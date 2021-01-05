@@ -270,7 +270,6 @@ object ChapterProvider {
         val icw = StaticLayout.getDesiredWidth(bodyIndent, textPaint) / bodyIndent.length
         val d = getDefinterval(textPaint)
         var num = 0
-        //Log.d("debug2","|$bodyIndent| ${bodyIndent.length} icw is $icw")
         bodyIndent.toStringArray().forEach {
             val x1 = x + icw + d
             num++
@@ -402,7 +401,6 @@ object ChapterProvider {
         val defCharWidth = StaticLayout.getDesiredWidth("我",textPaint)
         val f = (visibleWidth / defCharWidth).toInt().toFloat()
         val defD = (visibleWidth % defCharWidth) / f
-        //Log.d("mq-2","$visibleWidth $defCharWidth $f $defD")
         return defD
     }
     /**
@@ -410,7 +408,6 @@ object ChapterProvider {
      */
     private fun exceed(textLine: TextLine, words: Array<String>) {
         val endX = textLine.textChars.last().end
-        //Log.d("mq-2", "end is ${endX} $visibleRight")
         if (endX > visibleRight) {
             val cc = (endX - visibleRight) / words.size
             for (i in 0..words.lastIndex) {
