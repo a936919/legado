@@ -54,7 +54,7 @@ open class StrokeTextView(context: Context, attrs: AttributeSet?) :
                     .setCornerRadius(radius)
                     .setStrokeWidth(1.dp)
                     .setDisabledStrokeColor(context.getCompatColor(R.color.md_grey_500))
-                    .setDefaultStrokeColor(context.readCfgBottomText)
+                    .setDefaultStrokeColor(ColorUtils.withAlpha(context.readCfgBottomText,0.5f))
                     .setSelectedStrokeColor(context.accentColor)
                     .setPressedBgColor(context.getCompatColor(R.color.transparent30))
                     .create()

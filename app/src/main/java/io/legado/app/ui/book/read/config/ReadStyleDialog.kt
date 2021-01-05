@@ -123,8 +123,8 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
         rbSimulationAnim.initTheme()
         styleAdapter.addFooterView {
             ItemReadStyleBinding.inflate(layoutInflater, it, false).apply {
-                ivStyle.setColorFilter(requireContext().readCfgBottomText)
-                ivStyle.borderColor = requireContext().readCfgBottomText
+                ivStyle.setColorFilter(textColor)
+                ivStyle.borderColor = textColor
             }
         }
     }

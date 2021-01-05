@@ -31,11 +31,11 @@ class ATERadioNoButton(context: Context, attrs: AttributeSet) :
             isBottomBackground -> {
                 val textColor = context.readCfgBottomText
                 background = Selector.shapeBuild()
-                    .setCornerRadius(2.dp)
-                    .setStrokeWidth(2.dp)
+                    .setCornerRadius(1.dp)
+                    .setStrokeWidth(1.dp)
                     .setCheckedBgColor(context.accentColor)
                     .setCheckedStrokeColor(context.accentColor)
-                    .setDefaultStrokeColor(textColor)
+                    .setDefaultStrokeColor(ColorUtils.withAlpha(textColor,0.5f))
                     .create()
                 setTextColor(
                     Selector.colorBuild()
