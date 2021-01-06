@@ -32,10 +32,9 @@
     <group android:id="@+id/menu_group_text">
         <item
             android:id="@+id/menu_toc_regex"
-            android:icon="@drawable/ic_book_source_line"
             android:title="@string/txt_toc_regex"
             android:visible="false"
-            app:showAsAction="always" />
+            app:showAsAction="never" />
     </group>
 
     <group android:id="@+id/menu_group_local">

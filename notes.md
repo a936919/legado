@@ -25,6 +25,7 @@ ColorUtils.shiftColor(ReadBookConfig.bgMeanColor, 1.02f)
 
 ```
 git pull git://github.com/gedoor/legado.git master
+//后面的可以在Desktop里操作了
 git add //conflict file
 git commit -m "resolve the conflict"
 git push origin master
