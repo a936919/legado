@@ -992,7 +992,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
 
     override fun enableComicMode() {
         //mqLog.d("bakSelect is ${ReadBookConfig.bakSelect} styleSelect is ${ReadBookConfig.styleSelect}")
-        var select:Int = ReadBookConfig.bakSelect
+        var select:Int = ReadBookConfig.styleSelect
         if(ReadBook.isComicBook()){
             if(ReadBookConfig.getComicSelect()>=0){
                 select = ReadBookConfig.getComicSelect()
@@ -1002,8 +1002,8 @@ class ReadBookActivity : ReadBookBaseActivity(),
             var selectAble = getPrefBoolean(PreferKey.textSelectAble, true)
             binding.readView.curPage.upSelectAble(selectAble)
         }
-        if (select != ReadBookConfig.styleSelect) {
-            ReadBookConfig.styleSelect = select
+        if (select != ReadBookConfig.backupSelect) {
+            ReadBookConfig.backupSelect = select
             ReadBookConfig.upBg()
             upView()
             postEvent(EventBus.UP_CONFIG, true)

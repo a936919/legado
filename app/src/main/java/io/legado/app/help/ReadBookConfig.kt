@@ -27,9 +27,9 @@ object ReadBookConfig {
     val configList: ArrayList<Config> = arrayListOf()
     lateinit var shareConfig: Config
     var durConfig
-        get() = getConfig(styleSelect)
+        get() = getConfig(backupSelect)
         set(value) {
-            configList[styleSelect] = value
+            configList[backupSelect] = value
             if (shareLayout) {
                 shareConfig = value
             }
@@ -159,7 +159,7 @@ object ReadBookConfig {
     val textBottomJustify get() = context.getPrefBoolean(PreferKey.textBottomJustify, true)
     var hideStatusBar = context.getPrefBoolean(PreferKey.hideStatusBar)
     var hideNavigationBar = context.getPrefBoolean(PreferKey.hideNavigationBar)
-    var bakSelect:Int = context.getPrefInt(PreferKey.readStyleSelect)
+    var backupSelect:Int = styleSelect
 
     val config get() = if (shareLayout) shareConfig else durConfig
 
