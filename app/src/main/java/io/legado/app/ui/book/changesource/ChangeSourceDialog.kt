@@ -92,19 +92,14 @@ class ChangeSourceDialog : BaseDialogFragment(),
         binding.toolBar.menu.findItem(R.id.menu_load_info)?.isChecked =
             AppConfig.changeSourceLoadInfo
         binding.toolBar.menu.findItem(R.id.menu_load_toc)?.isChecked = AppConfig.changeSourceLoadToc
-//mq-
         val isLight = ColorUtils.isColorLight(requireContext().backgroundColor)
         var string = "书源不在库中"
-        callBack?.oldBook?.originName?.let{
-            val bookSource = App.db.bookSourceDao.getEnableByName(it)
-            for(i in 0 until bookSource.size){
-                if(i == 0) string = "书源:${it} ┇ 分组:"
-                string = "${string}${bookSource[i].bookSourceGroup} "
-            }
+        callBack?.oldBook?.origin?.let{
+            val bookSource = App.db.bookSourceDao.getBookSource(it)
+            if(bookSource!=null) string = "书源:${bookSource.bookSourceName} ┇ 分组:${bookSource.bookSourceGroup}"
         }
         binding.sourceName.text = string
         binding.sourceName.textColor =  requireContext().getPrimaryTextColor(isLight)
-
     }
 
     private fun initRecyclerView() {
