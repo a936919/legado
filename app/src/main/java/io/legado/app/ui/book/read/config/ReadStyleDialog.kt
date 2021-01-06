@@ -29,6 +29,7 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
     private val binding by viewBinding(DialogReadBookStyleBinding::bind)
     val callBack get() = activity as? ReadBookActivity
     private lateinit var styleAdapter: StyleAdapter
+    private lateinit var view:ItemReadStyleBinding
 
     override fun onStart() {
         super.onStart()
@@ -79,7 +80,8 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
         styleAdapter = StyleAdapter()
         rvStyle.adapter = styleAdapter
         styleAdapter.addFooterView {
-            ItemReadStyleBinding.inflate(layoutInflater, it, false).apply {
+            view = ItemReadStyleBinding.inflate(layoutInflater, it, false)
+            view.apply {
                 ivStyle.setPadding(6.dp, 6.dp, 6.dp, 6.dp)
                 ivStyle.setText(null)
                 ivStyle.setImageResource(R.drawable.ic_add)
@@ -121,8 +123,8 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
         rbNoAnim.initTheme()
         rbScrollAnim.initTheme()
         rbSimulationAnim.initTheme()
-        styleAdapter.addFooterView {
-            ItemReadStyleBinding.inflate(layoutInflater, it, false).apply {
+        if(::view.isInitialized){
+            view.apply {
                 ivStyle.setColorFilter(textColor)
                 ivStyle.borderColor = textColor
             }
