@@ -176,10 +176,15 @@ class ChangeSourceDialog : BaseDialogFragment(),
 
     override fun onMenuItemClick(item: MenuItem?): Boolean {
         when (item?.itemId) {
-            R.id.menu_delay->requireContext().alert("书源检索时间"){
+            R.id.menu_delay -> requireContext().alert("书源检索时间") {
                 title = "书源检索时间:"
-                message = ChangeSourceViewModel.sourceTime
-                okButton {  }
+                var text=""
+                val searchGroup = App.INSTANCE.getPrefString("searchGroup") ?: ""
+                App.db.bookSourceDao.getEnabledByGroupSort(searchGroup).forEach {bookSource ->
+                    text = "${text}${bookSource.bookSourceName}  ${bookSource.searchBookName}\n连接速度：${bookSource.searchTime}毫秒\n"
+                }
+                message = text
+                okButton { }
             }.show()
             R.id.menu_load_toc -> {
                 putPrefBoolean(PreferKey.changeSourceLoadToc, !item.isChecked)

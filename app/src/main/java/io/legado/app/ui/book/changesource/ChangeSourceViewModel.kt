@@ -150,14 +150,16 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
             .onFinally {
                 synchronized(this) {
                     threadCheck--
-                    sourceTime = "${sourceTime}\n${source.bookSourceName}：  ${System.currentTimeMillis()-startTime}ms"
-                    //mqLog.d("2 searchIndex is ${index} size is ${tasks.size} threadCheck is ${threadCheck} book is ${source.bookSourceName}time is ${System.currentTimeMillis()-startTime}")
                     if (searchIndex < bookSourceList.lastIndex) {
                         search()
                     } else {
                         searchIndex++
                     }
-
+                     App.db.bookSourceDao.getBookSource(source.bookSourceUrl)?.let {
+                         it.searchTime = System.currentTimeMillis() - startTime
+                         it.searchBookName = name
+                         App.db.bookSourceDao.update(it)
+                     }
                     if(threadCheck<=0){
                         tasks.clear()
                         searchPool?.close()
