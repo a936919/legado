@@ -4,7 +4,6 @@ import android.app.Application
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import io.legado.app.App
 import io.legado.app.R
@@ -28,6 +27,7 @@ import java.util.concurrent.Executors
 
 class ChangeSourceViewModel(application: Application) : BaseViewModel(application) {
     private val threadCount = AppConfig.threadCount
+    private var threadCheck = threadCount
     private var searchPool: ExecutorCoroutineDispatcher? = null
     val handler = Handler(Looper.getMainLooper())
     val searchStateData = MutableLiveData<Boolean>()
@@ -100,7 +100,6 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
 
     private fun startSearch() {
         execute {
-            //App.db.searchBookDao.clear(name, author)
             bookSourceList.clear()
             if (searchGroup.isBlank()) {
                 bookSourceList.addAll(App.db.bookSourceDao.allEnabled)
@@ -109,6 +108,9 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
             }
             searchStateData.postValue(true)
             initSearchPool()
+            App.db.searchBookDao.clearByGroup(name, author,searchGroup)
+            threadCheck = bookSourceList.size
+            sourceTime = ""
             for (i in 0 until threadCount) {
                 search()
             }
@@ -124,9 +126,11 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
         }
         val source = bookSourceList[searchIndex]
         val webBook = WebBook(source)
+        val index = searchIndex
+        val startTime =  System.currentTimeMillis()
         val task = webBook
             .searchBook(this, name, context = searchPool!!)
-            .timeout(60000L)
+            .timeout(30000L)
             .onSuccess(IO) {
                 it.forEach { searchBook ->
                     if (searchBook.name == name && searchBook.author == author) {
@@ -145,14 +149,18 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
             }
             .onFinally {
                 synchronized(this) {
+                    threadCheck--
+                    sourceTime = "${sourceTime}\n${source.bookSourceName}：  ${System.currentTimeMillis()-startTime}ms"
+                    //mqLog.d("2 searchIndex is ${index} size is ${tasks.size} threadCheck is ${threadCheck} book is ${source.bookSourceName}time is ${System.currentTimeMillis()-startTime}")
                     if (searchIndex < bookSourceList.lastIndex) {
                         search()
                     } else {
                         searchIndex++
                     }
-                    if (searchIndex >= bookSourceList.lastIndex + bookSourceList.size
-                        || searchIndex >= bookSourceList.lastIndex + threadCount
-                    ) {
+
+                    if(threadCheck<=0){
+                        tasks.clear()
+                        searchPool?.close()
                         searchStateData.postValue(false)
                     }
                 }
@@ -209,8 +217,11 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
 
     fun stopSearch() {
         if (tasks.isEmpty) {
+            searchBooks.clear()
+            upAdapter()
             startSearch()
-        } else {
+        }
+        else{
             tasks.clear()
             searchPool?.close()
             searchStateData.postValue(false)
@@ -233,4 +244,7 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
         }
     }
 
+    companion object{
+        var sourceTime:String = ""
+    }
 }

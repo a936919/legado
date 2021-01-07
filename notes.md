@@ -41,3 +41,5 @@ src\main\java\io\legado\app\utils\MenuExtensions.kt//设置图标颜色
 src\main\java\io\legado\app\constant\AppConst.kt//设置全局阴影
 src\main\java\io\legado\app\ui\main\bookshelf\books\BooksFragment.kt//打开书籍
 ```
+bookSourceList用于线程搜书的列表
+searchBooks暂存搜书数据库,为更新searchBooksLiveData的。searchBooksLiveData用于更新adapter的

@@ -69,4 +69,13 @@ interface SearchBookDao {
     @Query("delete from searchBooks where time < :time")
     fun clearExpired(time: Long)
 
+    @Query(
+        """
+        delete from  searchBooks  where origin in 
+        ( select t1.origin
+        from searchBooks as t1 inner join book_sources as t2 
+        on t1.origin = t2.bookSourceUrl 
+        where t1.name = :name and t1.author = :author and t2.enabled = 1 and t2.bookSourceGroup like '%'||:sourceGroup||'%' )
+        """)
+    fun clearByGroup(name: String, author: String, sourceGroup: String)
 }

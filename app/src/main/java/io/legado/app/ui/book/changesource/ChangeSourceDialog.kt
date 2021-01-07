@@ -1,7 +1,6 @@
 package io.legado.app.ui.book.changesource
 
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
@@ -24,8 +23,7 @@ import io.legado.app.ui.book.source.manage.BookSourceActivity
 import io.legado.app.ui.widget.recycler.VerticalDivider
 import io.legado.app.utils.*
 import io.legado.app.utils.viewbindingdelegate.viewBinding
-import org.jetbrains.anko.textColor
-
+import org.jetbrains.anko.*
 
 
 class ChangeSourceDialog : BaseDialogFragment(),
@@ -105,6 +103,7 @@ class ChangeSourceDialog : BaseDialogFragment(),
         }
         binding.sourceName.text = string
         binding.sourceName.textColor =  requireContext().getPrimaryTextColor(isLight)
+        ChangeSourceViewModel.sourceTime = "请检索书源获取本书的检索时间"
     }
 
     private fun initRecyclerView() {
@@ -177,6 +176,11 @@ class ChangeSourceDialog : BaseDialogFragment(),
 
     override fun onMenuItemClick(item: MenuItem?): Boolean {
         when (item?.itemId) {
+            R.id.menu_delay->requireContext().alert("书源检索时间"){
+                title = "书源检索时间:"
+                message = ChangeSourceViewModel.sourceTime
+                okButton {  }
+            }.show()
             R.id.menu_load_toc -> {
                 putPrefBoolean(PreferKey.changeSourceLoadToc, !item.isChecked)
                 item.isChecked = !item.isChecked
