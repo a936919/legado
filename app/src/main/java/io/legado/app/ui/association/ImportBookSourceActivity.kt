@@ -15,6 +15,7 @@ class ImportBookSourceActivity :
     VMBaseActivity<ActivityTranslucenceBinding, ImportBookSourceViewModel>(
         theme = Theme.Transparent
     ) {
+    private var groupName=""
 
     override fun getViewBinding(): ActivityTranslucenceBinding {
         return ActivityTranslucenceBinding.inflate(layoutInflater)
@@ -48,6 +49,9 @@ class ImportBookSourceActivity :
             }
         }
         intent.getStringExtra("source")?.let {
+            intent.getStringExtra("sourceGroup")?.let{
+                groupName="\uD83D\uDCCC $it"
+            }
             viewModel.importSource(it)
             return
         }
@@ -83,7 +87,7 @@ class ImportBookSourceActivity :
     }
 
     private fun successDialog() {
-        ImportBookSourceDialog().show(supportFragmentManager, "SourceDialog")
+        ImportBookSourceDialog(groupName).show(supportFragmentManager, "SourceDialog")
     }
 
 }

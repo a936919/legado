@@ -12,6 +12,7 @@ import io.legado.app.base.BaseActivity
 import io.legado.app.data.entities.RuleSub
 import io.legado.app.databinding.ActivityRuleSubBinding
 import io.legado.app.databinding.DialogRuleSubEditBinding
+import io.legado.app.help.IntentDataHelp
 import io.legado.app.lib.dialogs.alert
 import io.legado.app.ui.association.ImportBookSourceActivity
 import io.legado.app.ui.association.ImportReplaceRuleActivity
@@ -74,7 +75,10 @@ class RuleSubActivity : BaseActivity<ActivityRuleSubBinding>(),
     override fun openSubscription(ruleSub: RuleSub) {
         when (ruleSub.type) {
             0 -> {
-                startActivity<ImportBookSourceActivity>("source" to ruleSub.url)
+                startActivity<ImportBookSourceActivity>(
+                    Pair("source", ruleSub.url),
+                    Pair("sourceGroup", ruleSub.name)
+                )
             }
             1 -> {
                 startActivity<ImportRssSourceActivity>("source" to ruleSub.url)

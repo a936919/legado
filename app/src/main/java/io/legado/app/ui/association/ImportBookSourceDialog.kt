@@ -30,7 +30,7 @@ import org.jetbrains.anko.sdk27.listeners.onClick
 /**
  * 导入书源弹出窗口
  */
-class ImportBookSourceDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickListener {
+class ImportBookSourceDialog(val groupName:String) : BaseDialogFragment(), Toolbar.OnMenuItemClickListener {
 
     private val binding by viewBinding(DialogRecyclerViewBinding::bind)
 
@@ -67,6 +67,7 @@ class ImportBookSourceDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickList
         }
         binding.tvOk.visible()
         binding.tvOk.onClick {
+            viewModel.groupName = groupName
             viewModel.importSelect {
                 dismiss()
             }

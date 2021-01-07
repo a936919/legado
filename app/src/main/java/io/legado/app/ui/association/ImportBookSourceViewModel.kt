@@ -36,7 +36,11 @@ class ImportBookSourceViewModel(app: Application) : BaseViewModel(app) {
                 if (b) {
                     val source = allSources[index]
                     if (groupName != null) {
-                        source.bookSourceGroup = groupName
+                        if(source.bookSourceGroup!=null)
+                            source.bookSourceGroup = "$groupName,${source.bookSourceGroup}"
+                        else
+                            source.bookSourceGroup = groupName
+
                     }
                     if (keepName) {
                         checkSources[index]?.let {
