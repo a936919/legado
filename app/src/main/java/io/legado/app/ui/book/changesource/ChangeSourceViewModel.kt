@@ -126,7 +126,6 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
         }
         val source = bookSourceList[searchIndex]
         val webBook = WebBook(source)
-        val index = searchIndex
         val startTime =  System.currentTimeMillis()
         val task = webBook
             .searchBook(this, name, context = searchPool!!)
@@ -149,7 +148,6 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
             }
             .onFinally {
                 synchronized(this) {
-                    threadCheck--
                     if (searchIndex < bookSourceList.lastIndex) {
                         search()
                     } else {
@@ -160,6 +158,7 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
                          it.searchBookName = name
                          App.db.bookSourceDao.update(it)
                      }
+                    threadCheck--
                     if(threadCheck<=0){
                         tasks.clear()
                         searchPool?.close()

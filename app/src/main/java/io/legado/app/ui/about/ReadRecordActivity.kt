@@ -14,6 +14,7 @@ import io.legado.app.data.entities.ReadRecordShow
 import io.legado.app.databinding.ActivityReadRecordBinding
 import io.legado.app.databinding.ItemReadRecordBinding
 import io.legado.app.lib.dialogs.alert
+import io.legado.app.utils.StringUtils
 import io.legado.app.utils.cnCompare
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
@@ -90,12 +91,15 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
 
             readRecords = when (sortMode) {
                 1 -> {readRecords.filter { it.readTime >= (filterTime)}
-                        .sortedBy { it.readTime }}
-                else -> {
+                        .sortedBy { -it.readTime }}
+                2 -> {
                     readRecords.filter { it.readTime >= (filterTime)}
-                            .sortedWith { o1, o2 ->
+                    .sortedWith { o1, o2 ->
                         o1.bookName.cnCompare(o2.bookName)
                     }
+                }else -> {
+                    readRecords.filter { it.durChapterTime!=0L }
+                        .sortedBy {it.durChapterTime}
                 }
             }
             withContext(Main) {
@@ -119,7 +123,7 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
         ) {
             binding.apply {
                 tvBookName.text = item.bookName
-                tvReadTime.text = formatDuring(item.readTime)
+                tvReadTime.text = StringUtils.dateConvert(item.durChapterTime,"yyyy-MM-dd-HH-mm-ss")//item.durChapterTime.//formatDuring(item.readTime)
             }
         }
 
