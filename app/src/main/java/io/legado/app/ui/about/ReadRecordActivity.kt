@@ -54,7 +54,7 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
                 initData()
             }
             R.id.menu_sort_time -> {
-                shortTimeitem?.isVisible = true
+                shortTimeitem?.isVisible = false
                 sortMode = 1
                 initData()
             }
@@ -97,20 +97,16 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
 
             var readRecords = App.db.readRecordDao.allShow
             var filterTime = 0
-            if(shortTimeFilter) filterTime = 5 *60*1000
+            if(shortTimeFilter) filterTime = 5*60*1000
 
             readRecords = when (sortMode) {
-                1 -> {readRecords.filter { it.readTime >= (filterTime)}
-                        .sortedBy { -it.readTime }}
-                2 -> {
-                    readRecords.filter { it.readTime >= (filterTime)}
+                1 -> readRecords.sortedBy { -it.readTime }
+                2 ->  readRecords.filter { it.readTime >= (filterTime)}
                     .sortedWith { o1, o2 ->
                         o1.bookName.cnCompare(o2.bookName)
                     }
-                }else -> {
-                    readRecords.filter { it.durChapterTime!=0L }
+                else ->  readRecords.filter { it.durChapterTime >0L }
                         .sortedBy {-it.durChapterTime}
-                }
             }
             withContext(Main) {
                 adapter.setItems(readRecords)

@@ -318,6 +318,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        android:layout_marginBottom="15dp"
         tool:listitem="@layout/item_read_style" />
 
 </LinearLayout>
