@@ -47,7 +47,6 @@ object ReadBook {
         contentProcessor = ContentProcessor(book.name, book.origin)
         readRecord.bookName = book.name
         readRecord.readTime = App.db.readRecordDao.getReadTime(book.name) ?: 0
-        readRecord.durChapterTime = book.durChapterTime
         durChapterIndex = book.durChapterIndex
         durChapterPos = book.durChapterPos
         isLocalBook = book.origin == BookType.local
@@ -455,6 +454,8 @@ object ReadBook {
                     book.durChapterTitle = it.title
                 }
                 App.db.bookDao.update(book)
+                readRecord.durChapterTime = book.durChapterTime
+                App.db.readRecordDao.insert(readRecord)
             }
         }
     }

@@ -28,6 +28,7 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
     lateinit var adapter: RecordAdapter
     private var sortMode = 0
     private var shortTimeFilter = true
+    private var shortTimeitem:MenuItem? = null
 
     override fun getViewBinding(): ActivityReadRecordBinding {
         return ActivityReadRecordBinding.inflate(layoutInflater)
@@ -40,21 +41,30 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
 
     override fun onCompatCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.book_read_record, menu)
-        menu.findItem(R.id.filter_short_time)?.isChecked = shortTimeFilter
+        shortTimeitem = menu.findItem(R.id.filter_short_time)
+        shortTimeitem?.isChecked = shortTimeFilter
         return super.onCompatCreateOptionsMenu(menu)
     }
 
     override fun onCompatOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.menu_sort_name -> {
+            R.id.menu_sort_current -> {
+                shortTimeitem?.isVisible = false
                 sortMode = 0
                 initData()
             }
             R.id.menu_sort_time -> {
+                shortTimeitem?.isVisible = true
                 sortMode = 1
                 initData()
             }
+            R.id.menu_sort_name -> {
+                shortTimeitem?.isVisible = true
+                sortMode = 2
+                initData()
+            }
             R.id.filter_short_time ->{
+                shortTimeitem?.isVisible = true
                 item.isChecked = !item.isChecked
                 shortTimeFilter = item.isChecked
                 initData()
@@ -99,7 +109,7 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
                     }
                 }else -> {
                     readRecords.filter { it.durChapterTime!=0L }
-                        .sortedBy {it.durChapterTime}
+                        .sortedBy {-it.durChapterTime}
                 }
             }
             withContext(Main) {
@@ -123,7 +133,7 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
         ) {
             binding.apply {
                 tvBookName.text = item.bookName
-                tvReadTime.text = StringUtils.dateConvert(item.durChapterTime,"yyyy-MM-dd-HH-mm-ss")//item.durChapterTime.//formatDuring(item.readTime)
+                tvReadTime.text = formatDuring(item.readTime)//StringUtils.dateConvert(item.durChapterTime,"yyyy-MM-dd-HH-mm-ss")
             }
         }
 

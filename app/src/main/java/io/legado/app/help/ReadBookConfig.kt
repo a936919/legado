@@ -368,7 +368,7 @@ object ReadBookConfig {
 
     fun getComicSelect():Int{
         for (i in 0 until  configList.size) {
-            if(configList[i]?.name == "comic")
+            if(configList[i].name == "comic")
                 return i
         }
         return -1

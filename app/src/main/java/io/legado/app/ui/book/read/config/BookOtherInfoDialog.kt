@@ -128,9 +128,9 @@ class BookOtherInfoDialog : BaseDialogFragment()  {
                 startActivity<SearchActivity>(Pair("key", book?.author))
             }
             llAccessUrl.onClick {
-                val localBook = ReadBook?.book?.isLocalBook()?:true
+                val localBook = ReadBook.book?.isLocalBook()?:true
                 if(localBook||ReadBook.curTextChapter?.url==null){
-                    requireContext().openUrl("https://www.baidu.com/s?wd=${ReadBook?.book?.name}")
+                    requireContext().openUrl("https://www.baidu.com/s?wd=${ReadBook.book?.name}")
                 }else{
                     requireContext().openUrl(ReadBook.curTextChapter?.url.toString())
                 }

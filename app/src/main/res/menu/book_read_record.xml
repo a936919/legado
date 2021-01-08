@@ -2,16 +2,18 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/menu_sort_name"
-        android:title="按书名排序" />
-
+        android:id="@+id/menu_sort_current"
+        android:title="按阅读顺序排序" />
     <item
         android:id="@+id/menu_sort_time"
-        android:title="按时间排序" />
-
+        android:title="按阅读时间排序" />
+    <item
+        android:id="@+id/menu_sort_name"
+        android:title="按书名排序" />
     <item
         android:id="@+id/filter_short_time"
         android:title="短记录不显示"
+        android:visible="false"
         android:checkable="true" />
 
 </menu>
