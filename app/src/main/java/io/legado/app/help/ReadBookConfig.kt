@@ -26,11 +26,10 @@ object ReadBookConfig {
     val shareConfigFilePath = FileUtils.getPath(context.filesDir, shareConfigFileName)
     val configList: ArrayList<Config> = arrayListOf()
     lateinit var shareConfig: Config
-    //var comicConfig: Config = shareConfig
     var durConfig
-        get() = getConfig(styleSelect)
+        get() = getConfig(backupSelect)
         set(value) {
-            configList[styleSelect] = value
+            configList[backupSelect] = value
             if (shareLayout) {
                 shareConfig = value
             }
@@ -44,10 +43,6 @@ object ReadBookConfig {
     init {
         initConfigs()
         initShareConfig()
-
-        //comicConfig = configList[getComicSelect()]
-        //comicConfig = configList[0]
-
     }
 
     @Synchronized
@@ -164,11 +159,9 @@ object ReadBookConfig {
     val textBottomJustify get() = context.getPrefBoolean(PreferKey.textBottomJustify, true)
     var hideStatusBar = context.getPrefBoolean(PreferKey.hideStatusBar)
     var hideNavigationBar = context.getPrefBoolean(PreferKey.hideNavigationBar)
-    var iscomic = false
-    //var backupSelect:Int = styleSelect
+    var backupSelect:Int = styleSelect
 
-    //val config get() = if (shareLayout) shareConfig else if (iscomic) comicConfig else durConfig
-    val config get() = if (shareLayout||iscomic) shareConfig else durConfig
+    val config get() = if (shareLayout) shareConfig else durConfig
 
     var pageAnim: Int
         get() = config.curPageAnim()
@@ -378,7 +371,7 @@ object ReadBookConfig {
             if(configList[i].name == "comic")
                 return i
         }
-        return 0
+        return -1
     }
 
     @Keep

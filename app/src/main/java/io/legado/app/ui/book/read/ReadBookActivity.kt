@@ -115,7 +115,6 @@ class ReadBookActivity : ReadBookBaseActivity(),
             upView()
         }
         viewModel.initData(intent)
-        mqLog.d("onActivityCreated")
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -134,7 +133,6 @@ class ReadBookActivity : ReadBookBaseActivity(),
         upSystemUiVisibility()
         timeBatteryReceiver = TimeBatteryReceiver.register(this)
         binding.readView.upTime()
-        mqLog.d("onResume")
     }
 
     override fun onPause() {
@@ -147,12 +145,6 @@ class ReadBookActivity : ReadBookBaseActivity(),
         upSystemUiVisibility()
         ReadBook.uploadProgress()
         Backup.autoBack(this)
-        mqLog.d("onPause")
-    }
-
-    override fun onStop() {
-        super.onStop()
-        mqLog.d("onStop")
     }
 
     override fun onCompatCreateOptionsMenu(menu: Menu): Boolean {
@@ -907,7 +899,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
         binding.readView.onDestroy()
         ReadBook.msg = null
         Backup.autoBack(this)
-        mqLog.d("onDestroy")
+
     }
 
     override fun observeLiveBus() = with(binding) {
@@ -999,22 +991,23 @@ class ReadBookActivity : ReadBookBaseActivity(),
 
 
     override fun enableComicMode() {
-        //var select:Int = ReadBookConfig.styleSelect
+        //mqLog.d("bakSelect is ${ReadBookConfig.bakSelect} styleSelect is ${ReadBookConfig.styleSelect}")
+        var select:Int = ReadBookConfig.styleSelect
         if(ReadBook.isComicBook()){
+            if(ReadBookConfig.getComicSelect()>=0){
+                select = ReadBookConfig.getComicSelect()
+            }
             binding.readView.curPage.upSelectAble(false)
-            ReadBookConfig.iscomic = true
         } else{
             var selectAble = getPrefBoolean(PreferKey.textSelectAble, true)
-           binding.readView.curPage.upSelectAble(selectAble)
-            ReadBookConfig.iscomic = false
+            binding.readView.curPage.upSelectAble(selectAble)
         }
-        //if (select != ReadBookConfig.backupSelect) {
-            //ReadBookConfig.backupSelect = select
+        if (select != ReadBookConfig.backupSelect) {
+            ReadBookConfig.backupSelect = select
             ReadBookConfig.upBg()
             upView()
             postEvent(EventBus.UP_CONFIG, true)
-        //}
+        }
         upPageAnim()
-        mqLog.d("book is ${ReadBook.book?.name} styleSelect is ${ReadBookConfig.styleSelect}")
     }
 }
