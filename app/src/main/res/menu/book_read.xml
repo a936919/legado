@@ -59,6 +59,14 @@
         android:title="@string/bookmark_add"
         app:showAsAction="always" />
 
+    <group android:id="@+id/menu_group_login">
+        <item
+            android:id="@+id/menu_login"
+            android:visible="false"
+            android:title="@string/login"
+            app:showAsAction="never" />
+    </group>
+
     <group android:id="@+id/menu_group_on_line_ns">
 
         <item
