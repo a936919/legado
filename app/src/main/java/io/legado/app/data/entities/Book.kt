@@ -10,6 +10,7 @@ import io.legado.app.service.help.ReadBook
 import io.legado.app.utils.GSON
 import io.legado.app.utils.MD5Utils
 import io.legado.app.utils.fromJsonObject
+import io.legado.app.utils.mqLog
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 import java.nio.charset.Charset
@@ -124,6 +125,8 @@ data class Book(
     private fun config(): ReadConfig {
         if (readConfig == null) {
             readConfig = ReadConfig()
+        } else{
+            readConfig = ReadConfig(0,false,false)
         }
         return readConfig!!
     }
