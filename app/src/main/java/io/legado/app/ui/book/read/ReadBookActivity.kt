@@ -175,8 +175,6 @@ class ReadBookActivity : ReadBookBaseActivity(),
                     R.id.menu_group_on_line_ns -> item.isVisible = onLine
                     R.id.menu_group_local -> item.isVisible = !onLine
                     R.id.menu_group_text -> item.isVisible = book.isLocalTxt()
-                    R.id.menu_group_login ->
-                        item.isVisible = !ReadBook.webBook?.bookSource?.loginUrl.isNullOrEmpty()
                     else -> when (item.itemId) {
                         R.id.menu_enable_replace -> item.isChecked = book.getUseReplaceRule()
                         R.id.menu_re_segment -> item.isChecked = book.getReSegment()
@@ -259,12 +257,6 @@ class ReadBookActivity : ReadBookBaseActivity(),
                 supportFragmentManager,
                 ReadBook.book?.tocUrl
             )
-            R.id.menu_login -> ReadBook.webBook?.bookSource?.let {
-                startActivity<SourceLogin>(
-                    Pair("sourceUrl", it.bookSourceUrl),
-                    Pair("loginUrl", it.loginUrl)
-                )
-            }
             R.id.menu_set_charset -> showCharsetConfig()
             R.id.menu_get_progress -> ReadBook.book?.let {
                 viewModel.syncBookProgress(it) { progress ->
@@ -754,6 +746,15 @@ class ReadBookActivity : ReadBookBaseActivity(),
         upNavigationBarColor()
     }
 
+    override fun showLogin() {
+        ReadBook.webBook?.bookSource?.let {
+            startActivity<SourceLogin>(
+                Pair("sourceUrl", it.bookSourceUrl),
+                Pair("loginUrl", it.loginUrl)
+            )
+        }
+    }
+
     /**
      * 朗读按钮
      */
@@ -814,7 +815,9 @@ class ReadBookActivity : ReadBookBaseActivity(),
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == Activity.RESULT_OK) {
             when (requestCode) {
-                requestCodeEditSource -> viewModel.upBookSource()
+                requestCodeEditSource -> viewModel.upBookSource() {
+                    upView()
+                }
                 requestCodeChapterList ->
                     data?.getIntExtra("index", ReadBook.durChapterIndex)?.let { index ->
                         if (index != ReadBook.durChapterIndex) {

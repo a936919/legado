@@ -62,11 +62,11 @@
                 android:background="@color/btn_bg_press_3" />
         </io.legado.app.ui.widget.TitleBar>
 
-
     <LinearLayout
         android:id="@+id/ll_brightness"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
+
         android:layout_marginRight="16dp"
         android:layout_marginTop="12dp"
         android:layout_marginBottom="96dp"
@@ -81,8 +81,8 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_margin="8dp"
-            android:src="@drawable/ic_brightness_auto"
-            android:contentDescription="@string/brightness_auto" />
+            android:contentDescription="@string/brightness_auto"
+            android:src="@drawable/ic_brightness_auto" />
 
         <io.legado.app.ui.widget.seekbar.VerticalSeekBarWrapper
             android:layout_width="wrap_content"
