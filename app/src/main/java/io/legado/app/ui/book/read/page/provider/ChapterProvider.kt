@@ -500,15 +500,16 @@ object ChapterProvider {
         return Pair(tPaint, cPaint)
     }
 
+
     /**
      * 更新View尺寸
      */
-    fun upViewSize(width: Int, height: Int) {
-        if (width > 0 && height > 0 && (width != viewWidth || height != viewHeight)) {
+    fun upViewSize(readConfigChage:Boolean,width: Int, height: Int) {
+        if (width > 0 && height > 0 && (readConfigChage == true || width != viewWidth || height != viewHeight)) {
             viewWidth = width
             viewHeight = height
             upVisibleSize()
-            postEvent(EventBus.UP_CONFIG, true)
+            postEvent(EventBus.UP_CONFIG, false)
         }
     }
 

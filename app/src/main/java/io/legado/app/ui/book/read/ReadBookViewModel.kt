@@ -47,7 +47,6 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
             if (ReadBook.inBookshelf) {
                 ReadBook.saveRead()
             }
-            //ReadBook.callBack?.enableComicMode()
         }
     }
 
@@ -55,8 +54,6 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
         if (ReadBook.book?.bookUrl != book.bookUrl) {
             ReadBook.resetData(book)
             isInitFinish = true
-            mqLog.d("initBook")
-            //ReadBook.callBack?.enableComicMode()
             if (!book.isLocalBook() && ReadBook.webBook == null) {
                 autoChangeSource(book.name, book.author)
                 return
@@ -87,7 +84,6 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
             ReadBook.titleDate.postValue(book.name)
             ReadBook.upWebBook(book)
             isInitFinish = true
-            //ReadBook.callBack?.enableComicMode()
             if (!book.isLocalBook() && ReadBook.webBook == null) {
                 autoChangeSource(book.name, book.author)
                 return

@@ -104,7 +104,6 @@ class ReadBookActivity : ReadBookBaseActivity(),
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onActivityCreated(savedInstanceState: Bundle?) {
-        mqLog.d("onActivityCreated")
         super.onActivityCreated(savedInstanceState)
         binding.cursorLeft.setColorFilter(accentColor)
         binding.cursorRight.setColorFilter(accentColor)
@@ -554,18 +553,15 @@ class ReadBookActivity : ReadBookBaseActivity(),
         ReadBook.upMsg(getString(R.string.toc_updateing))
         viewModel.loadChapterList(book)
     }
-    val mutex = Mutex()
     /**
      * 内容加载完成
      */
-
     override fun contentLoadFinish() {
         if (intent.getBooleanExtra("readAloud", false)) {
             intent.removeExtra("readAloud")
             ReadBook.readAloud()
         }
         loadStates = true
-        mqLog.d("contentLoadFinish")
     }
 
     /**
@@ -578,8 +574,6 @@ class ReadBookActivity : ReadBookBaseActivity(),
             binding.readMenu.setSeekPage(ReadBook.durPageIndex())
         }
         loadStates = false
-        mqLog.d("upContent relativePosition is $relativePosition resetPageOffset is $resetPageOffset")
-
     }
 
     /**
@@ -1007,9 +1001,8 @@ class ReadBookActivity : ReadBookBaseActivity(),
         }
     }
 
-
+    val mutex = Mutex()
     override fun enableComicMode() {
-        //mqLog.d("bakSelect is ${ReadBookConfig.bakSelect} styleSelect is ${ReadBookConfig.styleSelect}")
         launch{
             mutex.withLock {
                 var select:Int = ReadBookConfig.styleSelect
