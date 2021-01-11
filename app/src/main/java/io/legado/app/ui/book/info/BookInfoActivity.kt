@@ -318,6 +318,8 @@ class BookInfoActivity :
         }
     }
 
+
+
     private fun startReadActivity(book: Book) {
         when (book.type) {
             BookType.audio -> startActivityForResult<AudioPlayActivity>(

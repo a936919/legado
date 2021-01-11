@@ -57,6 +57,8 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.jetbrains.anko.startActivity
 import org.jetbrains.anko.startActivityForResult
@@ -102,6 +104,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onActivityCreated(savedInstanceState: Bundle?) {
+        mqLog.d("onActivityCreated")
         super.onActivityCreated(savedInstanceState)
         binding.cursorLeft.setColorFilter(accentColor)
         binding.cursorRight.setColorFilter(accentColor)
@@ -551,16 +554,18 @@ class ReadBookActivity : ReadBookBaseActivity(),
         ReadBook.upMsg(getString(R.string.toc_updateing))
         viewModel.loadChapterList(book)
     }
-
+    val mutex = Mutex()
     /**
      * 内容加载完成
      */
+
     override fun contentLoadFinish() {
         if (intent.getBooleanExtra("readAloud", false)) {
             intent.removeExtra("readAloud")
             ReadBook.readAloud()
         }
         loadStates = true
+        mqLog.d("contentLoadFinish")
     }
 
     /**
@@ -573,6 +578,8 @@ class ReadBookActivity : ReadBookBaseActivity(),
             binding.readMenu.setSeekPage(ReadBook.durPageIndex())
         }
         loadStates = false
+        mqLog.d("upContent relativePosition is $relativePosition resetPageOffset is $resetPageOffset")
+
     }
 
     /**
@@ -1003,22 +1010,26 @@ class ReadBookActivity : ReadBookBaseActivity(),
 
     override fun enableComicMode() {
         //mqLog.d("bakSelect is ${ReadBookConfig.bakSelect} styleSelect is ${ReadBookConfig.styleSelect}")
-        var select:Int = ReadBookConfig.styleSelect
-        if(ReadBook.isComicBook()){
-            if(ReadBookConfig.getComicSelect()>=0){
-                select = ReadBookConfig.getComicSelect()
+        launch{
+            mutex.withLock {
+                var select:Int = ReadBookConfig.styleSelect
+                if(ReadBook.isComicBook()){
+                    if(ReadBookConfig.getComicSelect()>=0){
+                        select = ReadBookConfig.getComicSelect()
+                    }
+                    binding.readView.curPage.upSelectAble(false)
+                } else{
+                    var selectAble = getPrefBoolean(PreferKey.textSelectAble, true)
+                    binding.readView.curPage.upSelectAble(selectAble)
+                }
+                if (select != ReadBookConfig.backupSelect) {
+                    ReadBookConfig.backupSelect = select
+                    ReadBookConfig.upBg()
+                    upView()
+                    postEvent(EventBus.UP_CONFIG, true)
+                    upPageAnim()
+                }
             }
-            binding.readView.curPage.upSelectAble(false)
-        } else{
-            var selectAble = getPrefBoolean(PreferKey.textSelectAble, true)
-            binding.readView.curPage.upSelectAble(selectAble)
         }
-        if (select != ReadBookConfig.backupSelect) {
-            ReadBookConfig.backupSelect = select
-            ReadBookConfig.upBg()
-            upView()
-            postEvent(EventBus.UP_CONFIG, true)
-        }
-        upPageAnim()
     }
 }
