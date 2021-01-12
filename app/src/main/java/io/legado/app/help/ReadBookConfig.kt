@@ -25,11 +25,12 @@ object ReadBookConfig {
     val configFilePath = FileUtils.getPath(context.filesDir, configFileName)
     val shareConfigFilePath = FileUtils.getPath(context.filesDir, shareConfigFileName)
     val configList: ArrayList<Config> = arrayListOf()
+    var isComicMod = false
     lateinit var shareConfig: Config
     var durConfig
-        get() = getConfig(backupSelect)
+        get() = getConfig(durSelect)
         set(value) {
-            configList[backupSelect] = value
+            configList[durSelect] = value
             if (shareLayout) {
                 shareConfig = value
             }
@@ -47,7 +48,6 @@ object ReadBookConfig {
 
     @Synchronized
     fun getConfig(index: Int): Config {
-
         if (configList.size < 5) {
             resetAll()
         }
@@ -159,8 +159,8 @@ object ReadBookConfig {
     val textBottomJustify get() = context.getPrefBoolean(PreferKey.textBottomJustify, true)
     var hideStatusBar = context.getPrefBoolean(PreferKey.hideStatusBar)
     var hideNavigationBar = context.getPrefBoolean(PreferKey.hideNavigationBar)
-    var backupSelect:Int = styleSelect
-
+    private val durSelect:Int
+        get() =  getComicSelect()
     val config get() = if (shareLayout) shareConfig else durConfig
 
     var pageAnim: Int
@@ -366,12 +366,15 @@ object ReadBookConfig {
         return exportConfig
     }
 
+    @Synchronized
     fun getComicSelect():Int{
-        for (i in 0 until  configList.size) {
-            if(configList[i].name == "comic")
-                return i
+        if(isComicMod){
+            for (i in 0 until  configList.size) {
+                if(configList[i].name == "comic")
+                    return i
+            }
         }
-        return -1
+        return styleSelect
     }
 
     fun isComic(bookSourceUrl:String):Boolean{

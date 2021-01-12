@@ -104,7 +104,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         val intentBook = getIntent(intent)
-        intentIsComic = if(intentBook != null && ReadBookConfig.isComic(intentBook.origin)) true else false
+        intentIsComic = intentBook != null && ReadBookConfig.isComic(intentBook.origin)
         binding.cursorLeft.setColorFilter(accentColor)
         binding.cursorRight.setColorFilter(accentColor)
         binding.cursorLeft.setOnTouchListener(this)

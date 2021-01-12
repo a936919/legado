@@ -199,10 +199,9 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
     }
 
     private fun changeBg(index: Int) {
-        val oldIndex = ReadBookConfig.backupSelect
+        val oldIndex = ReadBookConfig.styleSelect
         if (index != oldIndex) {
             ReadBookConfig.styleSelect = index
-            ReadBookConfig.backupSelect = index
             ReadBookConfig.upBg()
             upView()
             styleAdapter.notifyItemChanged(oldIndex)

@@ -529,17 +529,14 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
     }
 
     private fun processComicMode():Boolean{
-        var select:Int
         var readConfigChage:Boolean
         if(callBack.intentIsComic){
-            select= ReadBookConfig.getComicSelect()
             selectAble = false
         } else{
-            select = ReadBookConfig.styleSelect
             selectAble = context.getPrefBoolean(PreferKey.textSelectAble, true)
         }
-        if(ReadBookConfig.backupSelect != select){
-            ReadBookConfig.backupSelect = select
+        if(ReadBookConfig.isComicMod != callBack.intentIsComic){
+            ReadBookConfig.isComicMod = callBack.intentIsComic
             readConfigChage = true
         }else{
             readConfigChage = false
