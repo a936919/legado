@@ -127,6 +127,7 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
         val source = bookSourceList[searchIndex]
         val webBook = WebBook(source)
         val startTime =  System.currentTimeMillis()
+        var status = ""
         val task = webBook
             .searchBook(this, name, context = searchPool!!)
             .timeout(30000L)
@@ -142,9 +143,14 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
                         } else {
                             searchFinish(searchBook)
                         }
+                        status ="（成功）"
                         return@onSuccess
                     }
                 }
+                status ="（未找到）"
+            }
+            .onError(IO){
+                status ="（书源失效）"
             }
             .onFinally {
                 synchronized(this) {
@@ -155,7 +161,7 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
                     }
                      App.db.bookSourceDao.getBookSource(source.bookSourceUrl)?.let {
                          it.searchTime = System.currentTimeMillis() - startTime
-                         it.searchBookName = name
+                         it.searchBookName = "$name$status"
                          App.db.bookSourceDao.update(it)
                      }
                     threadCheck--

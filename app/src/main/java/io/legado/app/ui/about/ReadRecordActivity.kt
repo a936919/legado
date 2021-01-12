@@ -27,7 +27,7 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
 
     lateinit var adapter: RecordAdapter
     private var sortMode = 0
-    private var shortTimeFilter = true
+    private var shortTimeFilter = false
     private var shortTimeitem:MenuItem? = null
 
     override fun getViewBinding(): ActivityReadRecordBinding {
@@ -105,8 +105,7 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
                     .sortedWith { o1, o2 ->
                         o1.bookName.cnCompare(o2.bookName)
                     }
-                else ->  readRecords.filter { it.durChapterTime >0L }
-                        .sortedBy {-it.durChapterTime}
+                else ->  readRecords.sortedBy {-it.durChapterTime}
             }
             withContext(Main) {
                 adapter.setItems(readRecords)
