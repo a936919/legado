@@ -150,7 +150,7 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
                 status ="（未找到）"
             }
             .onError(IO){
-                status ="（书源失效）"
+                status ="（可能失效）"
             }
             .onFinally {
                 synchronized(this) {

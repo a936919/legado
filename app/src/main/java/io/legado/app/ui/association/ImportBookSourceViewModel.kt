@@ -35,12 +35,7 @@ class ImportBookSourceViewModel(app: Application) : BaseViewModel(app) {
             selectStatus.forEachIndexed { index, b ->
                 if (b) {
                     val source = allSources[index]
-                    if (groupName != null && groupName != "") {
-                        if(source.bookSourceGroup != null && source.bookSourceGroup != "")
-                            source.bookSourceGroup = "$groupName,${source.bookSourceGroup}"
-                        else
-                            source.bookSourceGroup = groupName
-                    }
+                    groupName?.let{source.addGroup(groupName!!)}
                     if (keepName) {
                         checkSources[index]?.let {
                             source.bookSourceName = it.bookSourceName
@@ -56,7 +51,6 @@ class ImportBookSourceViewModel(app: Application) : BaseViewModel(app) {
             finally.invoke()
         }
     }
-
 
     fun importSourceFromFilePath(path: String) {
         execute {
