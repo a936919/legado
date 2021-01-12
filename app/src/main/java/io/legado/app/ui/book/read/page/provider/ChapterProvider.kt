@@ -505,11 +505,12 @@ object ChapterProvider {
      * 更新View尺寸
      */
     fun upViewSize(readConfigChage:Boolean,width: Int, height: Int) {
-        if (width > 0 && height > 0 && (readConfigChage == true || width != viewWidth || height != viewHeight)) {
+        if (width > 0 && height > 0 && (readConfigChage || width != viewWidth || height != viewHeight)) {
+            val viewChange = if(width != viewWidth || height != viewHeight) true else false
             viewWidth = width
             viewHeight = height
             upVisibleSize()
-            postEvent(EventBus.UP_CONFIG, false)
+            postEvent(EventBus.UP_CONFIG, viewChange)
         }
     }
 

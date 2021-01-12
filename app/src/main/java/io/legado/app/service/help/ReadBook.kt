@@ -460,16 +460,6 @@ object ReadBook {
         }
     }
 
-    /*当前是否是漫画书*/
-    fun isComicBook():Boolean{
-        val url = book?.origin
-        if(url!=null){
-            val bookSource = App.db.bookSourceDao.getBookSource(url)
-            if(bookSource?.bookSourceComment == "comic") return true
-        }
-        return false
-    }
-
     interface CallBack {
         fun loadChapterList(book: Book)
         fun upContent(relativePosition: Int = 0, resetPageOffset: Boolean = true)
@@ -477,7 +467,5 @@ object ReadBook {
         fun pageChanged()
         fun contentLoadFinish()
         fun upPageAnim()
-        fun enableComicMode()
     }
-
 }

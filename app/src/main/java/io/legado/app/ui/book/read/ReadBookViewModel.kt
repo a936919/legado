@@ -31,18 +31,9 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
     var isInitFinish = false
     var searchContentQuery = ""
 
-    fun initData(intent: Intent) {
+    fun initData(book: Book?) {
         execute {
-            ReadBook.inBookshelf = intent.getBooleanExtra("inBookshelf", true)
-            IntentDataHelp.getData<Book>(intent.getStringExtra("key"))?.let {
-                initBook(it)
-            } ?: intent.getStringExtra("bookUrl")?.let {
-                App.db.bookDao.getBook(it)?.let { book ->
-                    initBook(book)
-                }
-            } ?: App.db.bookDao.lastReadBook?.let {
-                initBook(it)
-            }
+           if(book!=null) initBook(book)
         }.onFinally {
             if (ReadBook.inBookshelf) {
                 ReadBook.saveRead()

@@ -528,18 +528,10 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
         }
     }
 
-    private fun isComic(bookSourceUrl:String):Boolean{
-        val bookSource = App.db.bookSourceDao.getBookSource(bookSourceUrl)
-        if(bookSource?.bookSourceComment == "comic") return true
-        return false
-    }
-
     private fun processComicMode():Boolean{
-        val book = BooksFragment.startBook
         var select:Int
         var readConfigChage:Boolean
-        var selectAble:Boolean
-        if(book!=null && isComic(book.origin)){
+        if(callBack.intentIsComic){
             select= ReadBookConfig.getComicSelect()
             selectAble = false
         } else{
@@ -548,9 +540,9 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
         }
         if(ReadBookConfig.backupSelect != select){
             ReadBookConfig.backupSelect = select
-            readConfigChage =true
+            readConfigChage = true
         }else{
-            readConfigChage =false
+            readConfigChage = false
         }
 
         if(readConfigChage){
@@ -570,5 +562,7 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
         val pageFactory: TextPageFactory
         val scope: CoroutineScope
         val isScroll: Boolean
+        val intentIsComic : Boolean
+
     }
 }

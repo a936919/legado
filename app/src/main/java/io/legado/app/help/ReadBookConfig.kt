@@ -374,6 +374,12 @@ object ReadBookConfig {
         return -1
     }
 
+    fun isComic(bookSourceUrl:String):Boolean{
+        val bookSource = App.db.bookSourceDao.getBookSource(bookSourceUrl)
+        if(bookSource?.bookSourceComment == "comic") return true
+        return false
+    }
+
     @Keep
     class Config(
         var name: String = "",

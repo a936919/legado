@@ -36,8 +36,6 @@ class BooksFragment : BaseFragment(R.layout.fragment_books),
     BaseBooksAdapter.CallBack {
 
     companion object {
-        var startBook:Book? = null
-
         fun newInstance(position: Int, groupId: Long): BooksFragment {
             return BooksFragment().apply {
                 val bundle = Bundle()
@@ -141,7 +139,6 @@ class BooksFragment : BaseFragment(R.layout.fragment_books),
     }
 
     override fun open(book: Book) {
-        startBook = book
         when (book.type) {
             BookType.audio ->
                 startActivity<AudioPlayActivity>(Pair("bookUrl", book.bookUrl))
