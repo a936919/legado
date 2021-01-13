@@ -15,6 +15,7 @@ import io.legado.app.ui.filepicker.utils.FilePickerIcon
 import io.legado.app.utils.FileUtils
 import io.legado.app.utils.cnCompare
 import org.jetbrains.anko.sdk27.listeners.onClick
+import org.jetbrains.anko.sdk27.listeners.onLongClick
 import java.io.File
 import java.util.*
 
@@ -79,8 +80,7 @@ class FileAdapter(context: Context, val callBack: CallBack) :
                     }
                     fileItem.name = file.name
                     fileItem.path = file.absolutePath
-                    if(fileItem.path == "/storage/emulated/0/Books") fileItem.top = true
-                    if(fileItem.path == "/storage/emulated/0/Download") fileItem.top = true
+                    fileItem.top = callBack.isTopPath(fileItem.path)
                     data.add(fileItem)
                 }
             }
@@ -131,11 +131,16 @@ class FileAdapter(context: Context, val callBack: CallBack) :
         holder.itemView.onClick {
             callBack.onFileClick(holder.layoutPosition)
         }
+        holder.itemView.onLongClick{
+            callBack.processTopPath(holder.layoutPosition)
+            true
+        }
     }
 
     interface CallBack {
         fun onFileClick(position: Int)
-
+        fun isTopPath(path: String):Boolean
+        fun processTopPath(position:Int)
         //允许的扩展名
         var allowExtensions: Array<String>?
 

@@ -21,6 +21,7 @@ import io.legado.app.ui.filepicker.adapter.PathAdapter
 import io.legado.app.ui.widget.recycler.VerticalDivider
 import io.legado.app.utils.*
 import io.legado.app.utils.viewbindingdelegate.viewBinding
+import okhttp3.internal.notifyAll
 import java.io.File
 
 
@@ -215,6 +216,26 @@ class FilePickerDialog : DialogFragment(),
             ?.onActivityResult(requestCode, Activity.RESULT_OK, data)
         (activity as? CallBack)
             ?.onActivityResult(requestCode, Activity.RESULT_OK, data)
+    }
+
+    private val topPath = ArrayList<String>()
+    override fun processTopPath(position:Int){
+        val fileItem = fileAdapter.getItem(position)
+        if (fileItem?.isDirectory == true) {
+            val path = fileItem.path
+            if(isTopPath(path)) topPath.remove(path) else topPath.add(path)
+            fileAdapter.loadData(File(path).parent ?: "")
+            toast("置顶文件夹")
+        }
+        else{
+            toast("无法置顶文件")
+        }
+    }
+    override fun isTopPath(path:String):Boolean{
+        topPath.forEach {
+            if(it == path)  return true
+        }
+        return false
     }
 
     interface CallBack {
