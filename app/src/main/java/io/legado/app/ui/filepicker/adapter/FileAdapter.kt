@@ -13,6 +13,7 @@ import io.legado.app.ui.filepicker.entity.FileItem
 import io.legado.app.ui.filepicker.utils.ConvertUtils
 import io.legado.app.ui.filepicker.utils.FilePickerIcon
 import io.legado.app.utils.FileUtils
+import io.legado.app.utils.cnCompare
 import org.jetbrains.anko.sdk27.listeners.onClick
 import java.io.File
 import java.util.*
@@ -78,12 +79,21 @@ class FileAdapter(context: Context, val callBack: CallBack) :
                     }
                     fileItem.name = file.name
                     fileItem.path = file.absolutePath
+                    if(fileItem.path == "/storage/emulated/0/Books") fileItem.top = true
+                    if(fileItem.path == "/storage/emulated/0/Download") fileItem.top = true
                     data.add(fileItem)
                 }
             }
+            data.sortWith{o1,o2->
+                var sort = -o1.top.compareTo(o2.top)
+                if (sort == 0) {
+                    sort = -o1.isDirectory.compareTo(o2.isDirectory)
+                    if(sort == 0) sort = o2.name?.let { o1.name?.cnCompare(it) } ?:0
+                }
+                sort
+            }
             setItems(data)
         }
-
     }
 
     override fun getViewBinding(parent: ViewGroup): ItemFileFilepickerBinding {
