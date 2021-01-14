@@ -137,6 +137,9 @@ object Restore {
             fileToListT<RuleSub>(path, "sourceSub.json")?.let {
                 App.db.ruleSubDao.insert(*it.toTypedArray())
             }
+            fileToListT<TopPath>(path, "topPath.json")?.let {
+                App.db.topPathDao.insert(*it.toTypedArray())
+            }
             fileToListT<TxtTocRule>(path, DefaultData.txtTocRuleFileName)?.let {
                 App.db.txtTocRule.insert(*it.toTypedArray())
             }

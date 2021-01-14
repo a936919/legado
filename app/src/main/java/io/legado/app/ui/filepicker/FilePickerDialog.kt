@@ -13,7 +13,9 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import io.legado.app.App
 import io.legado.app.R
+import io.legado.app.data.entities.TopPath
 import io.legado.app.databinding.DialogFileChooserBinding
 import io.legado.app.lib.theme.primaryColor
 import io.legado.app.ui.filepicker.adapter.FileAdapter
@@ -218,24 +220,24 @@ class FilePickerDialog : DialogFragment(),
             ?.onActivityResult(requestCode, Activity.RESULT_OK, data)
     }
 
-    private val topPath = ArrayList<String>()
     override fun processTopPath(position:Int){
         val fileItem = fileAdapter.getItem(position)
         if (fileItem?.isDirectory == true) {
-            val path = fileItem.path
-            if(isTopPath(path)) topPath.remove(path) else topPath.add(path)
-            fileAdapter.loadData(File(path).parent ?: "")
-            toast("置顶文件夹")
+            val topPath=TopPath()
+            topPath.path = fileItem.path
+            if(App.db.topPathDao.isTopPath(fileItem.path)) {
+                App.db.topPathDao.delete(topPath)
+                toast("取消置顶")
+
+            } else {
+                App.db.topPathDao.insert(topPath)
+                toast("置顶")
+            }
+            fileAdapter.loadData(File(fileItem.path).parent ?: "")
         }
         else{
             toast("无法置顶文件")
         }
-    }
-    override fun isTopPath(path:String):Boolean{
-        topPath.forEach {
-            if(it == path)  return true
-        }
-        return false
     }
 
     interface CallBack {

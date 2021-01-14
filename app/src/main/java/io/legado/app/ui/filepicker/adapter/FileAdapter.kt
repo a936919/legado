@@ -3,6 +3,7 @@ package io.legado.app.ui.filepicker.adapter
 
 import android.content.Context
 import android.view.ViewGroup
+import io.legado.app.App
 import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.base.adapter.RecyclerAdapter
 import io.legado.app.databinding.ItemFileFilepickerBinding
@@ -31,6 +32,7 @@ class FileAdapter(context: Context, val callBack: CallBack) :
     private val fileIcon = ConvertUtils.toDrawable(FilePickerIcon.getFile())
     private val primaryTextColor = context.getPrimaryTextColor(!AppConfig.isNightTheme)
     private val disabledTextColor = context.getPrimaryDisabledTextColor(!AppConfig.isNightTheme)
+    private val topIcon = ConvertUtils.toDrawable(FilePickerIcon.getTop())
 
     fun loadData(path: String?) {
         if (path == null) {
@@ -80,7 +82,8 @@ class FileAdapter(context: Context, val callBack: CallBack) :
                     }
                     fileItem.name = file.name
                     fileItem.path = file.absolutePath
-                    fileItem.top = callBack.isTopPath(fileItem.path)
+                    fileItem.top = App.db.topPathDao.isTopPath(fileItem.path)
+                    if( fileItem.top) fileItem.icon = topIcon
                     data.add(fileItem)
                 }
             }
@@ -139,7 +142,6 @@ class FileAdapter(context: Context, val callBack: CallBack) :
 
     interface CallBack {
         fun onFileClick(position: Int)
-        fun isTopPath(path: String):Boolean
         fun processTopPath(position:Int)
         //允许的扩展名
         var allowExtensions: Array<String>?
