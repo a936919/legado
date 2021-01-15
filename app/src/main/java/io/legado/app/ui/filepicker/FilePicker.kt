@@ -1,5 +1,6 @@
 package io.legado.app.ui.filepicker
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
@@ -19,6 +20,7 @@ object FilePicker {
         otherActions: List<String>? = null,
         otherFun: ((action: String) -> Unit)? = null
     ) {
+        if(openFilePickerDialog(activity,requestCode))  return
         val selectList = arrayListOf(activity.getString(R.string.sys_folder_picker))
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
             selectList.add(activity.getString(R.string.app_folder_picker))
@@ -69,6 +71,7 @@ object FilePicker {
         otherActions: List<String>? = null,
         otherFun: ((action: String) -> Unit)? = null
     ) {
+        if(openFilePickerDialog(fragment,requestCode))  return
         val selectList = arrayListOf(fragment.getString(R.string.sys_folder_picker))
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
             selectList.add(fragment.getString(R.string.app_folder_picker))
@@ -274,5 +277,26 @@ object FilePicker {
             }
         }
         return types.toTypedArray()
+    }
+
+    private fun openFilePickerDialog(activity: AppCompatActivity, requestCode: Int):Boolean{
+        checkPermissions(activity) {
+            FilePickerDialog.show(
+                    activity.supportFragmentManager,
+                    requestCode,
+                    mode = FilePickerDialog.DIRECTORY
+            )
+        }
+        return true
+    }
+    private fun openFilePickerDialog(fragment: Fragment, requestCode: Int):Boolean {
+        checkPermissions(fragment) {
+            FilePickerDialog.show(
+                    fragment.childFragmentManager,
+                    requestCode,
+                    mode = FilePickerDialog.DIRECTORY
+            )
+        }
+        return true
     }
 }
