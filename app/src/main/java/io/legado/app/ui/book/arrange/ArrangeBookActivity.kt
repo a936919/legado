@@ -26,6 +26,7 @@ import io.legado.app.ui.widget.recycler.VerticalDivider
 import io.legado.app.utils.cnCompare
 import io.legado.app.utils.getPrefInt
 import io.legado.app.utils.getViewModel
+import java.lang.Integer.max
 import java.text.FieldPosition
 
 

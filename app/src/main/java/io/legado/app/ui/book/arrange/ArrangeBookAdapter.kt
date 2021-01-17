@@ -3,6 +3,7 @@ package io.legado.app.ui.book.arrange
 import android.content.Context
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat.startActivity
 import androidx.core.os.bundleOf
 import androidx.recyclerview.widget.RecyclerView
 import io.legado.app.base.adapter.ItemViewHolder
@@ -11,10 +12,13 @@ import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookGroup
 import io.legado.app.databinding.ItemArrangeBookBinding
 import io.legado.app.lib.theme.backgroundColor
+import io.legado.app.ui.book.info.BookInfoActivity
 import io.legado.app.ui.widget.recycler.DragSelectTouchHelper
 import io.legado.app.ui.widget.recycler.ItemTouchCallback
+import io.legado.app.utils.startActivity
 import org.jetbrains.anko.backgroundColor
 import org.jetbrains.anko.sdk27.listeners.onClick
+import org.jetbrains.anko.startActivity
 import java.util.*
 
 class ArrangeBookAdapter(context: Context, val callBack: CallBack) :
@@ -38,7 +42,7 @@ class ArrangeBookAdapter(context: Context, val callBack: CallBack) :
             getItem(position)?.let{
                 selectedBooks.add(it)
             }
-            callBack.gotoPosition(position)
+            callBack.gotoPosition(Integer.max(position - 2, 0))
         }
     }
 
@@ -95,6 +99,11 @@ class ArrangeBookAdapter(context: Context, val callBack: CallBack) :
                 getItem(holder.layoutPosition)?.let {
                     actionItem = it
                     callBack.selectGroup(groupRequestCode, it.group)
+                }
+            }
+            tvStatus.onClick {
+                getItem(holder.layoutPosition)?.let {
+                    context.startActivity<BookInfoActivity>(Pair("name", it.name), Pair("author", it.author))
                 }
             }
         }
