@@ -69,7 +69,7 @@ class BooksAdapterList(context: Context, private val callBack: CallBack) :
 
             onLongClick {
                 getItem(holder.layoutPosition)?.let {
-                    callBack.openBookInfo(it)
+                    callBack.openArrangeBook(holder.layoutPosition)
                 }
                 true
             }

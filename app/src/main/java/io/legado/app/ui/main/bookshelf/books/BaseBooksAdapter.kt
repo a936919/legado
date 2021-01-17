@@ -75,7 +75,7 @@ abstract class BaseBooksAdapter<VB : ViewBinding>(context: Context) :
 
     interface CallBack {
         fun open(book: Book)
-        fun openBookInfo(book: Book)
+        fun openArrangeBook(layoutPosition: Int)
         fun isUpdate(bookUrl: String): Boolean
     }
 }

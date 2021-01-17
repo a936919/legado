@@ -98,6 +98,21 @@ abstract class RecyclerAdapter<ITEM, VB : ViewBinding>(protected val context: Co
     }
 
     @Synchronized
+    fun setItems(position: Int, items: List<ITEM>?) {
+        kotlin.runCatching {
+            if (this.items.isNotEmpty()) {
+                this.items.clear()
+            }
+            if (items != null) {
+                this.items.addAll(items)
+            }
+            notifyDataSetChanged()
+            if(position>=0) gotoPositionAndSelect(position)
+            onCurrentListChanged()
+        }
+    }
+
+    @Synchronized
     fun setItems(items: List<ITEM>?, itemCallback: DiffUtil.ItemCallback<ITEM>) {
         kotlin.runCatching {
             val callback = object : DiffUtil.Callback() {
@@ -324,7 +339,9 @@ abstract class RecyclerAdapter<ITEM, VB : ViewBinding>(protected val context: Co
     }
 
     open fun onCurrentListChanged() {
+    }
 
+    open fun gotoPositionAndSelect(position: Int) {
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = when {

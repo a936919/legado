@@ -88,6 +88,7 @@ class BookshelfFragment : VMBaseFragment<BookshelfViewModel>(R.layout.fragment_b
             R.id.menu_arrange_bookshelf -> startActivity<ArrangeBookActivity>(
                 Pair("groupId", selectedGroup.groupId),
                 Pair("groupName", selectedGroup.groupName)
+
             )
             R.id.menu_download -> startActivity<CacheActivity>(
                 Pair("groupId", selectedGroup.groupId),
@@ -267,7 +268,7 @@ class BookshelfFragment : VMBaseFragment<BookshelfViewModel>(R.layout.fragment_b
 
         override fun getItem(position: Int): Fragment {
             val group = bookGroups[position]
-            return BooksFragment.newInstance(position, group.groupId)
+            return BooksFragment.newInstance(position, group.groupId,group.groupName)
         }
 
         override fun getCount(): Int {

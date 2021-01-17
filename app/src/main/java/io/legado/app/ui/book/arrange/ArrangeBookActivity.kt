@@ -26,6 +26,7 @@ import io.legado.app.ui.widget.recycler.VerticalDivider
 import io.legado.app.utils.cnCompare
 import io.legado.app.utils.getPrefInt
 import io.legado.app.utils.getViewModel
+import java.text.FieldPosition
 
 
 class ArrangeBookActivity : VMBaseActivity<ActivityArrangeBookBinding, ArrangeBookViewModel>(),
@@ -43,6 +44,7 @@ class ArrangeBookActivity : VMBaseActivity<ActivityArrangeBookBinding, ArrangeBo
     private var booksLiveData: LiveData<List<Book>>? = null
     private var menu: Menu? = null
     private var groupId: Long = -1
+    private var position: Int = 0
 
     override fun getViewBinding(): ActivityArrangeBookBinding {
         return ActivityArrangeBookBinding.inflate(layoutInflater)
@@ -50,6 +52,7 @@ class ArrangeBookActivity : VMBaseActivity<ActivityArrangeBookBinding, ArrangeBo
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         groupId = intent.getLongExtra("groupId", -1)
+        position = intent.getIntExtra("position", -1)
         binding.titleBar.subtitle = intent.getStringExtra("groupName") ?: getString(R.string.all)
         initView()
         initGroupData()
@@ -130,7 +133,7 @@ class ArrangeBookActivity : VMBaseActivity<ActivityArrangeBookBinding, ArrangeBo
                 3 -> list.sortedBy { it.order }
                 else -> list.sortedByDescending { it.durChapterTime }
             }
-            adapter.setItems(books)
+            adapter.setItems(position,books)
         })
     }
 
@@ -214,6 +217,10 @@ class ArrangeBookActivity : VMBaseActivity<ActivityArrangeBookBinding, ArrangeBo
                 viewModel.deleteBook(book)
             }
         }.show()
+    }
+
+    override fun gotoPosition(position: Int){
+        binding.recyclerView.scrollToPosition(position)
     }
 
 }

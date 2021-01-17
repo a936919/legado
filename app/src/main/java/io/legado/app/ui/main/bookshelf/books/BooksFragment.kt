@@ -22,6 +22,7 @@ import io.legado.app.help.IntentDataHelp
 import io.legado.app.lib.theme.ATH
 import io.legado.app.lib.theme.accentColor
 import io.legado.app.ui.audio.AudioPlayActivity
+import io.legado.app.ui.book.arrange.ArrangeBookActivity
 import io.legado.app.ui.book.info.BookInfoActivity
 import io.legado.app.ui.book.read.ReadBookActivity
 import io.legado.app.ui.main.MainViewModel
@@ -36,11 +37,12 @@ class BooksFragment : BaseFragment(R.layout.fragment_books),
     BaseBooksAdapter.CallBack {
 
     companion object {
-        fun newInstance(position: Int, groupId: Long): BooksFragment {
+        fun newInstance(position: Int, groupId: Long,groupName:String): BooksFragment {
             return BooksFragment().apply {
                 val bundle = Bundle()
                 bundle.putInt("position", position)
                 bundle.putLong("groupId", groupId)
+                bundle.putString("groupName", groupName)
                 arguments = bundle
             }
         }
@@ -53,11 +55,13 @@ class BooksFragment : BaseFragment(R.layout.fragment_books),
     private var bookshelfLiveData: LiveData<List<Book>>? = null
     private var position = 0
     private var groupId = -1L
+    private var groupName = ""
 
     override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) {
         arguments?.let {
             position = it.getInt("position", 0)
             groupId = it.getLong("groupId", -1)
+            groupName = it.getString("groupName", null)
         }
         initRecyclerView()
         upRecyclerData()
@@ -149,10 +153,18 @@ class BooksFragment : BaseFragment(R.layout.fragment_books),
         }
     }
 
-    override fun openBookInfo(book: Book) {
+    fun openBookInfo(book: Book) {
         startActivity<BookInfoActivity>(
-            Pair("name", book.name),
-            Pair("author", book.author)
+        Pair("name", book.name),
+        Pair("author", book.author)
+        )
+    }
+
+    override fun openArrangeBook(layoutPosition: Int) {
+        startActivity<ArrangeBookActivity>(
+            Pair("groupId", groupId),
+            Pair("groupName", groupName),
+            Pair("position", layoutPosition)
         )
     }
 

@@ -33,6 +33,15 @@ class ArrangeBookAdapter(context: Context, val callBack: CallBack) :
         callBack.upSelectCount()
     }
 
+    override fun gotoPositionAndSelect(position: Int) {
+        if(position>=0){
+            getItem(position)?.let{
+                selectedBooks.add(it)
+            }
+            callBack.gotoPosition(position)
+        }
+    }
+
     override fun convert(
         holder: ItemViewHolder,
         binding: ItemArrangeBookBinding,
@@ -46,6 +55,7 @@ class ArrangeBookAdapter(context: Context, val callBack: CallBack) :
             tvAuthor.visibility = if (item.author.isEmpty()) View.GONE else View.VISIBLE
             tvGroupS.text = getGroupName(item.group)
             checkbox.isChecked = selectedBooks.contains(item)
+            ivCover.load(item.getDisplayCover(),item.name,item.author)
         }
     }
 
@@ -201,5 +211,6 @@ class ArrangeBookAdapter(context: Context, val callBack: CallBack) :
         fun updateBook(vararg book: Book)
         fun deleteBook(book: Book)
         fun selectGroup(requestCode: Int, groupId: Long)
+        fun gotoPosition(position: Int)
     }
 }
