@@ -11,6 +11,7 @@ import android.view.animation.Animation
 import android.widget.FrameLayout
 import android.widget.SeekBar
 import androidx.core.view.get
+import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.core.view.size
 import io.legado.app.App
@@ -19,14 +20,11 @@ import io.legado.app.constant.PreferKey
 import io.legado.app.databinding.ViewReadMenuBinding
 import io.legado.app.help.AppConfig
 import io.legado.app.help.LocalConfig
-import io.legado.app.help.ReadBookConfig
 import io.legado.app.lib.theme.*
 import io.legado.app.service.help.ReadBook
 import io.legado.app.ui.widget.seekbar.SeekBarChangeListener
 import io.legado.app.utils.*
 import org.jetbrains.anko.sdk27.listeners.onClick
-import org.jetbrains.anko.sdk27.listeners.onLongClick
-import org.jetbrains.anko.seekBar
 
 /**
  * 阅读界面菜单
@@ -323,8 +321,8 @@ class ReadMenu @JvmOverloads constructor(
     }
 
     fun upBookView() {
-        //binding.tvLogin.visible(!ReadBook.webBook?.bookSource?.loginUrl.isNullOrEmpty())
         binding.tvLogin.visible(false)
+        //binding.tvLogin.isGone = ReadBook.webBook?.bookSource?.loginUrl.isNullOrEmpty()
         ReadBook.curTextChapter?.let {
             binding.tvChapterName.text = it.title
             binding.tvChapterName.setTextColor(context.readCfgTopText)

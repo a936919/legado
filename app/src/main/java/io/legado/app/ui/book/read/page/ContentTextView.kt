@@ -351,8 +351,8 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
         selectStart[0] = relativePage
         selectStart[1] = lineIndex
         selectStart[2] = charIndex
-        val textLine = relativePage(relativePage).textLines[lineIndex]
-        val textChar = textLine.textChars[charIndex]
+        val textLine = relativePage(relativePage).getLine(lineIndex)
+        val textChar = textLine.getTextChar(charIndex)
         upSelectedStart(
             textChar.start,
             textLine.lineBottom + relativeOffset(relativePage),
@@ -368,8 +368,8 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
         selectEnd[0] = relativePage
         selectEnd[1] = lineIndex
         selectEnd[2] = charIndex
-        val textLine = relativePage(relativePage).textLines[lineIndex]
-        val textChar = textLine.textChars[charIndex]
+        val textLine = relativePage(relativePage).getLine(lineIndex)
+        val textChar = textLine.getTextChar(charIndex)
         upSelectedEnd(textChar.end, textLine.lineBottom + relativeOffset(relativePage))
         upSelectChars()
     }

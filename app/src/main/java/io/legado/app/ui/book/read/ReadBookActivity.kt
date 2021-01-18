@@ -53,10 +53,8 @@ import io.legado.app.ui.widget.dialog.TextDialog
 import io.legado.app.utils.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.jetbrains.anko.startActivity
 import org.jetbrains.anko.startActivityForResult
 import org.jetbrains.anko.toast
@@ -327,6 +325,14 @@ class ReadBookActivity : ReadBookBaseActivity(),
                     return true
                 }
             }
+            keyCode == KeyEvent.KEYCODE_PAGE_UP -> {
+                binding.readView.pageDelegate?.keyTurnPage(PageDirection.PREV)
+                return true
+            }
+            keyCode == KeyEvent.KEYCODE_PAGE_DOWN -> {
+                binding.readView.pageDelegate?.keyTurnPage(PageDirection.NEXT)
+                return true
+            }
             keyCode == KeyEvent.KEYCODE_SPACE -> {
                 binding.readView.pageDelegate?.keyTurnPage(PageDirection.NEXT)
                 return true
@@ -568,13 +574,18 @@ class ReadBookActivity : ReadBookBaseActivity(),
     /**
      * 更新内容
      */
-    override fun upContent(relativePosition: Int, resetPageOffset: Boolean) {
-        autoPageProgress = 0
+    override fun upContent(
+        relativePosition: Int,
+        resetPageOffset: Boolean,
+        success: (() -> Unit)?
+    ) {
         launch {
+            autoPageProgress = 0
             binding.readView.upContent(relativePosition, resetPageOffset)
             binding.readMenu.setSeekPage(ReadBook.durPageIndex())
+            loadStates = false
+            success?.invoke()
         }
-        loadStates = false
     }
 
     /**
@@ -825,7 +836,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == Activity.RESULT_OK) {
             when (requestCode) {
-                requestCodeEditSource -> viewModel.upBookSource() {
+                requestCodeEditSource -> viewModel.upBookSource {
                     upView()
                 }
                 requestCodeChapterList ->
@@ -847,43 +858,35 @@ class ReadBookActivity : ReadBookBaseActivity(),
     }
 
     private fun skipToSearch(index: Int, indexWithinChapter: Int) {
-        launch(IO) {
-            viewModel.openChapter(index)
-            // block until load correct chapter and pages
-            var pages = ReadBook.curTextChapter?.pages
-            while (ReadBook.durChapterIndex != index || pages == null) {
-                delay(100L)
-                pages = ReadBook.curTextChapter?.pages
-            }
+        viewModel.openChapter(index) {
+            val pages = ReadBook.curTextChapter?.pages ?: return@openChapter
             val positions = ReadBook.searchResultPositions(
                     pages,
                     indexWithinChapter,
                     viewModel.searchContentQuery
             )
-            while (ReadBook.durPageIndex() != positions[0]) {
-                delay(100L)
-                ReadBook.skipToPage(positions[0])
-            }
-            withContext(Main) {
-                binding.readView.curPage.selectStartMoveIndex(0, positions[1], positions[2])
-                delay(20L)
-                when (positions[3]) {
-                    0 -> binding.readView.curPage.selectEndMoveIndex(
+            ReadBook.skipToPage(positions[0]) {
+                launch {
+                    binding.readView.curPage.selectStartMoveIndex(0, positions[1], positions[2])
+                    delay(20L)
+                    when (positions[3]) {
+                        0 -> binding.readView.curPage.selectEndMoveIndex(
                             0,
                             positions[1],
                             positions[2] + viewModel.searchContentQuery.length - 1
-                    )
-                    1 -> binding.readView.curPage.selectEndMoveIndex(
+                        )
+                        1 -> binding.readView.curPage.selectEndMoveIndex(
                             0,
                             positions[1] + 1,
                             positions[4]
-                    )
-                    //consider change page, jump to scroll position
-                    -1 -> binding.readView.curPage
+                        )
+                        //consider change page, jump to scroll position
+                        -1 -> binding.readView.curPage
                             .selectEndMoveIndex(1, 0, positions[4])
+                    }
+                    binding.readView.isTextSelected = true
+                    delay(100L)
                 }
-                binding.readView.isTextSelected = true
-                delay(100L)
             }
         }
     }

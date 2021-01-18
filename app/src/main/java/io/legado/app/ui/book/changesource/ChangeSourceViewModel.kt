@@ -89,6 +89,7 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
     }
 
     private fun searchFinish(searchBook: SearchBook) {
+        if (searchBooks.contains(searchBook)) return
         App.db.searchBookDao.insert(searchBook)
         if (screenKey.isEmpty()) {
             searchBooks.add(searchBook)

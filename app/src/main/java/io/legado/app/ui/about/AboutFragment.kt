@@ -9,6 +9,7 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import io.legado.app.App
 import io.legado.app.R
+import io.legado.app.help.AppConfig
 import io.legado.app.lib.dialogs.alert
 import io.legado.app.ui.widget.dialog.TextDialog
 import io.legado.app.utils.openUrl
@@ -24,6 +25,7 @@ class AboutFragment : PreferenceFragmentCompat() {
         Pair("(QQ群VIP1)701903217", "-iolizL4cbJSutKRpeImHlXlpLDZnzeF"),
         Pair("(QQ群VIP2)263949160", "xwfh7_csb2Gf3Aw2qexEcEtviLfLfd4L"),
         Pair("(QQ群VIP3)680280282", "_N0i7yZObjKSeZQvzoe2ej7j02kLnOOK"),
+        Pair("(QQ群VIP4)680280282", "VF2UwvUCuaqlo6pddWTe_kw__a1_Fr8O"),
         Pair("(QQ群1)805192012", "6GlFKjLeIk5RhQnR3PNVDaKB6j10royo"),
         Pair("(QQ群2)773736122", "5Bm5w6OgLupXnICbYvbgzpPUgf0UlsJF"),
         Pair("(QQ群3)981838750", "g_Sgmp2nQPKqcZQ5qPcKLHziwX_mpps9"),
@@ -35,8 +37,11 @@ class AboutFragment : PreferenceFragmentCompat() {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         addPreferencesFromResource(R.xml.about)
-        findPreference<Preference>("check_update")?.summary =
+        findPreference<Preference>("update_log")?.summary =
             "${getString(R.string.version)} ${App.versionName}"
+        if (AppConfig.isGooglePlay) {
+            preferenceScreen.removePreferenceRecursively("check_update")
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -58,6 +63,7 @@ class AboutFragment : PreferenceFragmentCompat() {
             "qq" -> showQqGroups()
             "gzGzh" -> requireContext().sendToClip(getString(R.string.legado_gzh))
             "tg" -> openUrl(R.string.tg_url)
+            "discord" -> openUrl(R.string.discord_url)
         }
         return super.onPreferenceTreeClick(preference)
     }
