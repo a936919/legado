@@ -18,7 +18,8 @@
         android:padding="20dp"
         android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:focusable="true">
         <!--cover-->
         <io.legado.app.ui.widget.image.CoverImageView
             android:layout_marginRight="10dp"
