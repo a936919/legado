@@ -1,10 +1,11 @@
 package io.legado.app.ui.book.read.page.provider
 
+import android.graphics.Rect
 import android.text.StaticLayout
 import android.text.TextPaint
-import android.util.Log
 import io.legado.app.utils.mqLog
 import io.legado.app.utils.toStringArray
+import kotlin.math.max
 
 /*
 * 针对中文的断行排版处理-by hoodie13
@@ -18,10 +19,10 @@ class TextProcess(
     var lineStart = IntArray(100)
     var lineEnd =IntArray(100)
     var lineWidth = FloatArray(100)
-    var compressWidth =FloatArray(100)
     var lineCompressMod = IntArray(100)
-    var CompressCharIndex =IntArray(100)
     var lineCount = 0
+    private val curPaint = textPaint
+    private val cnCharWitch = getDesiredWidth("我",textPaint)
     enum class BreakMod{NORMAL, BREAK_ONE_CHAR, BREAK_MORE_CHAR, CPS_1, CPS_2, CPS_3,}
     companion object{
         const val CPS_MOD_NULL = 0
@@ -32,48 +33,44 @@ class TextProcess(
 
     init{
         var line = 0
-        var words = text.toStringArray()
+        val words = text.toStringArray()
         var lineW = 0f
         var cwPre = 0f
 
         words.forEachIndexed { index, s ->
-            val cw = StaticLayout.getDesiredWidth(s, textPaint)
-            var lindexTag:BreakMod
+            val cw = getDesiredWidth(s, curPaint)
+            var breakMod:BreakMod
             var breakLine = false
-            lineW = lineW + cw
+            lineW += cw
             var offset = 0f
             var breakCharCnt = 0
 
             if(lineW > ChapterProvider.visibleWidth) {
                 /*禁止在行尾的标点处理*/
-                if (index >= 1 && banEndOfLine(words[index - 1])) {
-                    if (index >= 2 && banEndOfLine(words[index - 2])) lindexTag = BreakMod.CPS_2//如果后面还有一个禁首标点则异常
-                    else lindexTag = BreakMod.BREAK_ONE_CHAR //无异常场景
+                if (index >= 1 && isPrePanc(words[index - 1])) {
+                    breakMod = if (index >= 2 && isPrePanc(words[index - 2])) BreakMod.CPS_2//如果后面还有一个禁首标点则异常
+                    else BreakMod.BREAK_ONE_CHAR //无异常场景
                 }
                 /*禁止在行首的标点处理*/
-                else if (banStartOfLine(words[index])) {
-                    if (index >= 1 && banStartOfLine(words[index - 1])) lindexTag = BreakMod.CPS_1//如果后面还有一个禁首标点则异常，不过三个连续行尾标点的用法不通用
-                    else if (index >= 2 && banEndOfLine(words[index - 2])) lindexTag = BreakMod.CPS_3//如果后面还有一个禁首标点则异常
-                    else lindexTag = BreakMod.BREAK_ONE_CHAR //无异常场景
+                else if (isPostPanc(words[index])) {
+                    breakMod = if (index >= 1 && isPostPanc(words[index - 1])) BreakMod.CPS_1//如果后面还有一个禁首标点则异常，不过三个连续行尾标点的用法不通用
+                    else if (index >= 2 && isPrePanc(words[index - 2])) BreakMod.CPS_3//如果后面还有一个禁首标点则异常
+                    else BreakMod.BREAK_ONE_CHAR //无异常场景
                 } else {
-                    lindexTag = BreakMod.NORMAL //无异常场景
+                    breakMod = BreakMod.NORMAL //无异常场景
                 }
 
                 /*判断上述逻辑解决不了的特殊情况*/
                 var reCheck = false
                 var breakIndex = 0
-                if(lindexTag==BreakMod.CPS_1&&(Incompressible(words[index])||Incompressible(words[index-1]))) reCheck= true
-
-                if(lindexTag==BreakMod.CPS_2&&(Incompressible(words[index-1])||Incompressible(words[index-2]))) reCheck= true
-
-                if(lindexTag==BreakMod.CPS_3&&(Incompressible(words[index])||Incompressible(words[index-2]))) reCheck= true
-
-                if(lindexTag>BreakMod.BREAK_MORE_CHAR&& index<words.lastIndex &&banStartOfLine(words[index + 1]))  reCheck= true
-
+                if(breakMod==BreakMod.CPS_1&&(inCompressible(words[index])||inCompressible(words[index-1]))) reCheck= true
+                if(breakMod==BreakMod.CPS_2&&(inCompressible(words[index-1])||inCompressible(words[index-2]))) reCheck= true
+                if(breakMod==BreakMod.CPS_3&&(inCompressible(words[index])||inCompressible(words[index-2]))) reCheck= true
+                if(breakMod>BreakMod.BREAK_MORE_CHAR&& index<words.lastIndex &&isPostPanc(words[index + 1]))  reCheck= true
 
                 /*特殊标点使用难保证显示效果，所以不考虑间隔，直接查找到能满足条件的分割字*/
-                if(reCheck == true && index>2){
-                    lindexTag = BreakMod.NORMAL
+                if(reCheck && index>2){
+                    breakMod = BreakMod.NORMAL
                     for(i in (index) downTo 1 ){
                         if(i==index){
                             breakIndex = 0
@@ -82,14 +79,14 @@ class TextProcess(
                             breakIndex++
                             cwPre = cwPre + StaticLayout.getDesiredWidth(words[i], textPaint)
                         }
-                        if(!banStartOfLine(words[i])&&!banEndOfLine(words[i - 1])) {
-                            lindexTag = BreakMod.BREAK_MORE_CHAR
+                        if(!isPostPanc(words[i])&&!isPrePanc(words[i - 1])) {
+                            breakMod = BreakMod.BREAK_MORE_CHAR
                             break
                         }
                     }
                 }
 
-                when (lindexTag) {
+                when (breakMod) {
                     BreakMod.NORMAL -> {//模式0 正常断行
                         offset = cw
                         lineEnd[line] = index
@@ -108,25 +105,22 @@ class TextProcess(
                         lineCompressMod[line] = CPS_MOD_NULL
                         breakCharCnt = breakIndex + 1
                     }
-                    BreakMod.CPS_1 -> {//模式3 两个后缀标点压缩
+                    BreakMod.CPS_1 -> {//模式3 两个后置标点压缩
                         offset = 0f
                         lineEnd[line] = index + 1
                         lineCompressMod[line] = CPS_MOD_1
-                        CompressCharIndex[line] = index - 1
                         breakCharCnt = 0
                     }
-                    BreakMod.CPS_2 -> { //模式4 标点压缩
+                    BreakMod.CPS_2 -> { //模式4 前置标点压缩+前置标点压缩+字
                         offset = 0f
                         lineEnd[line] = index + 1
                         lineCompressMod[line] = CPS_MOD_2
-                        CompressCharIndex[line] = index - 2
                         breakCharCnt = 0
                     }
-                    BreakMod.CPS_3 -> {//模式5 标点压缩
+                    BreakMod.CPS_3 -> {//模式5 前置标点压缩+字+后置标点压缩
                         offset = 0f
                         lineEnd[line] = index + 1
                         lineCompressMod[line] = CPS_MOD_3
-                        CompressCharIndex[line] = index - 2
                         breakCharCnt = 0
                     }
                 }
@@ -137,17 +131,15 @@ class TextProcess(
             if (words[index] == "\n") mqLog.e("have break $s $index")
 
             /*当前行写满情况下的断行*/
-            if (breakLine == true) {
+            if (breakLine) {
                 lineWidth[line] = lineW - offset
                 lineStart[line + 1] = lineEnd[line]
                 lineW = offset
                 line++
-                if (lineCompressMod[line] > 0) compressWidth[line] = lineWidth[line] - cw
-                else compressWidth[line] = lineWidth[line]
             }
             /*已到最后一个字符*/
             if ((words.lastIndex) == index) {
-                if (breakLine == false) {
+                if (!breakLine) {
                     offset = 0f
                     lineEnd[line] = index + 1
                     lineWidth[line] = lineW - offset
@@ -179,7 +171,7 @@ class TextProcess(
         }
     }
 
-    private fun banStartOfLine(string: String):Boolean{
+    private fun isPostPanc(string: String):Boolean{
         val panc = arrayOf("，","。","：","？","！","、","”","’","）","》","}","】",")",">","]","}",",",".","?","!",":","」","；",";")
         panc.forEach{
             if(it == string) return true
@@ -187,7 +179,7 @@ class TextProcess(
         return false
     }
 
-    private fun banEndOfLine(string: String):Boolean{
+    private fun isPrePanc(string: String):Boolean{
         val panc = arrayOf("“","（","《","【","‘","‘","(","<","[","{","「")
         panc.forEach{
             if(it == string) return true
@@ -195,14 +187,24 @@ class TextProcess(
         return false
     }
 
-    private fun Incompressible(string: String):Boolean{
-        val panc = arrayOf("!","(",")",",",".","?",":",";","'","`","[","]","{","}","<",">")
-        panc.forEach{
-            if(it == string) return true
-        }
-        return false
+    private fun inCompressible(string: String):Boolean{
+        return getDesiredWidth(string,curPaint) < cnCharWitch
     }
-
+    private val interval = (cnCharWitch/12.75).toFloat()
+    fun getPostPancOffset(string: String):Float{
+        val textRect = Rect()
+        curPaint.getTextBounds(string,0,1,textRect)
+        return max(textRect.left.toFloat()- interval,0f)
+    }
+    fun getPrePancOffset(string: String):Float{
+        val textRect = Rect()
+        curPaint.getTextBounds(string,0,1,textRect)
+        val d = max(cnCharWitch-textRect.right.toFloat()-interval,0f)
+        return  cnCharWitch/2 - d
+    }
+    fun getDesiredWidth(sting:String, paint: TextPaint):Float{
+        return paint.measureText(sting)
+    }
     fun getLineStart(line:Int):Int{
         return lineStart[line]
     }
@@ -215,15 +217,7 @@ class TextProcess(
     fun getLineCompressMod(line:Int):Int{
         return  lineCompressMod[line]
     }
-    fun getCompressChar(line:Int):Int{
-        return  CompressCharIndex[line]
-    }
-    fun getCompressWidth(line:Int):Float{
-        if(lineCompressMod[line]>0){
-            return compressWidth[line]
-        }
-        else{
-            return lineWidth[line]
-        }
+    fun getDefaultWidth():Float{
+        return cnCharWitch
     }
 }

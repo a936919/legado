@@ -1,12 +1,10 @@
 package io.legado.app.ui.book.read.page.provider
 
+import android.graphics.Rect
 import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
-import android.text.Layout
-import android.text.StaticLayout
 import android.text.TextPaint
-import android.util.Log
 import io.legado.app.App
 import io.legado.app.constant.AppPattern
 import io.legado.app.constant.EventBus
@@ -21,8 +19,6 @@ import io.legado.app.ui.book.read.page.entities.TextLine
 import io.legado.app.ui.book.read.page.entities.TextPage
 import io.legado.app.utils.*
 import java.util.*
-import kotlin.collections.HashMap
-import kotlin.math.max
 import kotlin.math.min
 
 
@@ -209,14 +205,12 @@ object ChapterProvider {
             val textLine = TextLine(isTitle = isTitle)
             val words =
                 text.substring(layout.getLineStart(lineIndex), layout.getLineEnd(lineIndex))
-            val desiredWidth = layout.getLineWidth(lineIndex)
             var isLastLine = false
-            val lineCompressMod = layout.getLineCompressMod(lineIndex)
 
             if (lineIndex == 0 && layout.lineCount > 1 && !isTitle) {
                 //第一行
                 textLine.text = words
-                addCharsToLineFirst(textLine, words.toStringArray(), textPaint, desiredWidth ,lineCompressMod)
+                addCharsToLineFirst(textLine, words.toStringArray(), textPaint, lineIndex,layout)
             } else if (lineIndex == layout.lineCount - 1) {
                 //最后一行
                 textLine.text = "$words\n"
@@ -224,11 +218,11 @@ object ChapterProvider {
                 val x = if (isTitle && ReadBookConfig.titleMode == 1)
                     (visibleWidth - layout.getLineWidth(lineIndex)) / 2
                 else 0f
-                addCharsToLineLast(textLine, words.toStringArray(), textPaint, x,desiredWidth ,lineCompressMod)
+                addCharsToLineLast(textLine, words.toStringArray(), textPaint, x, lineIndex,layout)
             } else {
                 //中间行
                 textLine.text = words
-                addCharsToLineMiddle(textLine, words.toStringArray(), textPaint, desiredWidth, 0f,lineCompressMod)
+                addCharsToLineMiddle(textLine, words.toStringArray(), textPaint,0f, lineIndex,layout)
             }
             if (durY + textPaint.textHeight > visibleHeight) {
                 //当前页面结束,设置各种值
@@ -258,17 +252,17 @@ object ChapterProvider {
         textLine: TextLine,
         words: Array<String>,
         textPaint: TextPaint,
-        desiredWidth: Float,
-        lineCompressMod:Int,
+        line:Int,
+        layout:TextProcess
     ) {
         var x = 0f
         if (!ReadBookConfig.textFullJustify) {
-            addCharsToLineLast(textLine, words, textPaint, x,desiredWidth ,lineCompressMod)
+            addCharsToLineLast(textLine, words, textPaint, x,line,layout)
             return
         }
         val bodyIndent = ReadBookConfig.paragraphIndent
-        val icw = StaticLayout.getDesiredWidth(bodyIndent, textPaint) / bodyIndent.length
-        val d = getDefinterval(textPaint)
+        val icw = layout.getDesiredWidth(bodyIndent, textPaint) / bodyIndent.length
+        val d = getDefinterval(layout)
         var num = 0
         bodyIndent.toStringArray().forEach {
             val x1 = x + icw + d
@@ -277,7 +271,7 @@ object ChapterProvider {
             x = x1
         }
         val words1 = words.copyOfRange(bodyIndent.length, words.size)
-        addCharsToLineMiddle(textLine, words1, textPaint, desiredWidth, x,lineCompressMod)
+        addCharsToLineMiddle(textLine, words1, textPaint, x,line,layout)
     }
 
     /**
@@ -287,19 +281,21 @@ object ChapterProvider {
         textLine: TextLine,
         words: Array<String>,
         textPaint: TextPaint,
-        desiredWidth: Float,
         startX: Float,
-        lineCompressMod:Int,
+        line:Int,
+        layout:TextProcess
     ) {
+        val desiredWidth = layout.getLineWidth(line)
+        val lineCompressMod = layout.getLineCompressMod(line)
         if (!ReadBookConfig.textFullJustify) {
-            addCharsToLineLast(textLine, words, textPaint, startX,desiredWidth ,lineCompressMod)
+            addCharsToLineLast(textLine, words, textPaint, startX,line,layout)
             return
         }
         var d:Float
         var interval:Float
         if(lineCompressMod>TextProcess.CPS_MOD_NULL){
             val gapCount: Int =  words.lastIndex - 1
-            val endPuncWidth = StaticLayout.getDesiredWidth(words.get(gapCount+1), textPaint)
+            val endPuncWidth = layout.getDesiredWidth(words.get(gapCount+1), textPaint)
             interval = visibleWidth - desiredWidth + endPuncWidth
             d = interval / gapCount
         }else{
@@ -309,10 +305,10 @@ object ChapterProvider {
         }
         /*间隔太大左对齐*/
         if(interval > (visibleWidth/6)){
-            addCharsToLineLast(textLine, words, textPaint, startX,desiredWidth ,lineCompressMod)
+            addCharsToLineLast(textLine, words, textPaint, startX, line,layout)
             return
         }
-        wordsProcess(textLine,words,textPaint,startX,lineCompressMod,d);
+        wordsProcess(textLine,words,textPaint,startX,line,layout,d);
     }
 
     /**
@@ -323,14 +319,16 @@ object ChapterProvider {
         words: Array<String>,
         textPaint: TextPaint,
         startX: Float,
-        desiredWidth: Float,
-        lineCompressMod:Int,
+        line:Int,
+        layout:TextProcess
     ) {
-        var interval:Float
-        var gapCount:Int
+        val desiredWidth = layout.getLineWidth(line)
+        val lineCompressMod = layout.getLineCompressMod(line)
+        val interval:Float
+        val gapCount:Int
         if(lineCompressMod>TextProcess.CPS_MOD_NULL){
             gapCount =  words.lastIndex - 1
-            val endPuncWidth = StaticLayout.getDesiredWidth(words.get(gapCount+1), textPaint)
+            val endPuncWidth = layout.getDesiredWidth(words.get(gapCount+1), textPaint)
             interval = visibleWidth - desiredWidth + endPuncWidth
         }else{
             gapCount =  words.lastIndex
@@ -338,8 +336,8 @@ object ChapterProvider {
         }
         /*目前改的不算严格意义的左对齐。会根据设置行宽做间隔叠加，保证上下行效果和两边间隔一致*/
         /*存在半角字符情况下依靠中文算出的默认间隔会越界*/
-        val d = min((interval / gapCount),(getDefinterval(textPaint)))
-        wordsProcess(textLine,words,textPaint,startX,lineCompressMod,d);
+        val d = min((interval / gapCount),(getDefinterval(layout)))
+        wordsProcess(textLine,words,textPaint,startX,line,layout,d);
     }
 //TODO 这里lineCompressMod写的太繁琐。接口不够抽象，后面要在TextProcess里做掉。-hoodie13
     private fun wordsProcess(
@@ -347,45 +345,71 @@ object ChapterProvider {
         words: Array<String>,
         textPaint: TextPaint,
         startX: Float,
-        lineCompressMod:Int,
+        line:Int,
+        layout:TextProcess,
         d: Float
     ){
+        val lineCompressMod = layout.getLineCompressMod(line)
         var x = startX
         words.forEachIndexed {index, s ->
-            val cw = StaticLayout.getDesiredWidth(s, textPaint)
-            var x1:Float
+            val cw = layout.getDesiredWidth(s, textPaint)
+            val x1:Float
             when(lineCompressMod){
                 TextProcess.CPS_MOD_1->{
-                    if(index == (words.lastIndex - 1))  x1 = x + (cw/2) else if(index == words.lastIndex) x1 = x + cw else x1 = x + cw + d
+                    when(index) {
+                        words.lastIndex - 1 -> {
+                            val offset = layout.getPostPancOffset(s)
+                            x -= offset
+                            x1 =x + cw / 2 + offset
+                        }
+                        words.lastIndex -> {
+                            x -= layout.getPostPancOffset(s)
+                            x1 = x + cw
+                        }
+                        else -> {
+                            x1 = x + cw + d
+                        }
+                    }
                 }
                 TextProcess.CPS_MOD_2->{
-                    if(index == (words.lastIndex - 2)){
-                        x  = x - (cw/2)
-                        x1 = x + cw
-                    }
-                    else if(index == (words.lastIndex - 1)){
-                        x  = x - (cw/2)
-                        x1 = x + cw + d
-                    }else if(index == words.lastIndex){
-                        x1 = x + cw
-                    }
-                    else{
-                        x1 = x + cw + d
+                    when(index){
+                        words.lastIndex - 2 -> {
+                            val offset = layout.getPostPancOffset(s)
+                            x -= offset
+                            x1 = x + cw/2 + offset
+                        }
+                        words.lastIndex - 1->{
+                            val offset = layout.getPostPancOffset(s)
+                            x -= offset
+                            x1 = x + cw/2 + offset
+                        }
+                        words.lastIndex->{
+                            x1 = x + cw
+                        }
+                        else ->{
+                            x1 = x + cw + d
+                        }
                     }
                 }
                 TextProcess.CPS_MOD_3->{
-                    if(index == (words.lastIndex - 2)){
-                        x  = x - (cw/2)
-                        x1 = x + cw
-                    }
-                    else if(index == (words.lastIndex - 1)){
-                        x1 = x + cw + d
-                    }
-                    else if(index == words.lastIndex){
-                        x1 = x + cw
-                    }
-                    else{
-                        x1 = x + cw + d
+                    val rect = Rect()
+                    textPaint.getTextBounds(s,0,1,rect)
+                    when(index){
+                        words.lastIndex - 2->{
+                            val offset = layout.getPrePancOffset(s)
+                            x -= offset
+                            x1 = x + cw/2 + offset
+                        }
+                        words.lastIndex - 1->{
+                            x1 = x + cw + d
+                        }
+                        words.lastIndex->{
+                            x -= layout.getPostPancOffset(s)
+                            x1 = x + cw
+                        }
+                        else->{
+                            x1 = x + cw + d
+                        }
                     }
                 }
                 else->{
@@ -397,11 +421,10 @@ object ChapterProvider {
         }
     }
 
-    private fun getDefinterval(textPaint: TextPaint):Float{
-        val defCharWidth = StaticLayout.getDesiredWidth("我",textPaint)
+    private fun getDefinterval(layout:TextProcess):Float{
+        val defCharWidth = layout.getDefaultWidth()
         val f = (visibleWidth / defCharWidth).toInt().toFloat()
-        val defD = (visibleWidth % defCharWidth) / f
-        return defD
+        return (visibleWidth % defCharWidth) / f
     }
     /**
      * 超出边界处理
