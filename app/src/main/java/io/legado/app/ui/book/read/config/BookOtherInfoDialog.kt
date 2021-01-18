@@ -19,6 +19,7 @@ import io.legado.app.help.ImageLoader
 import io.legado.app.lib.theme.readCfgBottomBg
 import io.legado.app.lib.theme.readCfgBottomText
 import io.legado.app.service.help.ReadBook
+import io.legado.app.ui.about.ReadRecordActivity
 import io.legado.app.ui.book.info.BookInfoActivity
 import io.legado.app.ui.book.info.BookInfoViewModel
 import io.legado.app.ui.book.read.ReadBookActivity
@@ -148,30 +149,13 @@ class BookOtherInfoDialog : BaseDialogFragment()  {
         showCover(book)
         bookName.text = book.name
         bookAuthor.text = book.getRealAuthor()
-        readTime.text="当前已读  ${formatDuring( System.currentTimeMillis()-ReadBook.readStartTime)}"
+        readTime.text="当前已读  ${ReadRecordActivity.formatDuring( System.currentTimeMillis()-ReadBook.readStartTime)}"
         val readTime =  App.db.readRecordDao.getReadTime(book.name) ?: 0
-        readAllTime.text="本书共读  ${formatDuring(readTime)}"
+        readAllTime.text="本书共读  ${ReadRecordActivity.formatDuring(readTime)}"
     }
 
     private fun showCover(book: Book) {
         binding.ivCover.load(book.getDisplayCover(), book.name, book.author)
-    }
-
-    private fun defaultCover(): RequestBuilder<Drawable> {
-        return ImageLoader.load(requireContext(), CoverImageView.defaultDrawable)
-            .apply(RequestOptions.bitmapTransform(BlurTransformation(requireContext(), 25)))
-    }
-
-    private fun formatDuring(mss: Long): String {
-        val days = mss / (1000 * 60 * 60 * 24)
-        val hours = mss % (1000 * 60 * 60 * 24) / (1000 * 60 * 60)
-        val minutes = mss % (1000 * 60 * 60) / (1000 * 60)
-        val seconds = mss % (1000 * 60) / 1000
-        val d = if (days > 0) "${days}天" else ""
-        val h = if (hours > 0) "${hours}时" else ""
-        val m = if (minutes > 0) "${minutes}分" else ""
-        val s = if (mss < 60000 && seconds > 0) "${seconds}秒" else ""
-        return "$d$h$m$s"
     }
 
     interface CallBack {

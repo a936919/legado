@@ -155,16 +155,15 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
 
     }
 
-    fun formatDuring(mss: Long): String {
-        val days = mss / (1000 * 60 * 60 * 24)
-        val hours = mss % (1000 * 60 * 60 * 24) / (1000 * 60 * 60)
-        val minutes = mss % (1000 * 60 * 60) / (1000 * 60)
-        val seconds = mss % (1000 * 60) / 1000
-        val d = if (days > 0) "${days}天" else ""
-        val h = if (hours > 0) "${hours}小时" else ""
-        val m = if (minutes > 0) "${minutes}分钟" else ""
-        val s = if (seconds > 0) "${seconds}秒" else ""
-        return "$d$h$m$s"
+    companion object{
+        fun formatDuring(mss: Long): String {
+            val hours = mss / (1000 * 60 * 60)
+            val minutes = mss % (1000 * 60 * 60) / (1000 * 60)
+            val seconds = mss % (1000 * 60) / 1000
+            val h = if (hours > 0) "${hours}小时" else ""
+            val m = if (minutes > 0) "${minutes}分钟" else ""
+            val s = if (mss < 1000 * 60 && seconds > 0) "${seconds}秒" else ""
+            return "$h$m$s"
+        }
     }
-
 }
