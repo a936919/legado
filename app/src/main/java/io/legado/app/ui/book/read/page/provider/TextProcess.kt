@@ -24,13 +24,14 @@ class TextProcess(
     private val curPaint = textPaint
     private val cnCharWitch = getDesiredWidth("我",textPaint)
     enum class BreakMod{NORMAL, BREAK_ONE_CHAR, BREAK_MORE_CHAR, CPS_1, CPS_2, CPS_3,}
-    companion object{
-        const val CPS_MOD_NULL = 0
-        const val CPS_MOD_1 = 1
-        const val CPS_MOD_2 = 2
-        const val CPS_MOD_3 = 3
+    class Locate {
+        var start:Float=0f
+        var end:Float=0f
     }
-
+    class Interval {
+        var total:Float=0f
+        var single:Float=0f
+    }
     init{
         var line = 0
         val words = text.toStringArray()
@@ -90,37 +91,37 @@ class TextProcess(
                     BreakMod.NORMAL -> {//模式0 正常断行
                         offset = cw
                         lineEnd[line] = index
-                        lineCompressMod[line] = CPS_MOD_NULL
+                        lineCompressMod[line] = 0
                         breakCharCnt = 1
                     }
                     BreakMod.BREAK_ONE_CHAR -> {//模式1 当前行下移一个字
                         offset = cw + cwPre
                         lineEnd[line] = index - 1
-                        lineCompressMod[line] = CPS_MOD_NULL
+                        lineCompressMod[line] = 0
                         breakCharCnt = 2
                     }
                     BreakMod.BREAK_MORE_CHAR -> {//模式2 当前行下移多个字
                         offset = cw + cwPre
                         lineEnd[line] = index - breakIndex
-                        lineCompressMod[line] = CPS_MOD_NULL
+                        lineCompressMod[line] = 0
                         breakCharCnt = breakIndex + 1
                     }
                     BreakMod.CPS_1 -> {//模式3 两个后置标点压缩
                         offset = 0f
                         lineEnd[line] = index + 1
-                        lineCompressMod[line] = CPS_MOD_1
+                        lineCompressMod[line] = 1
                         breakCharCnt = 0
                     }
                     BreakMod.CPS_2 -> { //模式4 前置标点压缩+前置标点压缩+字
                         offset = 0f
                         lineEnd[line] = index + 1
-                        lineCompressMod[line] = CPS_MOD_2
+                        lineCompressMod[line] = 2
                         breakCharCnt = 0
                     }
                     BreakMod.CPS_3 -> {//模式5 前置标点压缩+字+后置标点压缩
                         offset = 0f
                         lineEnd[line] = index + 1
-                        lineCompressMod[line] = CPS_MOD_3
+                        lineCompressMod[line] = 3
                         breakCharCnt = 0
                     }
                 }
@@ -178,7 +179,6 @@ class TextProcess(
         }
         return false
     }
-
     private fun isPrePanc(string: String):Boolean{
         val panc = arrayOf("“","（","《","【","‘","‘","(","<","[","{","「")
         panc.forEach{
@@ -186,38 +186,118 @@ class TextProcess(
         }
         return false
     }
-
     private fun inCompressible(string: String):Boolean{
         return getDesiredWidth(string,curPaint) < cnCharWitch
     }
     private val interval = (cnCharWitch/12.75).toFloat()
-    fun getPostPancOffset(string: String):Float{
+    private fun getPostPancOffset(string: String):Float{
         val textRect = Rect()
         curPaint.getTextBounds(string,0,1,textRect)
         return max(textRect.left.toFloat()- interval,0f)
     }
-    fun getPrePancOffset(string: String):Float{
+    private fun getPrePancOffset(string: String):Float{
         val textRect = Rect()
         curPaint.getTextBounds(string,0,1,textRect)
         val d = max(cnCharWitch-textRect.right.toFloat()-interval,0f)
         return  cnCharWitch/2 - d
     }
-    fun getDesiredWidth(sting:String, paint: TextPaint):Float{
-        return paint.measureText(sting)
+    fun getDesiredWidth(sting: String, paint: TextPaint) = paint.measureText(sting)
+    fun getLineStart(line:Int):Int = lineStart[line]
+    fun getLineEnd(line:Int):Int = lineEnd[line]
+    fun getLineWidth(line:Int):Float = lineWidth[line]
+    fun getDefaultWidth():Float = cnCharWitch
+    /*
+    * @fun：获取当前行的平均间隔：用于两端对齐，获取左对齐时的右边间隔：用于间隔过大时不再两端对齐
+    * @in：行，当前字符串，最大显示宽度
+    * @out：单个字符的平均间隔，左对齐的最大间隔
+    */
+    fun getInterval(line:Int,words: Array<String>,visibleWidth:Int):Interval{
+        val interval = Interval()
+        val total:Float
+        val d:Float
+        val lastIndex = words.lastIndex
+        val desiredWidth = getLineWidth(line)
+        if(lineCompressMod[line]>0){
+            val gapCount: Int =  lastIndex - 1
+            val lastWordsWith = getDesiredWidth(words[lastIndex],curPaint)
+            total = visibleWidth - desiredWidth + lastWordsWith
+            d = total / gapCount
+        }else{
+            val gapCount: Int =  lastIndex
+            total = visibleWidth - desiredWidth
+            d = total / gapCount
+        }
+        interval.total = total
+        interval.single = d
+        return interval
     }
-    fun getLineStart(line:Int):Int{
-        return lineStart[line]
+    /*
+    * @fun：获取当前行不同字符的位置
+    * @in：行，当前字符对于最后一个字符的偏移值，字符，间隔，定位参数
+    * @out：定位参数
+    */
+    fun getLocate(line:Int, idx:Int, string:String, interval:Float, locate: Locate){
+        val cw = getDesiredWidth(string, curPaint)
+        when(lineCompressMod[line]){
+            1->{
+                when(idx) {
+                    1 -> {
+                        val offset = getPostPancOffset(string)
+                        locate.start -= offset
+                        locate.end = locate.start + cw / 2 + offset
+                    }
+                    0 -> {
+                        locate.start -= getPostPancOffset(string)
+                        locate.end = locate.start + cw
+                    }
+                    else -> {
+                        locate.end = locate.start + cw + interval
+                    }
+                }
+            }
+            2->{
+                when(idx){
+                    2 -> {
+                        val offset = getPostPancOffset(string)
+                        locate.start -= offset
+                        locate.end = locate.start + cw/2 + offset
+                    }
+                    1->{
+                        val offset = getPostPancOffset(string)
+                        locate.start -= offset
+                        locate.end = locate.start + cw/2 + offset
+                    }
+                    0->{
+                        locate.end = locate.start + cw
+                    }
+                    else ->{
+                        locate.end = locate.start + cw + interval
+                    }
+                }
+            }
+            3->{
+                when(idx){
+                    2->{
+                        val offset = getPrePancOffset(string)
+                        locate.start -= offset
+                        locate.end = locate.start + cw/2 + offset
+                    }
+                    1->{
+                        locate.end = locate.start + cw + interval
+                    }
+                    0->{
+                        locate.start -= getPostPancOffset(string)
+                        locate.end = locate.start + cw
+                    }
+                    else->{
+                        locate.end = locate.start + cw + interval
+                    }
+                }
+            }
+            else->{
+                locate.end = if(idx != 0) (locate.start + cw + interval) else (locate.start + cw)
+            }
+        }
     }
-    fun getLineEnd(line:Int):Int{
-        return lineEnd[line]
-    }
-    fun getLineWidth(line:Int):Float{
-        return  lineWidth[line]
-    }
-    fun getLineCompressMod(line:Int):Int{
-        return  lineCompressMod[line]
-    }
-    fun getDefaultWidth():Float{
-        return cnCharWitch
-    }
+
 }

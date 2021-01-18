@@ -1,6 +1,5 @@
 package io.legado.app.ui.book.read.page.provider
 
-import android.graphics.Rect
 import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
@@ -218,11 +217,11 @@ object ChapterProvider {
                 val x = if (isTitle && ReadBookConfig.titleMode == 1)
                     (visibleWidth - layout.getLineWidth(lineIndex)) / 2
                 else 0f
-                addCharsToLineLast(textLine, words.toStringArray(), textPaint, x, lineIndex,layout)
+                addCharsToLineLast(textLine, words.toStringArray(), x, lineIndex, layout)
             } else {
                 //中间行
                 textLine.text = words
-                addCharsToLineMiddle(textLine, words.toStringArray(), textPaint,0f, lineIndex,layout)
+                addCharsToLineMiddle(textLine, words.toStringArray(), 0f, lineIndex, layout)
             }
             if (durY + textPaint.textHeight > visibleHeight) {
                 //当前页面结束,设置各种值
@@ -257,58 +256,42 @@ object ChapterProvider {
     ) {
         var x = 0f
         if (!ReadBookConfig.textFullJustify) {
-            addCharsToLineLast(textLine, words, textPaint, x,line,layout)
+            addCharsToLineLast(textLine, words, x, line, layout)
             return
         }
         val bodyIndent = ReadBookConfig.paragraphIndent
         val icw = layout.getDesiredWidth(bodyIndent, textPaint) / bodyIndent.length
-        val d = getDefinterval(layout)
-        var num = 0
+        val d = getDefInterval(layout)
         bodyIndent.toStringArray().forEach {
             val x1 = x + icw + d
-            num++
             textLine.addTextChar(charData = it, start = paddingLeft + x, end = paddingLeft + x1)
             x = x1
         }
         val words1 = words.copyOfRange(bodyIndent.length, words.size)
-        addCharsToLineMiddle(textLine, words1, textPaint, x,line,layout)
+        addCharsToLineMiddle(textLine, words1, x, line, layout)
     }
 
     /**
      * 无缩进,两端对齐
      */
     private fun addCharsToLineMiddle(
-        textLine: TextLine,
-        words: Array<String>,
-        textPaint: TextPaint,
-        startX: Float,
-        line:Int,
-        layout:TextProcess
+            textLine: TextLine,
+            words: Array<String>,
+            startX: Float,
+            line: Int,
+            layout: TextProcess
     ) {
-        val desiredWidth = layout.getLineWidth(line)
-        val lineCompressMod = layout.getLineCompressMod(line)
         if (!ReadBookConfig.textFullJustify) {
-            addCharsToLineLast(textLine, words, textPaint, startX,line,layout)
+            addCharsToLineLast(textLine, words, startX, line, layout)
             return
         }
-        var d:Float
-        var interval:Float
-        if(lineCompressMod>TextProcess.CPS_MOD_NULL){
-            val gapCount: Int =  words.lastIndex - 1
-            val endPuncWidth = layout.getDesiredWidth(words.get(gapCount+1), textPaint)
-            interval = visibleWidth - desiredWidth + endPuncWidth
-            d = interval / gapCount
-        }else{
-            val gapCount: Int =  words.lastIndex
-            interval = visibleWidth - desiredWidth
-            d = interval / gapCount
-        }
+        val interval = layout.getInterval(line,words,visibleWidth)
         /*间隔太大左对齐*/
-        if(interval > (visibleWidth/6)){
-            addCharsToLineLast(textLine, words, textPaint, startX, line,layout)
+        if(interval.total > (visibleWidth/6)){
+            addCharsToLineLast(textLine, words, startX, line, layout)
             return
         }
-        wordsProcess(textLine,words,textPaint,startX,line,layout,d);
+        wordsProcess(textLine, words, startX, line, layout, interval.single);
     }
 
     /**
@@ -317,111 +300,35 @@ object ChapterProvider {
     private fun addCharsToLineLast(
         textLine: TextLine,
         words: Array<String>,
-        textPaint: TextPaint,
         startX: Float,
-        line:Int,
-        layout:TextProcess
+        line: Int,
+        layout: TextProcess
     ) {
-        val desiredWidth = layout.getLineWidth(line)
-        val lineCompressMod = layout.getLineCompressMod(line)
-        val interval:Float
-        val gapCount:Int
-        if(lineCompressMod>TextProcess.CPS_MOD_NULL){
-            gapCount =  words.lastIndex - 1
-            val endPuncWidth = layout.getDesiredWidth(words.get(gapCount+1), textPaint)
-            interval = visibleWidth - desiredWidth + endPuncWidth
-        }else{
-            gapCount =  words.lastIndex
-            interval = visibleWidth - desiredWidth
-        }
+        val interval = layout.getInterval(line,words,visibleWidth)
         /*目前改的不算严格意义的左对齐。会根据设置行宽做间隔叠加，保证上下行效果和两边间隔一致*/
         /*存在半角字符情况下依靠中文算出的默认间隔会越界*/
-        val d = min((interval / gapCount),(getDefinterval(layout)))
-        wordsProcess(textLine,words,textPaint,startX,line,layout,d);
+        val d = min((interval.single),(getDefInterval(layout)))
+        wordsProcess(textLine, words, startX, line, layout, d);
     }
-//TODO 这里lineCompressMod写的太繁琐。接口不够抽象，后面要在TextProcess里做掉。-hoodie13
+
     private fun wordsProcess(
         textLine: TextLine,
         words: Array<String>,
-        textPaint: TextPaint,
         startX: Float,
-        line:Int,
-        layout:TextProcess,
+        line: Int,
+        layout: TextProcess,
         d: Float
-    ){
-        val lineCompressMod = layout.getLineCompressMod(line)
-        var x = startX
+){
+        var locate = TextProcess.Locate()
+        locate.start = startX
         words.forEachIndexed {index, s ->
-            val cw = layout.getDesiredWidth(s, textPaint)
-            val x1:Float
-            when(lineCompressMod){
-                TextProcess.CPS_MOD_1->{
-                    when(index) {
-                        words.lastIndex - 1 -> {
-                            val offset = layout.getPostPancOffset(s)
-                            x -= offset
-                            x1 =x + cw / 2 + offset
-                        }
-                        words.lastIndex -> {
-                            x -= layout.getPostPancOffset(s)
-                            x1 = x + cw
-                        }
-                        else -> {
-                            x1 = x + cw + d
-                        }
-                    }
-                }
-                TextProcess.CPS_MOD_2->{
-                    when(index){
-                        words.lastIndex - 2 -> {
-                            val offset = layout.getPostPancOffset(s)
-                            x -= offset
-                            x1 = x + cw/2 + offset
-                        }
-                        words.lastIndex - 1->{
-                            val offset = layout.getPostPancOffset(s)
-                            x -= offset
-                            x1 = x + cw/2 + offset
-                        }
-                        words.lastIndex->{
-                            x1 = x + cw
-                        }
-                        else ->{
-                            x1 = x + cw + d
-                        }
-                    }
-                }
-                TextProcess.CPS_MOD_3->{
-                    val rect = Rect()
-                    textPaint.getTextBounds(s,0,1,rect)
-                    when(index){
-                        words.lastIndex - 2->{
-                            val offset = layout.getPrePancOffset(s)
-                            x -= offset
-                            x1 = x + cw/2 + offset
-                        }
-                        words.lastIndex - 1->{
-                            x1 = x + cw + d
-                        }
-                        words.lastIndex->{
-                            x -= layout.getPostPancOffset(s)
-                            x1 = x + cw
-                        }
-                        else->{
-                            x1 = x + cw + d
-                        }
-                    }
-                }
-                else->{
-                    x1 = if(index != words.lastIndex) (x + cw + d) else (x + cw)
-                }
-            }
-            textLine.addTextChar(charData = s, start = paddingLeft + x, end = paddingLeft + x1)
-            x = x1
+            layout.getLocate(line,words.lastIndex-index,s,d,locate)
+            textLine.addTextChar(charData = s, start = paddingLeft + locate.start, end = paddingLeft + locate.end)
+            locate.start = locate.end
         }
     }
 
-    private fun getDefinterval(layout:TextProcess):Float{
+    private fun getDefInterval(layout:TextProcess):Float{
         val defCharWidth = layout.getDefaultWidth()
         val f = (visibleWidth / defCharWidth).toInt().toFloat()
         return (visibleWidth % defCharWidth) / f
