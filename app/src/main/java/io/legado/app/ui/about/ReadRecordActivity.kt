@@ -14,13 +14,13 @@ import io.legado.app.data.entities.ReadRecordShow
 import io.legado.app.databinding.ActivityReadRecordBinding
 import io.legado.app.databinding.ItemReadRecordBinding
 import io.legado.app.lib.dialogs.alert
-import io.legado.app.utils.StringUtils
 import io.legado.app.utils.cnCompare
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jetbrains.anko.sdk27.listeners.onClick
+import java.lang.Long.max
 import java.util.*
 
 class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
@@ -28,7 +28,7 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
     lateinit var adapter: RecordAdapter
     private var sortMode = 0
     private var shortTimeFilter = false
-    private var shortTimeitem:MenuItem? = null
+    private var shortTimeItem:MenuItem? = null
 
     override fun getViewBinding(): ActivityReadRecordBinding {
         return ActivityReadRecordBinding.inflate(layoutInflater)
@@ -41,30 +41,30 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
 
     override fun onCompatCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.book_read_record, menu)
-        shortTimeitem = menu.findItem(R.id.filter_short_time)
-        shortTimeitem?.isChecked = shortTimeFilter
+        shortTimeItem = menu.findItem(R.id.filter_short_time)
+        shortTimeItem?.isChecked = shortTimeFilter
         return super.onCompatCreateOptionsMenu(menu)
     }
 
     override fun onCompatOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.menu_sort_current -> {
-                shortTimeitem?.isVisible = false
+                shortTimeItem?.isVisible = false
                 sortMode = 0
                 initData()
             }
             R.id.menu_sort_time -> {
-                shortTimeitem?.isVisible = false
+                shortTimeItem?.isVisible = false
                 sortMode = 1
                 initData()
             }
             R.id.menu_sort_name -> {
-                shortTimeitem?.isVisible = true
+                shortTimeItem?.isVisible = true
                 sortMode = 2
                 initData()
             }
             R.id.filter_short_time ->{
-                shortTimeitem?.isVisible = true
+                shortTimeItem?.isVisible = true
                 item.isChecked = !item.isChecked
                 shortTimeFilter = item.isChecked
                 initData()
@@ -162,7 +162,7 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
             val seconds = mss % (1000 * 60) / 1000
             val h = if (hours > 0) "${hours}小时" else ""
             val m = if (minutes > 0) "${minutes}分钟" else ""
-            val s = if (mss < 1000 * 60 && seconds > 0) "${seconds}秒" else ""
+            val s = if (mss < 1000 * 60) "${max(seconds,1)}秒" else ""
             return "$h$m$s"
         }
     }
