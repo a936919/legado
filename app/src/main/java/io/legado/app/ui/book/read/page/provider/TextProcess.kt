@@ -189,16 +189,16 @@ class TextProcess(
     private fun inCompressible(string: String):Boolean{
         return getDesiredWidth(string,curPaint) < cnCharWitch
     }
-    private val interval = (cnCharWitch/12.75).toFloat()
+    private val gap = (cnCharWitch/12.75).toFloat()
     private fun getPostPancOffset(string: String):Float{
         val textRect = Rect()
         curPaint.getTextBounds(string,0,1,textRect)
-        return max(textRect.left.toFloat()- interval,0f)
+        return max(textRect.left.toFloat()- gap,0f)
     }
     private fun getPrePancOffset(string: String):Float{
         val textRect = Rect()
         curPaint.getTextBounds(string,0,1,textRect)
-        val d = max(cnCharWitch-textRect.right.toFloat()-interval,0f)
+        val d = max(cnCharWitch-textRect.right.toFloat()-gap,0f)
         return  cnCharWitch/2 - d
     }
     fun getDesiredWidth(sting: String, paint: TextPaint) = paint.measureText(sting)
