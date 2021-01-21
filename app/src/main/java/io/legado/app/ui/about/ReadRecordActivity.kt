@@ -76,54 +76,31 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
     }
 
     private fun initView() = with(binding) {
-        readRecord.tvBookName.setText(R.string.all_read_time)
+        tvBookName.setText(R.string.all_read_time)
         adapter = RecordAdapter(this@ReadRecordActivity)
         recyclerView.adapter = adapter
-        readRecord.ivRemove.onClick {
-            alert(R.string.delete, R.string.sure_del) {
-                okButton {
-                    App.db.readRecordDao.clear()
-                    initData()
-                }
-                noButton()
-            }.show()
-        }
     }
 
     private fun initData() {
         launch(IO) {
-            val allTime = App.db.readTimeRecordDao.allTime
+            val allTime = App.db.readRecordDao.allTime
             withContext(Main) {
-                binding.readRecord.tvReadTime.text = formatDuring(allTime)
+                binding.tvReadTime.text = formatDuring(allTime)
             }
 
-            var a = App.db.readRecordDao.all
-            val b = App.db.readTimeRecordDao.all
-            mqLog.d("readRecord is $a")
-            mqLog.d("readTimeRecord is $b")
-            b.forEach{
-                val c = StringUtils.dateConvert(it.date,"yyyy-MM-dd-HH-mm-ss")
-                mqLog.d("$c")
-            }
-
-            var readRecordShow = List<ReadRecordShow>
-            val timeRecord = App.db.readTimeRecordDao.all
-            timeRecord.forEach{
-               val readRecord =  App.db.readRecordDao.getBook(it.bookName,it.author)
-                readRecordShow.set(it.bookName,it.author,readRecord.coverUrl?:"",readRecord.status,it.readTime)
-            }
+            var readRecords = App.db.readRecordDao.allShow
             var filterTime = 0
             if(shortTimeFilter) filterTime = 5 * 60 * 1000
-            readRecordShow = when (sortMode) {
-                1 -> readRecordShow.sortedBy { -it.readTime }
-                2 ->  readRecordShow.filter { it.readTime >= (filterTime)}
+            readRecords = when (sortMode) {
+                1 -> readRecords.sortedBy { -it.readTime }
+                2 ->  readRecords.filter { it.readTime >= (filterTime)}
                     .sortedWith { o1, o2 ->
                         o1.bookName.cnCompare(o2.bookName)
                     }
-                else ->  readRecordShow.sortedBy {-it.durTime}
+                else ->  readRecords.sortedBy {-it.durChapterTime}
             }
             withContext(Main) {
-                adapter.setItems(readRecordShow)
+                adapter.setItems(readRecords)
             }
         }
     }
@@ -143,7 +120,11 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
         ) {
             binding.apply {
                 tvBookName.text = item.bookName
-                tvReadTime.text = formatDuring(item.readTime)//StringUtils.dateConvert(item.durChapterTime,"yyyy-MM-dd-HH-mm-ss")
+                tvAuthor.text = item.author
+                ivCover.load(item.coverUrl,item.bookName,item.author)
+                tvReadTime.text ="已阅读  ${formatDuring(item.readTime)} （${item.durChapterIndex}/${item.totalChapterNum}）"
+                tvStatus.text = if(item.status == 1) "已读" else ""
+                tvChapter.text = item.durChapterTitle
             }
         }
 

@@ -178,8 +178,11 @@ data class Book(
         author = author,
         origin = origin,
         bookUrl = bookUrl,
-        coverUrl = coverUrl,
-        androidId = App.androidId
+        coverUrl = getDisplayCover()?:"",
+        androidId = App.androidId,
+        totalChapterNum = totalChapterNum,
+        durChapterTitle = durChapterTitle?:"",
+        durChapterIndex  = durChapterIndex,
     )
 
     fun changeTo(newBook: Book) {

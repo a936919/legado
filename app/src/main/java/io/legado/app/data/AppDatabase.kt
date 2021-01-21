@@ -10,7 +10,7 @@ import io.legado.app.App
 import io.legado.app.constant.AppConst
 import io.legado.app.data.dao.*
 import io.legado.app.data.entities.*
-import io.legado.app.data.entities.rule.ReadTimeRecord
+import io.legado.app.data.entities.rule.TimeRecord
 import java.util.*
 
 
@@ -19,7 +19,7 @@ import java.util.*
         ReplaceRule::class, SearchBook::class, SearchKeyword::class, Cookie::class,
         RssSource::class, Bookmark::class, RssArticle::class, RssReadRecord::class,
         RssStar::class, TxtTocRule::class, ReadRecord::class, HttpTTS::class, Cache::class,
-        RuleSub::class,TopPath::class,ReadTimeRecord::class],
+        RuleSub::class,TopPath::class,TimeRecord::class],
     version = 28,
     exportSchema = true
 )
@@ -43,7 +43,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract val cacheDao: CacheDao
     abstract val ruleSubDao: RuleSubDao
     abstract val topPathDao: TopPathDao
-    abstract val readTimeRecordDao: ReadTimeRecordDao
+    abstract val timeRecordDao: TimeRecordDao
 
     companion object {
 

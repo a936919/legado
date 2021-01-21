@@ -11,18 +11,40 @@
         android:layout_height="wrap_content"
         app:title="@string/read_record" />
 
-    <FrameLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="horizontal"
         android:paddingTop="10dp"
         android:paddingBottom="10dp">
 
-        <include
-            android:id="@+id/read_record"
-            layout="@layout/item_read_record" />
-
-    </FrameLayout>
-
+        <TextView
+            android:id="@+id/tv_book_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:layout_marginStart="22dp"
+            android:text="@string/book_name"
+            android:textColor="@color/primaryText"
+            android:singleLine="true"
+            android:textIsSelectable="true"
+            />
+        <TextView
+            android:id="@+id/tv_read_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:layout_marginStart="6dp"
+            android:text="@string/book_name"
+            android:textColor="@color/tv_text_summary"
+            android:singleLine="true"
+            android:textIsSelectable="true" />
+    </LinearLayout>
+    <View
+        android:id="@+id/vw_bg_fg1"
+        android:layout_width="match_parent"
+        android:layout_height="0.8dp"
+        android:background="@color/btn_bg_press_3" />
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view"
         android:layout_width="match_parent"
