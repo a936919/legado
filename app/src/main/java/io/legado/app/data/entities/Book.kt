@@ -173,6 +173,15 @@ data class Book(
         this.tocHtml = this@Book.tocHtml
     }
 
+    fun toReadRecord()= ReadRecord(
+        bookName = name,
+        author = author,
+        origin = origin,
+        bookUrl = bookUrl,
+        coverUrl = coverUrl,
+        androidId = App.androidId
+    )
+
     fun changeTo(newBook: Book) {
         newBook.group = group
         newBook.order = order

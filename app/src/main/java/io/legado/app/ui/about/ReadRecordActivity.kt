@@ -14,7 +14,9 @@ import io.legado.app.data.entities.ReadRecordShow
 import io.legado.app.databinding.ActivityReadRecordBinding
 import io.legado.app.databinding.ItemReadRecordBinding
 import io.legado.app.lib.dialogs.alert
+import io.legado.app.utils.StringUtils
 import io.legado.app.utils.cnCompare
+import io.legado.app.utils.mqLog
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
@@ -90,25 +92,38 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
 
     private fun initData() {
         launch(IO) {
-            val allTime = App.db.readRecordDao.allTime
+            val allTime = App.db.readTimeRecordDao.allTime
             withContext(Main) {
                 binding.readRecord.tvReadTime.text = formatDuring(allTime)
             }
 
-            var readRecords = App.db.readRecordDao.allShow
-            var filterTime = 0
-            if(shortTimeFilter) filterTime = 5*60*1000
+            var a = App.db.readRecordDao.all
+            val b = App.db.readTimeRecordDao.all
+            mqLog.d("readRecord is $a")
+            mqLog.d("readTimeRecord is $b")
+            b.forEach{
+                val c = StringUtils.dateConvert(it.date,"yyyy-MM-dd-HH-mm-ss")
+                mqLog.d("$c")
+            }
 
-            readRecords = when (sortMode) {
-                1 -> readRecords.sortedBy { -it.readTime }
-                2 ->  readRecords.filter { it.readTime >= (filterTime)}
+            var readRecordShow = List<ReadRecordShow>
+            val timeRecord = App.db.readTimeRecordDao.all
+            timeRecord.forEach{
+               val readRecord =  App.db.readRecordDao.getBook(it.bookName,it.author)
+                readRecordShow.set(it.bookName,it.author,readRecord.coverUrl?:"",readRecord.status,it.readTime)
+            }
+            var filterTime = 0
+            if(shortTimeFilter) filterTime = 5 * 60 * 1000
+            readRecordShow = when (sortMode) {
+                1 -> readRecordShow.sortedBy { -it.readTime }
+                2 ->  readRecordShow.filter { it.readTime >= (filterTime)}
                     .sortedWith { o1, o2 ->
                         o1.bookName.cnCompare(o2.bookName)
                     }
-                else ->  readRecords.sortedBy {-it.durChapterTime}
+                else ->  readRecordShow.sortedBy {-it.durTime}
             }
             withContext(Main) {
-                adapter.setItems(readRecords)
+                adapter.setItems(readRecordShow)
             }
         }
     }

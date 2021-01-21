@@ -6,6 +6,7 @@ import com.hankcs.hanlp.HanLP
 import io.legado.app.App
 import io.legado.app.constant.BookType
 import io.legado.app.data.entities.*
+import io.legado.app.data.entities.rule.ReadTimeRecord
 import io.legado.app.help.*
 import io.legado.app.help.ReadBookConfig.context
 import io.legado.app.help.coroutine.Coroutine
@@ -39,14 +40,18 @@ object ReadBook {
     var webBook: WebBook? = null
     var msg: String? = null
     private val loadingChapters = arrayListOf<Int>()
-    private val readRecord = ReadRecord()
+    private var readRecord = ReadRecord()
+    private var readTimeRecord =ReadTimeRecord()
     var readStartTime: Long = System.currentTimeMillis()
 
     fun resetData(book: Book) {
         this.book = book
         contentProcessor = ContentProcessor(book.name, book.origin)
-        readRecord.bookName = book.name
-        readRecord.readTime = App.db.readRecordDao.getReadTime(book.name) ?: 0
+        readRecord= book.toReadRecord()
+        App.db.readRecordDao.insert(readRecord)
+        readTimeRecord = readRecord.toReadTimeRecord()
+        readTimeRecord.readTime = App.db.readTimeRecordDao.getBookReadTimeByDay(book.name,book.author,readTimeRecord.date) ?:0
+        readTimeRecord.readTime = readTimeRecord.readTime + System.currentTimeMillis() - readStartTime
         durChapterIndex = book.durChapterIndex
         durChapterPos = book.durChapterPos
         isLocalBook = book.origin == BookType.local
@@ -100,9 +105,9 @@ object ReadBook {
 
     fun upReadStartTime() {
         Coroutine.async {
-            readRecord.readTime = readRecord.readTime + System.currentTimeMillis() - readStartTime
+            readTimeRecord.readTime = readTimeRecord.readTime + System.currentTimeMillis() - readStartTime
             readStartTime = System.currentTimeMillis()
-            App.db.readRecordDao.insert(readRecord)
+            App.db.readTimeRecordDao.insert(readTimeRecord)
         }
     }
 
@@ -474,8 +479,7 @@ object ReadBook {
                     book.durChapterTitle = it.title
                 }
                 App.db.bookDao.update(book)
-                readRecord.durChapterTime = book.durChapterTime
-                App.db.readRecordDao.insert(readRecord)
+                readTimeRecord.durTime = book.durChapterTime
             }
         }
     }

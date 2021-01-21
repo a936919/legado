@@ -10,6 +10,7 @@ ColorUtils.withAlpha( Color.parseColor("#292323"),0.95f)
 ColorUtils.shiftColor(ReadBookConfig.bgMeanColor, 1.02f)
 colorControlNormal
 val upArrow = ContextCompat.getDrawable(this, R.drawable.abc_ic_ab_back_material)
+StringUtils.dateConvert(item.durChapterTime,"yyyy-MM-dd-HH-mm-ss")
 ```
 #### file
 ```
