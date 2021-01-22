@@ -253,7 +253,7 @@ object FilePicker {
             .request()
     }
 
-    private fun checkPermissions(activity: AppCompatActivity, success: (() -> Unit)? = null) {
+    fun checkPermissions(activity: AppCompatActivity, success: (() -> Unit)? = null) {
         PermissionsCompat.Builder(activity)
             .addPermissions(*Permissions.Group.STORAGE)
             .rationale(R.string.tip_perm_request_storage)

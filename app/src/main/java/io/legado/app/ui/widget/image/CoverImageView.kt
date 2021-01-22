@@ -31,12 +31,15 @@ class CoverImageView @JvmOverloads constructor(
     internal var height: Float = 0.toFloat()
     private var nameHeight = 0f
     private var authorHeight = 0f
+    private var nameWidth = 0f
+    private var authorWidth = 0f
+
     private val namePaint by lazy {
         val textPaint = TextPaint()
-        textPaint.typeface = Typeface.DEFAULT_BOLD
+        textPaint.typeface = Typeface.DEFAULT
         textPaint.isAntiAlias = true
-        textPaint.textAlign = Paint.Align.CENTER
-        textPaint.textSkewX = -0.2f
+        textPaint.textAlign = Paint.Align.RIGHT
+        textPaint.textSkewX = -0.1f
         textPaint
     }
     private val authorPaint by lazy {
@@ -64,12 +67,12 @@ class CoverImageView @JvmOverloads constructor(
         super.onLayout(changed, left, top, right, bottom)
         width = getWidth().toFloat()
         height = getHeight().toFloat()
-        namePaint.textSize = width / 6
+        namePaint.textSize = width / 8
         namePaint.strokeWidth = namePaint.textSize / 10
         authorPaint.textSize = width / 9
         authorPaint.strokeWidth = authorPaint.textSize / 10
         val fm = namePaint.fontMetrics
-        nameHeight = height * 0.3f + (fm.bottom - fm.top) * 0.3f
+        nameHeight = height * 0.2f + (fm.bottom - fm.top) * 0.2f
         authorHeight = nameHeight + (fm.bottom - fm.top) * 0.6f
     }
 
@@ -93,13 +96,15 @@ class CoverImageView @JvmOverloads constructor(
         super.onDraw(canvas)
         if (!loadFailed || !showBookName) return
         name?.let {
+            /*
             namePaint.color = Color.WHITE
             namePaint.style = Paint.Style.STROKE
-            canvas.drawText(it, width / 2, nameHeight, namePaint)
-            namePaint.color = Color.DKGRAY
+            canvas.drawText(it, width / 2, nameHeight, namePaint)*/
+            namePaint.color = Color.WHITE
             namePaint.style = Paint.Style.FILL
-            canvas.drawText(it, width / 2, nameHeight, namePaint)
+            canvas.drawText(it, width*0.93f, nameHeight, namePaint)
         }
+        /*
         author?.let {
             authorPaint.color = Color.WHITE
             authorPaint.style = Paint.Style.STROKE
@@ -107,7 +112,7 @@ class CoverImageView @JvmOverloads constructor(
             authorPaint.color = Color.DKGRAY
             authorPaint.style = Paint.Style.FILL
             canvas.drawText(it, width / 2, authorHeight, authorPaint)
-        }
+        }*/
     }
 
     fun setHeight(height: Int) {
@@ -119,7 +124,7 @@ class CoverImageView @JvmOverloads constructor(
         this.name =
             when {
                 name == null -> null
-                name.length > 5 -> name.substring(0, 4) + "…"
+                name.length > 6 -> name.substring(0, 5) + "…"
                 else -> name
             }
         this.author =
