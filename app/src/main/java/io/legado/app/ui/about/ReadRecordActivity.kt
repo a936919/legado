@@ -14,6 +14,7 @@ import io.legado.app.data.entities.ReadRecordShow
 import io.legado.app.databinding.ActivityReadRecordBinding
 import io.legado.app.databinding.ItemReadRecordBinding
 import io.legado.app.lib.dialogs.alert
+import io.legado.app.ui.book.info.BookInfoActivity
 import io.legado.app.utils.StringUtils
 import io.legado.app.utils.cnCompare
 import io.legado.app.utils.mqLog
@@ -22,6 +23,7 @@ import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jetbrains.anko.sdk27.listeners.onClick
+import org.jetbrains.anko.startActivity
 import java.lang.Long.max
 import java.util.*
 
@@ -133,6 +135,14 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
                 ivRemove.onClick {
                     getItem(holder.layoutPosition)?.let { item ->
                         sureDelAlert(item)
+                    }
+                }
+                root.onClick {
+                    getItem((holder.layoutPosition))?.let {
+                        startActivity<BookInfoActivity>(
+                            Pair("name", it.bookName),
+                            Pair("author", it.author)
+                        )
                     }
                 }
             }

@@ -259,7 +259,7 @@ class ArrangeBookActivity : VMBaseActivity<ActivityArrangeBookBinding, ArrangeBo
                 alertBinding.apply {
                     if (bookStatus != rgLayout.getCheckedIndex()) {
                         book.status = rgLayout.getCheckedIndex()
-                        App.db.readRecordDao.update(book.toReadRecord())
+                        App.db.readRecordDao.insert(book.toReadRecord())
                         if(cbDeleteBookshelf.isChecked) App.db.bookDao.delete(book) else App.db.bookDao.insert(book)
                     }
                 }

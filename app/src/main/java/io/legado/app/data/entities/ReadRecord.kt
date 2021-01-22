@@ -19,4 +19,16 @@ data class ReadRecord(
     var durChapterPos: Int = 0,                 // 当前阅读的进度(首行字符的索引位置)
     var readTime:Long = 0L,
     var durChapterTime:Long = System.currentTimeMillis()
-)
+){
+    fun toBook()=Book(
+        name = bookName,
+        author = author,
+        bookUrl = bookUrl,
+        origin = origin,
+        coverUrl = coverUrl,
+        status = status,
+        durChapterIndex = durChapterIndex,
+        durChapterPos = durChapterPos,
+        originName = App.db.bookSourceDao.getBookSource(origin)?.bookSourceName?:""
+    )
+}
