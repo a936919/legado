@@ -807,5 +807,6 @@
     <string name="pre_download">预下载</string>
     <string name="pre_download_s">预先下载10章正文</string>
     <string name="sort_enable">启用排序</string>
+    <string name="read_over_enable">请设置阅读状态</string>
 
 </resources>

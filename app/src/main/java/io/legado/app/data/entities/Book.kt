@@ -53,7 +53,8 @@ data class Book(
     var order: Int = 0,                         // 手动排序
     var originOrder: Int = 0,                   //书源排序
     var variable: String? = null,               // 自定义书籍变量信息(用于书源规则检索书籍信息)
-    var readConfig: ReadConfig? = null
+    var readConfig: ReadConfig? = null,
+    var status:Int=0, //阅读状态 0为在读 1为已读 2为想读
 ) : Parcelable, BaseBook {
 
     fun isLocalBook(): Boolean {
@@ -183,6 +184,7 @@ data class Book(
         totalChapterNum = totalChapterNum,
         durChapterTitle = durChapterTitle?:"",
         durChapterIndex  = durChapterIndex,
+        status = status,
     )
 
     fun changeTo(newBook: Book) {

@@ -26,6 +26,7 @@ import io.legado.app.ui.widget.recycler.VerticalDivider
 import io.legado.app.utils.cnCompare
 import io.legado.app.utils.getPrefInt
 import io.legado.app.utils.getViewModel
+import io.legado.app.utils.mqLog
 import java.lang.Integer.max
 import java.text.FieldPosition
 
@@ -216,6 +217,26 @@ class ArrangeBookActivity : VMBaseActivity<ActivityArrangeBookBinding, ArrangeBo
         alert(titleResource = R.string.draw, messageResource = R.string.sure_del) {
             okButton {
                 viewModel.deleteBook(book)
+            }
+        }.show()
+    }
+
+    override fun setBookStatus(book: Book){
+        alert(titleResource = R.string.draw, messageResource = R.string.read_over_enable) {
+            positiveButton("在读"){
+                book.status = 0
+                App.db.bookDao.insert(book)
+                App.db.readRecordDao.insert(book.toReadRecord())
+            }
+            positiveButton("已读") {
+                book.status = 1
+                App.db.bookDao.insert(book)
+                App.db.readRecordDao.insert(book.toReadRecord())
+            }
+            positiveButton("想读"){
+                book.status = 2
+                App.db.bookDao.insert(book)
+                App.db.readRecordDao.insert(book.toReadRecord())
             }
         }.show()
     }

@@ -103,6 +103,11 @@ class ArrangeBookAdapter(context: Context, val callBack: CallBack) :
             }
             tvStatus.onClick {
                 getItem(holder.layoutPosition)?.let {
+                    callBack.setBookStatus(it)
+                }
+            }
+            tvInfo.onClick {
+                getItem(holder.layoutPosition)?.let {
                     context.startActivity<BookInfoActivity>(Pair("name", it.name), Pair("author", it.author))
                 }
             }
@@ -221,5 +226,6 @@ class ArrangeBookAdapter(context: Context, val callBack: CallBack) :
         fun deleteBook(book: Book)
         fun selectGroup(requestCode: Int, groupId: Long)
         fun gotoPosition(position: Int)
+        fun setBookStatus(book: Book)
     }
 }
