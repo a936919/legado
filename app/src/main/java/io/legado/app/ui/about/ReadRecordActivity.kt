@@ -123,7 +123,7 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
                 tvAuthor.text = item.author
                 ivCover.load(item.coverUrl,item.bookName,item.author)
                 tvReadTime.text ="已阅读  ${formatDuring(item.readTime)} （${item.durChapterIndex}/${item.totalChapterNum}）"
-                tvStatus.text = if(item.status == 1) "已读" else ""
+                tvStatus.text = if(item.status == 1) "已读" else if(item.status == 2) "想读" else ""
                 tvChapter.text = item.durChapterTitle
             }
         }

@@ -129,7 +129,7 @@
 
         <io.legado.app.ui.widget.checkbox.SmoothCheckBox
             android:id="@+id/cb_show_bottom_line"
-            android:layout_width="20dp"
+            android:layout_width="12dp"
             android:layout_height="20dp"
             android:layout_margin="6dp" />
 
