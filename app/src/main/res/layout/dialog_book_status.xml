@@ -29,11 +29,4 @@
         android:padding="8dp"
         android:text="想读" />
     </RadioGroup>
-    <io.legado.app.lib.theme.view.ATECheckBox
-        android:id="@+id/cb_delete_bookshelf"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="8dp"
-        android:visibility="invisible"
-        android:text="同时删除书籍" />
 </LinearLayout>

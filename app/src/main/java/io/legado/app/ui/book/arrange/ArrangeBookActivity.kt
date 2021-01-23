@@ -14,9 +14,9 @@ import io.legado.app.constant.AppConst
 import io.legado.app.constant.PreferKey
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookGroup
+import io.legado.app.data.entities.ReadRecord
 import io.legado.app.databinding.ActivityArrangeBookBinding
 import io.legado.app.databinding.DialogBookStatusBinding
-import io.legado.app.databinding.DialogBookshelfConfigBinding
 import io.legado.app.lib.dialogs.alert
 import io.legado.app.lib.theme.ATH
 import io.legado.app.ui.book.group.GroupManageDialog
@@ -26,8 +26,6 @@ import io.legado.app.ui.widget.recycler.DragSelectTouchHelper
 import io.legado.app.ui.widget.recycler.ItemTouchCallback
 import io.legado.app.ui.widget.recycler.VerticalDivider
 import io.legado.app.utils.*
-import java.lang.Integer.max
-import java.text.FieldPosition
 
 
 class ArrangeBookActivity : VMBaseActivity<ActivityArrangeBookBinding, ArrangeBookViewModel>(),
@@ -163,6 +161,7 @@ class ArrangeBookActivity : VMBaseActivity<ActivityArrangeBookBinding, ArrangeBo
             R.id.menu_update_disable ->
                 viewModel.upCanUpdate(adapter.selectedBooks(), false)
             R.id.menu_add_to_group -> selectGroup(addToGroupRequestCode, 0)
+            R.id.menu_set_status -> setBookStatus(*adapter.selectedBooks())
         }
         return false
     }
@@ -220,47 +219,26 @@ class ArrangeBookActivity : VMBaseActivity<ActivityArrangeBookBinding, ArrangeBo
         }.show()
     }
 
-    override fun setBookStatus(book: Book){
+     override fun setBookStatus(vararg book: Book){
         alert("阅读状态设置") {
-            val bookStatus = book.status
-            val alertBinding =
-                DialogBookStatusBinding.inflate(layoutInflater)
-                    .apply {
-                        rgLayout.checkByIndex(bookStatus)
-                    }
-
-            alertBinding.apply{
-                when(rgLayout.getCheckedIndex()){
-                    0->{
-                        cbDeleteBookshelf.visible(false)
-                        cbDeleteBookshelf.isChecked = false
-                    }
-                    else->{
-                        cbDeleteBookshelf.visible(true)
-                        cbDeleteBookshelf.isChecked = true
-                    }
-                }
-                rgLayout.setOnCheckedChangeListener { _, _ ->
-                    when(rgLayout.getCheckedIndex()){
-                        0->{
-                            cbDeleteBookshelf.visible(false)
-                            cbDeleteBookshelf.isChecked = false
-                        }
-                        else->{
-                            cbDeleteBookshelf.visible(true)
-                            cbDeleteBookshelf.isChecked = true
-                        }
-                    }
-                }
+            val alertBinding = DialogBookStatusBinding.inflate(layoutInflater)
+            var change = false
+            if(book.size==1) alertBinding.rgLayout.checkByIndex(book[0].status)
+            alertBinding.rgLayout.setOnCheckedChangeListener { _, _ ->
+                change = true
             }
-
             customView = alertBinding.root
             okButton {
                 alertBinding.apply {
-                    if (bookStatus != rgLayout.getCheckedIndex()) {
-                        book.status = rgLayout.getCheckedIndex()
-                        App.db.readRecordDao.insert(book.toReadRecord())
-                        if(cbDeleteBookshelf.isChecked) App.db.bookDao.delete(book) else App.db.bookDao.insert(book)
+                    if (change) {
+                        val status = rgLayout.getCheckedIndex()
+                        val readRecords = arrayListOf<ReadRecord>()
+                        book.forEach {
+                            it.status = status
+                            readRecords.add(it.toReadRecord())
+                        }
+                        viewModel.updateBook(*book)
+                        viewModel.insertReadRecord(*readRecords.toTypedArray())
                     }
                 }
             }

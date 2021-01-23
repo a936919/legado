@@ -2,6 +2,9 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
+        android:id="@+id/menu_set_status"
+        android:title="标记" />
+    <item
         android:id="@+id/menu_del_selection"
         android:title="@string/delete" />
 

@@ -103,7 +103,8 @@ class ArrangeBookAdapter(context: Context, val callBack: CallBack) :
             }
             tvStatus.onClick {
                 getItem(holder.layoutPosition)?.let {
-                    callBack.setBookStatus(it)
+                    var books = arrayListOf(it)
+                    callBack.setBookStatus(*books.toTypedArray())
                 }
             }
             tvInfo.onClick {
@@ -147,6 +148,8 @@ class ArrangeBookAdapter(context: Context, val callBack: CallBack) :
         }
         return books.toTypedArray()
     }
+
+
 
     private fun getGroupList(groupId: Long): List<String> {
         val groupNames = arrayListOf<String>()
@@ -226,6 +229,6 @@ class ArrangeBookAdapter(context: Context, val callBack: CallBack) :
         fun deleteBook(book: Book)
         fun selectGroup(requestCode: Int, groupId: Long)
         fun gotoPosition(position: Int)
-        fun setBookStatus(book: Book)
+        fun setBookStatus(vararg book: Book)
     }
 }

@@ -185,7 +185,6 @@ data class Book(
         durChapterTitle = durChapterTitle?:"",
         durChapterIndex  = durChapterIndex,
         status = status,
-        durChapterTime = System.currentTimeMillis()
     )
 
     fun changeTo(newBook: Book) {
