@@ -11,6 +11,8 @@ import io.legado.app.base.adapter.RecyclerAdapter
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookGroup
 import io.legado.app.databinding.ItemArrangeBookBinding
+import io.legado.app.help.ReadBookConfig
+import io.legado.app.lib.theme.accentColor
 import io.legado.app.lib.theme.backgroundColor
 import io.legado.app.ui.book.info.BookInfoActivity
 import io.legado.app.ui.widget.recycler.DragSelectTouchHelper
@@ -19,6 +21,7 @@ import io.legado.app.utils.startActivity
 import org.jetbrains.anko.backgroundColor
 import org.jetbrains.anko.sdk27.listeners.onClick
 import org.jetbrains.anko.startActivity
+import org.jetbrains.anko.textColor
 import java.util.*
 
 class ArrangeBookAdapter(context: Context, val callBack: CallBack) :
@@ -57,7 +60,8 @@ class ArrangeBookAdapter(context: Context, val callBack: CallBack) :
             tvName.text = item.name
             tvAuthor.text = item.author
             tvAuthor.visibility = if (item.author.isEmpty()) View.GONE else View.VISIBLE
-            tvGroupS.text = getGroupName(item.group)
+            tvGroupS.text = if(item.status == 0) "" else if(item.status == 1) "已读" else ""
+            tvGroupS.setTextColor(context.accentColor)
             checkbox.isChecked = selectedBooks.contains(item)
             ivCover.load(item.getDisplayCover(),item.name,item.author)
         }
@@ -103,7 +107,7 @@ class ArrangeBookAdapter(context: Context, val callBack: CallBack) :
             }
             tvStatus.onClick {
                 getItem(holder.layoutPosition)?.let {
-                    var books = arrayListOf(it)
+                    val books = arrayListOf(it)
                     callBack.setBookStatus(*books.toTypedArray())
                 }
             }

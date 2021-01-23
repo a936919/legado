@@ -10,7 +10,7 @@ interface ReadRecordDao {
     @get:Query("select * from readRecord")
     val all: List<ReadRecord>
 
-    @get:Query("select bookName, author,coverUrl,durChapterIndex,totalChapterNum,durChapterTitle,sum(readTime) as readTime, durChapterTime,status from readRecord group by bookName order by bookName collate localized")
+    @get:Query("select bookName, author,coverUrl,durChapterIndex,totalChapterNum,durChapterTitle,sum(readTime) as readTime, durChapterTime,bookUrl,status from readRecord group by bookName order by bookName collate localized")
     val allShow: List<ReadRecordShow>
 
     @get:Query("select sum(readTime) from readRecord")

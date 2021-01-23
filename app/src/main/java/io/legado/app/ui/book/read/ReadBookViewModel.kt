@@ -205,6 +205,7 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
                     upChangeDurChapterIndex(newBook, oldTocSize, it)
                 }
             }
+            App.db.readRecordDao.insert(newBook.toReadRecord())
         }
     }
 

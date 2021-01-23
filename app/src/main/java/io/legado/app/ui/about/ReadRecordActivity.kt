@@ -10,14 +10,15 @@ import io.legado.app.R
 import io.legado.app.base.BaseActivity
 import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.base.adapter.RecyclerAdapter
+import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.ReadRecordShow
 import io.legado.app.databinding.ActivityReadRecordBinding
+import io.legado.app.databinding.DialogBookStatusBinding
 import io.legado.app.databinding.ItemReadRecordBinding
 import io.legado.app.lib.dialogs.alert
+import io.legado.app.lib.theme.accentColor
 import io.legado.app.ui.book.info.BookInfoActivity
-import io.legado.app.utils.StringUtils
-import io.legado.app.utils.cnCompare
-import io.legado.app.utils.mqLog
+import io.legado.app.utils.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
@@ -31,8 +32,8 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
 
     lateinit var adapter: RecordAdapter
     private var sortMode = 0
-    private var shortTimeFilter = false
-    private var shortTimeItem:MenuItem? = null
+    private var status = -1
+
 
     override fun getViewBinding(): ActivityReadRecordBinding {
         return ActivityReadRecordBinding.inflate(layoutInflater)
@@ -45,32 +46,42 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
 
     override fun onCompatCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.book_read_record, menu)
-        shortTimeItem = menu.findItem(R.id.filter_short_time)
-        shortTimeItem?.isChecked = shortTimeFilter
         return super.onCompatCreateOptionsMenu(menu)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        initData()
     }
 
     override fun onCompatOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
+            R.id.menu_read_all->{
+                status = -1
+                initData()
+            }
+            R.id.menu_read_now->{
+                status = 0
+                initData()
+            }
+            R.id.menu_read_finish->{
+                status = 1
+                initData()
+            }
+            R.id.menu_read_plan->{
+                status = 2
+                initData()
+            }
+            R.id.menu_book_mark->{
+                status = 5
+                initData()
+            }
             R.id.menu_sort_current -> {
-                shortTimeItem?.isVisible = false
                 sortMode = 0
                 initData()
             }
             R.id.menu_sort_time -> {
-                shortTimeItem?.isVisible = false
                 sortMode = 1
-                initData()
-            }
-            R.id.menu_sort_name -> {
-                shortTimeItem?.isVisible = true
-                sortMode = 2
-                initData()
-            }
-            R.id.filter_short_time ->{
-                shortTimeItem?.isVisible = true
-                item.isChecked = !item.isChecked
-                shortTimeFilter = item.isChecked
                 initData()
             }
         }
@@ -91,12 +102,11 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
             }
 
             var readRecords = App.db.readRecordDao.allShow
-            var filterTime = 0
-            if(shortTimeFilter) filterTime = 5 * 60 * 1000
+            if(status == 5) readRecords = readRecords.filter { App.db.bookmarkDao.haveBook(it.bookUrl)}
+            else if(status>=0) readRecords = readRecords.filter { it.status==status }
             readRecords = when (sortMode) {
                 1 -> readRecords.sortedBy { -it.readTime }
-                2 ->  readRecords.filter { it.readTime >= (filterTime)}
-                    .sortedWith { o1, o2 ->
+                2 ->  readRecords.sortedWith { o1, o2 ->
                         o1.bookName.cnCompare(o2.bookName)
                     }
                 else ->  readRecords.sortedBy {-it.durChapterTime}
@@ -105,6 +115,40 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
                 adapter.setItems(readRecords)
             }
         }
+    }
+
+    private fun setBookStatus(readShow: ReadRecordShow){
+        alert("阅读状态设置") {
+            val alertBinding = DialogBookStatusBinding.inflate(layoutInflater)
+            var change = false
+            val readRecord = App.db.readRecordDao.getBook(readShow.bookName,readShow.author)
+            var book: Book? = null
+            if (readRecord != null) {
+                alertBinding.rgLayout.checkByIndex(readRecord.status)
+                book = App.db.bookDao.getBook(readRecord.bookUrl)
+            }
+            alertBinding.rgLayout.setOnCheckedChangeListener { _, _ ->
+                change = true
+            }
+            customView = alertBinding.root
+            okButton {
+                alertBinding.apply {
+                    if (change) {
+                        val status = rgLayout.getCheckedIndex()
+                        readRecord?.status = status
+                        if (book != null) {
+                            book.status =status
+                            App.db.bookDao.update(book)
+                        }
+                        if (readRecord != null) {
+                            App.db.readRecordDao.update(readRecord)
+                        }
+                        initData()
+                    }
+                }
+            }
+            noButton()
+        }.show()
     }
 
     inner class RecordAdapter(context: Context) :
@@ -125,7 +169,8 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
                 tvAuthor.text = item.author
                 ivCover.load(item.coverUrl,item.bookName,item.author)
                 tvReadTime.text ="已阅读  ${formatDuring(item.readTime)} （${item.durChapterIndex}/${item.totalChapterNum}）"
-                tvStatus.text = if(item.status == 1) "已读" else if(item.status == 2) "想读" else ""
+                tvStatus.text = if(item.status == 1) "已读" else if(item.status == 2) "" else ""
+                tvStatus.setTextColor(accentColor)
                 tvChapter.text = item.durChapterTitle
             }
         }
@@ -143,6 +188,11 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
                             Pair("name", it.bookName),
                             Pair("author", it.author)
                         )
+                    }
+                }
+                tvStatus.onClick {
+                    getItem((holder.layoutPosition))?.let {
+                        setBookStatus(it)
                     }
                 }
             }

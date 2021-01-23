@@ -9,5 +9,6 @@ data class ReadRecordShow(
     var durChapterTitle: String = "",        // 当前章节名称
     var readTime: Long = 0L,
     var durChapterTime:Long = 0L,
-    var status:Int =0
+    var status:Int =0,
+    var bookUrl:String = "",
 )

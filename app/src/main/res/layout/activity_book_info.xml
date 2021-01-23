@@ -158,7 +158,16 @@
                             android:textColor="@color/tv_text_summary"
                             android:textSize="13sp"
                             tools:ignore="NestedWeights,RtlHardcoded,RtlSymmetry" />
-
+                        <io.legado.app.ui.widget.text.AccentBgTextView
+                            android:id="@+id/tv_book_status"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:paddingLeft="5dp"
+                            android:paddingRight="5dp"
+                            android:textSize="13sp"
+                            android:text="标记"
+                            app:radius="2dp" />
                     </LinearLayout>
 
                     <LinearLayout

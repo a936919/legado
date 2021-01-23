@@ -17,6 +17,7 @@ import io.legado.app.ui.book.read.page.entities.TextChapter
 import io.legado.app.ui.book.read.page.entities.TextPage
 import io.legado.app.ui.book.read.page.provider.ChapterProvider
 import io.legado.app.ui.book.read.page.provider.ImageProvider
+import io.legado.app.utils.mqLog
 import kotlinx.coroutines.*
 import org.jetbrains.anko.getStackTraceString
 import org.jetbrains.anko.toast
@@ -107,8 +108,8 @@ object ReadBook {
             readRecord.readTime = readRecord.readTime + dif
             timeRecord.readTime = timeRecord.readTime + dif
             readStartTime = System.currentTimeMillis()
-            App.db.readRecordDao.insert(readRecord)
-            App.db.timeRecordDao.insert(timeRecord)
+            App.db.readRecordDao.update(readRecord)
+            App.db.timeRecordDao.update(timeRecord)
 
         }
     }
@@ -481,10 +482,8 @@ object ReadBook {
                     book.durChapterTitle = it.title
                 }
                 App.db.bookDao.update(book)
-                readRecord.durChapterTime = book.durChapterTime
-                readRecord.durChapterIndex =  durChapterIndex
-                readRecord.durChapterPos = durChapterPos
-                App.db.readRecordDao.insert(readRecord)
+                readRecord = book.toReadRecord()
+                App.db.readRecordDao.update(readRecord)
             }
         }
     }

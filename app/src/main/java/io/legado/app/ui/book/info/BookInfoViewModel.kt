@@ -27,9 +27,9 @@ class BookInfoViewModel(application: Application) : BaseViewModel(application) {
             App.db.bookDao.getBook(name, author)?.let { book ->
                 inBookshelf = true
                 setBook(book)
-            }?: App.db.searchBookDao.getFirstByNameAuthor(name, author)?.toBook()?.let { book ->
-                setBook(book)
             } ?:App.db.readRecordDao.getBook(name,author)?.toBook()?.let { book ->
+                setBook(book)
+            }?: App.db.searchBookDao.getFirstByNameAuthor(name, author)?.toBook()?.let { book ->
                 setBook(book)
             }
         }

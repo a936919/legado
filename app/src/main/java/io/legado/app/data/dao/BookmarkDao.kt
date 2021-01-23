@@ -18,6 +18,9 @@ interface BookmarkDao {
         bookAuthor: String
     ): DataSource.Factory<Int, Bookmark>
 
+    @Query("select count(bookUrl) as Boolean from bookmarks where bookUrl = :bookUrl")
+    fun haveBook(bookUrl: String, ): Boolean
+
     @Query("SELECT * FROM bookmarks where bookUrl = :bookUrl and chapterName like '%'||:key||'%' or content like '%'||:key||'%'")
     fun liveDataSearch(bookUrl: String, key: String): DataSource.Factory<Int, Bookmark>
 

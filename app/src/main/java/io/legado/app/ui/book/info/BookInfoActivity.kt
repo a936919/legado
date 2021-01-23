@@ -12,13 +12,16 @@ import android.widget.LinearLayout
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestOptions.bitmapTransform
+import io.legado.app.App
 import io.legado.app.R
 import io.legado.app.base.VMBaseActivity
 import io.legado.app.constant.BookType
 import io.legado.app.constant.Theme
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.ReadRecord
 import io.legado.app.databinding.ActivityBookInfoBinding
+import io.legado.app.databinding.DialogBookStatusBinding
 import io.legado.app.help.BlurTransformation
 import io.legado.app.help.ImageLoader
 import io.legado.app.help.IntentDataHelp
@@ -212,6 +215,11 @@ class BookInfoActivity :
                 ChangeCoverDialog.show(supportFragmentManager, it.name, it.author)
             }
         }
+        tvBookStatus?.onClick {
+            viewModel.bookData.value?.let {
+                setBookStatus(it)
+            }
+        }
         tvRead.onClick {
             viewModel.bookData.value?.let {
                 readBook(it)
@@ -234,6 +242,7 @@ class BookInfoActivity :
         tvChangeSource.onClick {
             viewModel.bookData.value?.let {
                 ChangeSourceDialog.show(supportFragmentManager, it.name, it.author)
+
             }
         }
         tvTocView.onClick {
@@ -258,6 +267,32 @@ class BookInfoActivity :
         tvName.onClick {
             startActivity<SearchActivity>(Pair("key", viewModel.bookData.value?.name))
         }
+    }
+
+
+    private fun setBookStatus(book: Book){
+        alert("阅读状态设置") {
+            val alertBinding = DialogBookStatusBinding.inflate(layoutInflater)
+            var change = false
+            alertBinding.rgLayout.checkByIndex(book.status)
+            alertBinding.rgLayout.setOnCheckedChangeListener { _, _ ->
+                change = true
+            }
+            customView = alertBinding.root
+            okButton {
+                alertBinding.apply {
+                    if (change) {
+                        val status = rgLayout.getCheckedIndex()
+                        book.status = status
+                        if(viewModel.inBookshelf){
+                            App.db.bookDao.update(book)
+                        }
+                        App.db.readRecordDao.insert(book.toReadRecord())
+                    }
+                }
+            }
+            noButton()
+        }.show()
     }
 
     @SuppressLint("InflateParams")
