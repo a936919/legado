@@ -1,9 +1,6 @@
 package io.legado.app.ui.book.read
 
 import android.app.Application
-import android.content.Intent
-import android.util.Log
-
 import android.widget.Toast
 import io.legado.app.App
 import io.legado.app.R
@@ -13,7 +10,6 @@ import io.legado.app.data.entities.BookChapter
 import io.legado.app.data.entities.BookProgress
 import io.legado.app.help.AppConfig
 import io.legado.app.help.BookHelp
-import io.legado.app.help.IntentDataHelp
 import io.legado.app.help.storage.BookWebDav
 import io.legado.app.model.localBook.LocalBook
 import io.legado.app.model.webBook.PreciseSearch
@@ -21,7 +17,6 @@ import io.legado.app.model.webBook.WebBook
 import io.legado.app.service.BaseReadAloudService
 import io.legado.app.service.help.ReadAloud
 import io.legado.app.service.help.ReadBook
-import io.legado.app.utils.mqLog
 import io.legado.app.utils.msg
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
