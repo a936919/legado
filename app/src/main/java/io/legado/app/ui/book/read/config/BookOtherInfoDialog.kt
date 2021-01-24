@@ -150,7 +150,7 @@ class BookOtherInfoDialog : BaseDialogFragment()  {
         bookName.text = book.name
         bookAuthor.text = book.getRealAuthor()
         readTime.text="当前已读  ${ReadRecordActivity.formatDuring( System.currentTimeMillis()-ReadBook.readStartTime)}"
-        val readTime =  App.db.readRecordDao.getReadTime(book.name) ?: 0
+        val readTime =  App.db.readRecordDao.getReadTime(book.name,book.author) ?: 0
         readAllTime.text="本书共读  ${ReadRecordActivity.formatDuring(readTime)}"
     }
 

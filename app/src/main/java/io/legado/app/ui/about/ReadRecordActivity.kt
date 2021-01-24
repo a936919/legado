@@ -102,15 +102,25 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
             }
 
             var readRecords = App.db.readRecordDao.allShow
+            /*
+            val bak = App.db.readRecordDao.all
+            bak.forEach{
+                val b =App.db.readRecordDao.getBook("",it.name,"")
+                if(){
+                    mqLog.d("-------1--------")
+                    mqLog.d("$it")
+                    mqLog.d("-------2--------")
+                    mqLog.d("$b")
+
+                    it.readTime = it.readTime + b.readTime
+                    App.db.readRecordDao.delete(b)
+                    App.db.readRecordDao.update(it)
+                }
+            }*/
+
             if(status == 5) readRecords = readRecords.filter { App.db.bookmarkDao.haveBook(it.bookUrl)}
             else if(status>=0) readRecords = readRecords.filter { it.status==status }
-            readRecords = when (sortMode) {
-                1 -> readRecords.sortedBy { -it.readTime }
-                2 ->  readRecords.sortedWith { o1, o2 ->
-                        o1.bookName.cnCompare(o2.bookName)
-                    }
-                else ->  readRecords.sortedBy {-it.durChapterTime}
-            }
+            if(sortMode == 1) readRecords = readRecords.sortedBy { -it.readTime }
             withContext(Main) {
                 adapter.setItems(readRecords)
             }
@@ -121,7 +131,7 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
         alert("阅读状态设置") {
             val alertBinding = DialogBookStatusBinding.inflate(layoutInflater)
             var change = false
-            val readRecord = App.db.readRecordDao.getBook(readShow.bookName,readShow.author)
+            val readRecord = App.db.readRecordDao.getBook(App.androidId,readShow.bookName,readShow.author)
             var book: Book? = null
             if (readRecord != null) {
                 alertBinding.rgLayout.checkByIndex(readRecord.status)
@@ -168,7 +178,7 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
                 tvBookName.text = item.bookName
                 tvAuthor.text = item.author
                 ivCover.load(item.coverUrl,item.bookName,item.author)
-                tvReadTime.text ="已阅读  ${formatDuring(item.readTime)} （${item.durChapterIndex}/${item.totalChapterNum}）"
+                tvReadTime.text ="已阅读  ${formatDuring(item.readTime)} （${item.durChapterIndex+1}/${item.totalChapterNum}）"
                 tvStatus.text = if(item.status == 1) "已读" else if(item.status == 2) "" else ""
                 tvStatus.setTextColor(accentColor)
                 tvChapter.text = item.durChapterTitle
@@ -202,7 +212,7 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
             alert(R.string.delete) {
                 message = getString(R.string.sure_del_any, item.bookName)
                 okButton {
-                    App.db.readRecordDao.deleteByName(item.bookName)
+                    App.db.readRecordDao.deleteByName(item.bookName,item.author)
                     initData()
                 }
                 noButton()

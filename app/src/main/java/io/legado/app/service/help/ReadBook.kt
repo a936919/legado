@@ -47,9 +47,11 @@ object ReadBook {
     fun resetData(book: Book) {
         this.book = book
         contentProcessor = ContentProcessor(book.name, book.origin)
-        readRecord= book.toReadRecord()
-        readRecord.readTime = App.db.readRecordDao.getReadTime(book.name) ?: 0
-        timeRecord.readTime = App.db.timeRecordDao.getReadTimeByDay(timeRecord.getDayTime())?:0L
+        readRecord = book.toReadRecord()
+        readRecord.readTime = App.db.readRecordDao.getReadTime(book.name,book.author) ?: 0
+        timeRecord.readTime = App.db.timeRecordDao.getReadTimeByDay(timeRecord.getDayTime())?:0
+        App.db.timeRecordDao.insert(timeRecord)
+        App.db.readRecordDao.insert(readRecord)
         durChapterIndex = book.durChapterIndex
         durChapterPos = book.durChapterPos
         isLocalBook = book.origin == BookType.local
@@ -103,13 +105,14 @@ object ReadBook {
 
     fun upReadStartTime() {
         Coroutine.async {
-            val dif =  System.currentTimeMillis() - readStartTime
+            var dif =  System.currentTimeMillis() - readStartTime
+            //翻页时间超过2分钟，不计为阅读时间
+            if(dif > 2*60*1000) dif = 2*60*1000
             readRecord.readTime = readRecord.readTime + dif
             timeRecord.readTime = timeRecord.readTime + dif
             readStartTime = System.currentTimeMillis()
             App.db.readRecordDao.update(readRecord)
             App.db.timeRecordDao.update(timeRecord)
-
         }
     }
 
@@ -481,7 +484,10 @@ object ReadBook {
                     book.durChapterTitle = it.title
                 }
                 App.db.bookDao.update(book)
-                readRecord = book.toReadRecord()
+                readRecord.durChapterTime = book.durChapterTime
+                readRecord.durChapterIndex = book.durChapterIndex
+                readRecord.durChapterPos = book.durChapterPos
+                readRecord.durChapterTitle = book.durChapterTitle.toString()
                 App.db.readRecordDao.update(readRecord)
             }
         }
