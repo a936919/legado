@@ -40,6 +40,7 @@ object Backup {
             DefaultData.httpTtsFileName,
             ReadBookConfig.configFileName,
             ReadBookConfig.shareConfigFileName,
+            ReadBookConfig.comicConfigFileName,
             ThemeConfig.configFileName,
             "config.xml"
         )
@@ -77,6 +78,9 @@ object Backup {
             }
             GSON.toJson(ReadBookConfig.shareConfig).let {
                 FileUtils.createFileIfNotExist(backupPath + File.separator + ReadBookConfig.shareConfigFileName)
+            }
+            GSON.toJson(ReadBookConfig.comicConfig).let {
+                FileUtils.createFileIfNotExist(backupPath + File.separator + ReadBookConfig.comicConfigFileName)
             }
             GSON.toJson(ThemeConfig.configList).let {
                 FileUtils.createFileIfNotExist(backupPath + File.separator + ThemeConfig.configFileName)

@@ -199,6 +199,17 @@ object Restore {
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
+                try {
+                    val file =
+                        FileUtils.createFileIfNotExist("$path${File.separator}${ReadBookConfig.comicConfigFilePath}")
+                    if (file.exists()) {
+                        FileUtils.deleteFile(ReadBookConfig.comicConfigFilePath)
+                        file.copyTo(File(ReadBookConfig.comicConfigFilePath))
+                        ReadBookConfig.initComicConfig()
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
             Preferences.getSharedPreferences(App.INSTANCE, path, "config")?.all?.let { map ->
                 val edit = App.INSTANCE.defaultSharedPreferences.edit()
