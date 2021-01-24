@@ -42,6 +42,7 @@ object PreferKey {
     const val webDavCacheBackup = "webDavCacheBackup"
     const val changeSourceLoadToc = "changeSourceLoadToc"
     const val changeSourceLoadInfo = "changeSourceLoadInfo"
+    const val ignoreAuthor = "ignoreAuthor"
     const val chineseConverterType = "chineseConverterType"
     const val launcherIcon = "launcherIcon"
     const val textSelectAble = "selectText"

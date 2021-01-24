@@ -151,6 +151,8 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
 
     val preDownload get() = context.getPrefBoolean(PreferKey.preDownload, true)
 
+    val ignoreAuthor get() = context.getPrefBoolean(PreferKey.ignoreAuthor)
+
     private fun getPrefUserAgent(): String {
         val ua = context.getPrefString(PreferKey.userAgent)
         if (ua.isNullOrBlank()) {

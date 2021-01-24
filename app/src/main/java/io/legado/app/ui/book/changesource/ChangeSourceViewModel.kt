@@ -134,7 +134,7 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
             .timeout(30000L)
             .onSuccess(IO) {
                 it.forEach { searchBook ->
-                    if (searchBook.name == name && searchBook.author == author) {
+                    if (searchBook.name == name && (searchBook.author == author||AppConfig.ignoreAuthor)) {
                         if (searchBook.latestChapterTitle.isNullOrEmpty()) {
                             if (AppConfig.changeSourceLoadInfo || AppConfig.changeSourceLoadToc) {
                                 loadBookInfo(webBook, searchBook.toBook())
