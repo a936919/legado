@@ -58,29 +58,36 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
         when (item.itemId) {
             R.id.menu_read_all->{
                 status = -1
+                sortMode = 0
                 initData()
             }
             R.id.menu_read_now->{
                 status = 0
+                sortMode = 0
                 initData()
             }
             R.id.menu_read_finish->{
                 status = 1
+                sortMode = 0
                 initData()
             }
             R.id.menu_read_plan->{
                 status = 2
+                sortMode = 0
                 initData()
             }
             R.id.menu_book_mark->{
                 status = 5
+                sortMode = 0
                 initData()
             }
             R.id.menu_sort_current -> {
+                status = -1
                 sortMode = 0
                 initData()
             }
             R.id.menu_sort_time -> {
+                status = -1
                 sortMode = 1
                 initData()
             }
