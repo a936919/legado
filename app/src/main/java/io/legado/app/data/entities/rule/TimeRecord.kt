@@ -1,9 +1,12 @@
 package io.legado.app.data.entities.rule
 
+import android.annotation.SuppressLint
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import io.legado.app.App
 import io.legado.app.data.entities.ReadRecord
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Entity(
     tableName = "timeRecord",
@@ -24,10 +27,14 @@ data class TimeRecord (
     var listenTime:Long = 0L
 ){
     companion object{
-        fun getDayTime():Long{
-            var now = System.currentTimeMillis()
-            now -= now % (1000 * 60 * 60 * 24) + (8 * 1000 * 60 * 60)
-            return now
+        fun getDate():Long{
+            val pattern = "yyyy-MM-dd"
+            @SuppressLint("SimpleDateFormat")
+            val format = SimpleDateFormat(pattern)
+            val now = Date()
+            val date = format.parse(format.format(now))?:Date(0)
+            return date.time
         }
     }
 }
+

@@ -27,6 +27,8 @@ import kotlinx.coroutines.withContext
 import org.jetbrains.anko.sdk27.listeners.onClick
 import org.jetbrains.anko.startActivity
 import java.lang.Long.max
+import java.text.ParsePosition
+import java.text.SimpleDateFormat
 import java.util.*
 
 class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
@@ -104,7 +106,7 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
     private fun initData() {
         launch(IO) {
             val allTime = App.db.timeRecordDao.allTime
-            val todayTime = App.db.timeRecordDao.getReadTime(TimeRecord.getDayTime())?:0
+            val todayTime = App.db.timeRecordDao.getReadTime(TimeRecord.getDate())?:0
             withContext(Main) {
                 binding.tvReadTime.text = formatDuring(allTime)
                 binding.tvReadTime2.text = formatDuring(todayTime)
@@ -114,30 +116,6 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
             readRecords.forEach{
                 it.readTime = App.db.timeRecordDao.getReadTime(it.bookName,it.author)?:0
             }
-/*
-            val a = App.db.readRecordDao.all
-            a.forEach{
-                val b = TimeRecord()
-                if(it.readTime>30*1000){
-                    b.readTime = it.readTime
-                    it.readTime = 0
-                    b.androidId = it.androidId
-                    b.bookName = it.bookName
-                    b.author = it.author
-                    b.date = TimeRecord.getDayTime()-(24*60*60*1000)
-                    mqLog.d("${b.bookName} ${b.readTime/1000/60} ${StringUtils.dateConvert(b.date,"yyyy-MM-dd-HH-mm-ss")}")
-                    App.db.readRecordDao.update(it)
-                    App.db.timeRecordDao.insert(b)
-                }
-            }
-*/
-            /*
-            val c =  App.db.timeRecordDao.all
-            c.forEach {
-                mqLog.d("${it.bookName} ${it.author} ${it.androidId} ${StringUtils.dateConvert(it.date,"yyyy-MM-dd-HH-mm-ss")} ${it.readTime/1000/60}")
-
-            }*/
-
 
             if(status == 5) readRecords = readRecords.filter { App.db.bookmarkDao.haveBook(it.bookUrl)}
             else if(status>=0) readRecords = readRecords.filter { it.status==status }
@@ -148,6 +126,9 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
         }
     }
 
+    private fun format(t: Long) :String{
+        return StringUtils.dateConvert(t,"yyyy-MM-dd-HH-mm-ss")
+    }
 
 
     private fun setBookStatus(readShow: ReadRecordShow){

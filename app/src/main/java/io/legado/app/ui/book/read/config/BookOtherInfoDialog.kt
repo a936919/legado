@@ -139,7 +139,7 @@ class BookOtherInfoDialog : BaseDialogFragment()  {
         binding.ivCover.load(book.getDisplayCover(), book.name, book.author)
         bookName.text = book.name
         bookAuthor.text = book.getRealAuthor()
-        val nowReadTime = App.db.timeRecordDao.getReadTime(book.name,book.author,TimeRecord.getDayTime())?:0
+        val nowReadTime = App.db.timeRecordDao.getReadTime(book.name,book.author,TimeRecord.getDate())?:0
         var string = "今日阅读  ${ReadRecordActivity.formatDuring(nowReadTime)} （${book.durChapterIndex+1}/${book.totalChapterNum}）"
         readTime.text =  string
         val readTime =  App.db.timeRecordDao.getReadTime(book.name,book.author) ?: 0

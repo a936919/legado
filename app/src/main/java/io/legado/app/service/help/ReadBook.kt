@@ -17,7 +17,6 @@ import io.legado.app.ui.book.read.page.entities.TextChapter
 import io.legado.app.ui.book.read.page.entities.TextPage
 import io.legado.app.ui.book.read.page.provider.ChapterProvider
 import io.legado.app.ui.book.read.page.provider.ImageProvider
-import io.legado.app.utils.mqLog
 import kotlinx.coroutines.*
 import org.jetbrains.anko.getStackTraceString
 import org.jetbrains.anko.toast
@@ -51,7 +50,7 @@ object ReadBook {
         contentProcessor = ContentProcessor(book.name, book.origin)
         readRecord = book.toReadRecord()
         timeRecord = readRecord.toTimeRecord()
-        timeRecord.date = TimeRecord.getDayTime()
+        timeRecord.date = TimeRecord.getDate()
         timeRecord.readTime = App.db.timeRecordDao.getReadTime(App.androidId,book.name,book.author,timeRecord.date)?:0
         timeRecord.listenTime = App.db.timeRecordDao.getListenTime(App.androidId,book.name,book.author,timeRecord.date)?:0
         durChapterIndex = book.durChapterIndex
