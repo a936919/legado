@@ -1,22 +1,14 @@
 package io.legado.app.ui.book.read.config
 
 import android.content.DialogInterface
-import android.graphics.drawable.Drawable
 import android.os.Bundle
-import android.util.Log
 import android.view.*
-import com.bumptech.glide.RequestBuilder
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
-import com.bumptech.glide.request.RequestOptions
 import io.legado.app.App
 import io.legado.app.R
 import io.legado.app.base.BaseDialogFragment
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookProgress
 import io.legado.app.data.entities.rule.TimeRecord
 import io.legado.app.databinding.DialogReadBookOtherInfoBinding
-import io.legado.app.help.BlurTransformation
-import io.legado.app.help.ImageLoader
 import io.legado.app.lib.theme.readCfgBottomBg
 import io.legado.app.lib.theme.readCfgBottomText
 import io.legado.app.service.help.ReadBook
@@ -24,16 +16,13 @@ import io.legado.app.ui.about.ReadRecordActivity
 import io.legado.app.ui.book.info.BookInfoActivity
 import io.legado.app.ui.book.info.BookInfoViewModel
 import io.legado.app.ui.book.read.ReadBookActivity
-import io.legado.app.ui.book.read.page.entities.TextPage
 import io.legado.app.ui.book.search.SearchActivity
-import io.legado.app.ui.widget.image.CoverImageView
 import io.legado.app.utils.*
 import io.legado.app.utils.viewbindingdelegate.viewBinding
 import org.jetbrains.anko.sdk27.listeners.onClick
-import org.jetbrains.anko.startActivity
 
 class BookOtherInfoDialog : BaseDialogFragment()  {
-    private var callBack: BookOtherInfoDialog.CallBack? = null
+    private var callBack: CallBack? = null
     private val binding by viewBinding(DialogReadBookOtherInfoBinding::bind)
     val viewModel: BookInfoViewModel
         get() = getViewModel(BookInfoViewModel::class.java)
@@ -150,8 +139,9 @@ class BookOtherInfoDialog : BaseDialogFragment()  {
         showCover(book)
         bookName.text = book.name
         bookAuthor.text = book.getRealAuthor()
-        readTime.text="今日阅读  ${App.db.timeRecordDao.getBookReadTimeByDay(book.name,book.author, TimeRecord.getDayTime())?.let { ReadRecordActivity.formatDuring(it) }}"
-        val readTime =  App.db.readRecordDao.getReadTime(book.name,book.author) ?: 0
+        val nowReadTime = App.db.timeRecordDao.getReadTime(book.name,book.author,TimeRecord.getDayTime())?:0
+        readTime.text =  "今日阅读  ${ReadRecordActivity.formatDuring(nowReadTime)}"
+        val readTime =  App.db.timeRecordDao.getReadTime(book.name,book.author) ?: 0
         readAllTime.text="本书共读  ${ReadRecordActivity.formatDuring(readTime)}"
     }
 

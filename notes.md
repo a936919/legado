@@ -12,6 +12,8 @@ colorControlNormal
 val upArrow = ContextCompat.getDrawable(this, R.drawable.abc_ic_ab_back_material)
 StringUtils.dateConvert(item.durChapterTime,"yyyy-MM-dd-HH-mm-ss")
 System.currentTimeMillis()
+val c = SimpleDateFormat("yyyy-MM-dd").parse("2021-01-25",ParsePosition(0)).time
+
 ```
 #### file
 ```

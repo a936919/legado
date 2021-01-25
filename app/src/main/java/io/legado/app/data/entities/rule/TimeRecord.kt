@@ -7,19 +7,22 @@ import io.legado.app.data.entities.ReadRecord
 
 @Entity(
     tableName = "timeRecord",
-    primaryKeys = ["androidId", "date","bookName","author"],
+    primaryKeys = ["androidId","bookName","author", "date"],
+    foreignKeys = [(ForeignKey(
+            entity = ReadRecord::class,
+            parentColumns = ["androidId", "bookName","author"],
+            childColumns = ["androidId", "bookName","author"],
+            onDelete = ForeignKey.CASCADE
+    ))]
 )
 data class TimeRecord (
     var androidId: String = App.androidId,
-    var date:Long = 0L,
     var bookName:String = "",
     var author:String = "",
+    var date:Long = 0L,
     var readTime: Long = 0L,
     var listenTime:Long = 0L
 ){
-    init {
-        date = getDayTime()
-    }
     companion object{
         fun getDayTime():Long{
             var now = System.currentTimeMillis()

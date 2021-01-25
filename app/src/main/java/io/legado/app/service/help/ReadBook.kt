@@ -51,10 +51,9 @@ object ReadBook {
         contentProcessor = ContentProcessor(book.name, book.origin)
         readRecord = book.toReadRecord()
         timeRecord = readRecord.toTimeRecord()
-        readRecord.readTime = App.db.readRecordDao.getReadTime(book.name,book.author) ?: 0
-        readRecord.listenTime = App.db.readRecordDao.getListenTime(book.name,book.author) ?: 0
-        timeRecord.readTime = App.db.timeRecordDao.getReadTimeByDay(timeRecord.date)?:0
-        timeRecord.listenTime = App.db.timeRecordDao.getListenTimeByDay(timeRecord.date)?:0
+        timeRecord.date = TimeRecord.getDayTime()
+        timeRecord.readTime = App.db.timeRecordDao.getReadTime(App.androidId,book.name,book.author,timeRecord.date)?:0
+        timeRecord.listenTime = App.db.timeRecordDao.getListenTime(App.androidId,book.name,book.author,timeRecord.date)?:0
         durChapterIndex = book.durChapterIndex
         durChapterPos = book.durChapterPos
         isLocalBook = book.origin == BookType.local
@@ -110,17 +109,14 @@ object ReadBook {
         Coroutine.async {
             var dif =  System.currentTimeMillis() - readStartTime
             val maxInterval = 3*60*1000L
+            //翻页时间超过3分钟，不计为阅读时间
             dif = min(dif,maxInterval)
             if (BaseReadAloudService.isRun) {
-                readRecord.listenTime = readRecord.listenTime + dif
                 timeRecord.listenTime = timeRecord.listenTime + dif
             } else {
-                //翻页时间超过2分钟，不计为阅读时间
-                readRecord.readTime = readRecord.readTime + dif
                 timeRecord.readTime = timeRecord.readTime + dif
             }
             readStartTime = System.currentTimeMillis()
-            App.db.readRecordDao.insert(readRecord)
             App.db.timeRecordDao.insert(timeRecord)
         }
     }

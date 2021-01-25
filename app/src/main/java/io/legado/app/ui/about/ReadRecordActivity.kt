@@ -41,7 +41,6 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         initView()
-        initData()
     }
 
     override fun onCompatCreateOptionsMenu(menu: Menu): Boolean {
@@ -103,27 +102,39 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
 
     private fun initData() {
         launch(IO) {
-            val allTime = App.db.readRecordDao.allTime
+            val allTime = App.db.timeRecordDao.allTime
             withContext(Main) {
                 binding.tvReadTime.text = formatDuring(allTime)
             }
 
             var readRecords = App.db.readRecordDao.allShow
-            /*
-            val bak = App.db.readRecordDao.all
-            bak.forEach{
-                val b =App.db.readRecordDao.getBook("",it.name,"")
-                if(){
-                    mqLog.d("-------1--------")
-                    mqLog.d("$it")
-                    mqLog.d("-------2--------")
-                    mqLog.d("$b")
-
-                    it.readTime = it.readTime + b.readTime
-                    App.db.readRecordDao.delete(b)
+            readRecords.forEach{
+                it.readTime = App.db.timeRecordDao.getReadTime(it.bookName,it.author)?:0
+            }
+/*
+            val a = App.db.readRecordDao.all
+            a.forEach{
+                val b = TimeRecord()
+                if(it.readTime>30*1000){
+                    b.readTime = it.readTime
+                    it.readTime = 0
+                    b.androidId = it.androidId
+                    b.bookName = it.bookName
+                    b.author = it.author
+                    b.date = TimeRecord.getDayTime()-(24*60*60*1000)
+                    mqLog.d("${b.bookName} ${b.readTime/1000/60} ${StringUtils.dateConvert(b.date,"yyyy-MM-dd-HH-mm-ss")}")
                     App.db.readRecordDao.update(it)
+                    App.db.timeRecordDao.insert(b)
                 }
+            }
+*/
+            /*
+            val c =  App.db.timeRecordDao.all
+            c.forEach {
+                mqLog.d("${it.bookName} ${it.author} ${it.androidId} ${StringUtils.dateConvert(it.date,"yyyy-MM-dd-HH-mm-ss")} ${it.readTime/1000/60}")
+
             }*/
+
 
             if(status == 5) readRecords = readRecords.filter { App.db.bookmarkDao.haveBook(it.bookUrl)}
             else if(status>=0) readRecords = readRecords.filter { it.status==status }
@@ -133,6 +144,8 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
             }
         }
     }
+
+
 
     private fun setBookStatus(readShow: ReadRecordShow){
         alert("阅读状态设置") {
