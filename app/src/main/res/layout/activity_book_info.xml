@@ -339,10 +339,8 @@
                     </LinearLayout>
 
                 </LinearLayout>
-
                 <io.legado.app.ui.widget.text.ScrollTextView
                     android:id="@+id/tv_intro"
-                    android:layout_marginTop="8dp"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:clickable="true"
@@ -351,11 +349,25 @@
                     android:textColor="@color/secondaryText"
                     android:textSize="14sp"
                     android:paddingLeft="8dp"
-                    android:paddingBottom="8dp"
                     android:visibility="visible"
                     tools:ignore="RtlHardcoded,RtlSymmetry" />
-
+                <io.legado.app.ui.widget.text.ScrollTextView
+                    android:id="@+id/tv_read_time"
+                    android:layout_marginTop="8dp"
+                    android:paddingBottom="8dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:text=""
+                    android:textColor="@color/tv_text_summary"
+                    android:textSize="14sp"
+                    android:paddingLeft="8dp"
+                    android:visibility="visible"
+                    tools:ignore="RtlHardcoded,RtlSymmetry" />
             </LinearLayout>
+
+
 
         </ScrollView>
 

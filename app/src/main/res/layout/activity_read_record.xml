@@ -39,6 +39,27 @@
             android:textColor="@color/tv_text_summary"
             android:singleLine="true"
             android:textIsSelectable="true" />
+        <TextView
+            android:id="@+id/tv_book_name_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:layout_marginStart="22dp"
+            android:text="今日阅读"
+            android:textColor="@color/primaryText"
+            android:singleLine="true"
+            android:textIsSelectable="true"
+            />
+        <TextView
+            android:id="@+id/tv_read_time_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:layout_marginStart="6dp"
+            android:text="@string/book_name"
+            android:textColor="@color/tv_text_summary"
+            android:singleLine="true"
+            android:textIsSelectable="true" />
     </LinearLayout>
     <View
         android:id="@+id/vw_bg_fg1"

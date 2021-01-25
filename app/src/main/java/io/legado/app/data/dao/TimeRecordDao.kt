@@ -39,6 +39,9 @@ interface TimeRecordDao {
     @Query("select sum(listenTime) from timeRecord where bookName =:name and author = :author")
     fun getListenTime(name:String, author:String): Long?
 
+    @Query("select * from timeRecord where bookName =:name and author = :author order by -date")
+    fun getRecord(name:String, author:String): List<TimeRecord>?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(vararg timeRecord: TimeRecord)
 

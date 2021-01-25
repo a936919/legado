@@ -29,6 +29,7 @@ import io.legado.app.lib.dialogs.alert
 import io.legado.app.lib.theme.backgroundColor
 import io.legado.app.lib.theme.bottomBackground
 import io.legado.app.lib.theme.getPrimaryTextColor
+import io.legado.app.ui.about.ReadRecordActivity
 import io.legado.app.ui.audio.AudioPlayActivity
 import io.legado.app.ui.book.changecover.ChangeCoverDialog
 import io.legado.app.ui.book.changesource.ChangeSourceDialog
@@ -77,6 +78,21 @@ class BookInfoActivity :
         viewModel.chapterListData.observe(this, { upLoading(false, it) })
         viewModel.initData(intent)
         initOnClick()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.bookData.observe(this, { showReadTime(it) })
+    }
+
+    private fun showReadTime(book: Book){
+        val time =  App.db.timeRecordDao.getReadTime(book.name,book.author)?:0
+        val timeRecord = App.db.timeRecordDao.getRecord(book.name,book.author)
+        var string = "本书已读  ${ReadRecordActivity.formatDuring(time)}"
+        timeRecord?.forEach{
+            string = "${string}\n${StringUtils.dateConvert(it.date,"yyyy年MM月dd日")} ${ReadRecordActivity.formatDuring(it.readTime)}"
+        }
+        binding.tvReadTime?.text = string
     }
 
     override fun onCompatCreateOptionsMenu(menu: Menu): Boolean {

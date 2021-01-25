@@ -12,6 +12,7 @@ import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.base.adapter.RecyclerAdapter
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.ReadRecordShow
+import io.legado.app.data.entities.rule.TimeRecord
 import io.legado.app.databinding.ActivityReadRecordBinding
 import io.legado.app.databinding.DialogBookStatusBinding
 import io.legado.app.databinding.ItemReadRecordBinding
@@ -103,8 +104,10 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
     private fun initData() {
         launch(IO) {
             val allTime = App.db.timeRecordDao.allTime
+            val todayTime = App.db.timeRecordDao.getReadTime(TimeRecord.getDayTime())?:0
             withContext(Main) {
                 binding.tvReadTime.text = formatDuring(allTime)
+                binding.tvReadTime2.text = formatDuring(todayTime)
             }
 
             var readRecords = App.db.readRecordDao.allShow

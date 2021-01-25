@@ -136,17 +136,15 @@ class BookOtherInfoDialog : BaseDialogFragment()  {
     }
 
     private fun showBook(book: Book) = with(binding) {
-        showCover(book)
+        binding.ivCover.load(book.getDisplayCover(), book.name, book.author)
         bookName.text = book.name
         bookAuthor.text = book.getRealAuthor()
         val nowReadTime = App.db.timeRecordDao.getReadTime(book.name,book.author,TimeRecord.getDayTime())?:0
-        readTime.text =  "今日阅读  ${ReadRecordActivity.formatDuring(nowReadTime)}"
+        var string = "今日阅读  ${ReadRecordActivity.formatDuring(nowReadTime)} （${book.durChapterIndex+1}/${book.totalChapterNum}）"
+        readTime.text =  string
         val readTime =  App.db.timeRecordDao.getReadTime(book.name,book.author) ?: 0
-        readAllTime.text="本书共读  ${ReadRecordActivity.formatDuring(readTime)}"
-    }
-
-    private fun showCover(book: Book) {
-        binding.ivCover.load(book.getDisplayCover(), book.name, book.author)
+        string ="本已共读  ${ReadRecordActivity.formatDuring(readTime)}"
+        readAllTime.text = string
     }
 
     interface CallBack {
