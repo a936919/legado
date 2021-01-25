@@ -7,7 +7,7 @@ import io.legado.app.data.entities.ReadRecord
 
 @Entity(
     tableName = "timeRecord",
-    primaryKeys = ["androidId", "date"],
+    primaryKeys = ["androidId", "date","bookName","author"],
 )
 data class TimeRecord (
     var androidId: String = App.androidId,

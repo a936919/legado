@@ -78,9 +78,11 @@ object Backup {
             }
             GSON.toJson(ReadBookConfig.shareConfig).let {
                 FileUtils.createFileIfNotExist(backupPath + File.separator + ReadBookConfig.shareConfigFileName)
+                    .writeText(it)
             }
             GSON.toJson(ReadBookConfig.comicConfig).let {
                 FileUtils.createFileIfNotExist(backupPath + File.separator + ReadBookConfig.comicConfigFileName)
+                    .writeText(it)
             }
             GSON.toJson(ThemeConfig.configList).let {
                 FileUtils.createFileIfNotExist(backupPath + File.separator + ThemeConfig.configFileName)
