@@ -19,6 +19,10 @@ interface ReadRecordDao {
     @Query("select sum(readTime) from readRecord where bookName = :bookName and author = :author")
     fun getReadTime(bookName: String,author: String): Long?
 
+    @Query("select sum(listenTime) from readRecord where bookName = :bookName and author = :author")
+    fun getListenTime(bookName: String,author: String): Long?
+
+
     @Query("select * from readRecord where bookName = :bookName and author = :author and androidId = :id")
     fun getBook(id:String,bookName: String,author:String): ReadRecord?
 

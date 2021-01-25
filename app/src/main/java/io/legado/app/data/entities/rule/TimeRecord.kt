@@ -12,7 +12,10 @@ import io.legado.app.data.entities.ReadRecord
 data class TimeRecord (
     var androidId: String = App.androidId,
     var date:Long = 0L,
+    var bookName:String = "",
+    var author:String = "",
     var readTime: Long = 0L,
+    var listenTime:Long = 0L
 ){
     init {
         date = getDayTime()

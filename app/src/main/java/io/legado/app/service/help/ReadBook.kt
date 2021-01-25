@@ -17,9 +17,11 @@ import io.legado.app.ui.book.read.page.entities.TextChapter
 import io.legado.app.ui.book.read.page.entities.TextPage
 import io.legado.app.ui.book.read.page.provider.ChapterProvider
 import io.legado.app.ui.book.read.page.provider.ImageProvider
+import io.legado.app.utils.mqLog
 import kotlinx.coroutines.*
 import org.jetbrains.anko.getStackTraceString
 import org.jetbrains.anko.toast
+import kotlin.math.min
 
 
 @Suppress("MemberVisibilityCanBePrivate")
@@ -48,10 +50,11 @@ object ReadBook {
         this.book = book
         contentProcessor = ContentProcessor(book.name, book.origin)
         readRecord = book.toReadRecord()
+        timeRecord = readRecord.toTimeRecord()
         readRecord.readTime = App.db.readRecordDao.getReadTime(book.name,book.author) ?: 0
-        timeRecord.readTime = App.db.timeRecordDao.getReadTimeByDay(timeRecord.getDayTime())?:0
-        App.db.timeRecordDao.insert(timeRecord)
-        App.db.readRecordDao.insert(readRecord)
+        readRecord.listenTime = App.db.readRecordDao.getListenTime(book.name,book.author) ?: 0
+        timeRecord.readTime = App.db.timeRecordDao.getReadTimeByDay(timeRecord.date)?:0
+        timeRecord.listenTime = App.db.timeRecordDao.getListenTimeByDay(timeRecord.date)?:0
         durChapterIndex = book.durChapterIndex
         durChapterPos = book.durChapterPos
         isLocalBook = book.origin == BookType.local
@@ -106,13 +109,19 @@ object ReadBook {
     fun upReadStartTime() {
         Coroutine.async {
             var dif =  System.currentTimeMillis() - readStartTime
-            //翻页时间超过2分钟，不计为阅读时间
-            if(dif > 2*60*1000) dif = 2*60*1000
-            readRecord.readTime = readRecord.readTime + dif
-            timeRecord.readTime = timeRecord.readTime + dif
+            val maxInterval = 3*60*1000L
+            dif = min(dif,maxInterval)
+            if (BaseReadAloudService.isRun) {
+                readRecord.listenTime = readRecord.listenTime + dif
+                timeRecord.listenTime = timeRecord.listenTime + dif
+            } else {
+                //翻页时间超过2分钟，不计为阅读时间
+                readRecord.readTime = readRecord.readTime + dif
+                timeRecord.readTime = timeRecord.readTime + dif
+            }
             readStartTime = System.currentTimeMillis()
-            App.db.readRecordDao.update(readRecord)
-            App.db.timeRecordDao.update(timeRecord)
+            App.db.readRecordDao.insert(readRecord)
+            App.db.timeRecordDao.insert(timeRecord)
         }
     }
 
@@ -122,10 +131,11 @@ object ReadBook {
             callBack?.upContent()
         }
     }
-
+    /*目前只有TTS在调用*/
     fun moveToNextPage() {
         durChapterPos = curTextChapter?.getNextPageLength(durChapterPos) ?: durChapterPos
         callBack?.upContent()
+        upReadStartTime()
         saveRead()
     }
 
