@@ -36,6 +36,7 @@ object Backup {
             "searchHistory.json",
             "sourceSub.json",
             "topPath.json",
+            "timeRecord.json",
             DefaultData.txtTocRuleFileName,
             DefaultData.httpTtsFileName,
             ReadBookConfig.configFileName,
@@ -70,6 +71,7 @@ object Backup {
             writeListToJson(App.db.searchKeywordDao.all, "searchHistory.json", backupPath)
             writeListToJson(App.db.ruleSubDao.all, "sourceSub.json", backupPath)
             writeListToJson(App.db.topPathDao.all, "topPath.json", backupPath)
+            writeListToJson(App.db.timeRecordDao.all, "timeRecord.json", backupPath)
             writeListToJson(App.db.txtTocRule.all, DefaultData.txtTocRuleFileName, backupPath)
             writeListToJson(App.db.httpTTSDao.all, DefaultData.httpTtsFileName, backupPath)
             GSON.toJson(ReadBookConfig.configList).let {

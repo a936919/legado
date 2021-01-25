@@ -13,6 +13,7 @@ import io.legado.app.R
 import io.legado.app.constant.EventBus
 import io.legado.app.constant.PreferKey
 import io.legado.app.data.entities.*
+import io.legado.app.data.entities.rule.TimeRecord
 import io.legado.app.help.DefaultData
 import io.legado.app.help.LauncherIconHelp
 import io.legado.app.help.ReadBookConfig
@@ -139,6 +140,9 @@ object Restore {
             }
             fileToListT<TopPath>(path, "topPath.json")?.let {
                 App.db.topPathDao.insert(*it.toTypedArray())
+            }
+            fileToListT<TimeRecord>(path, "timeRecord.json")?.let {
+                App.db.timeRecordDao.insert(*it.toTypedArray())
             }
             fileToListT<TxtTocRule>(path, DefaultData.txtTocRuleFileName)?.let {
                 App.db.txtTocRule.insert(*it.toTypedArray())
