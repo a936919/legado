@@ -20,9 +20,11 @@ data class TimeRecord (
     init {
         date = getDayTime()
     }
-    fun getDayTime():Long{
-        var now = System.currentTimeMillis()
-        now -= now % (1000 * 60 * 60 * 24) + (8 * 1000 * 60 * 60)
-        return now
+    companion object{
+        fun getDayTime():Long{
+            var now = System.currentTimeMillis()
+            now -= now % (1000 * 60 * 60 * 24) + (8 * 1000 * 60 * 60)
+            return now
+        }
     }
 }

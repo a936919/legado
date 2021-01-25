@@ -13,6 +13,7 @@ import io.legado.app.R
 import io.legado.app.base.BaseDialogFragment
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookProgress
+import io.legado.app.data.entities.rule.TimeRecord
 import io.legado.app.databinding.DialogReadBookOtherInfoBinding
 import io.legado.app.help.BlurTransformation
 import io.legado.app.help.ImageLoader
@@ -149,7 +150,7 @@ class BookOtherInfoDialog : BaseDialogFragment()  {
         showCover(book)
         bookName.text = book.name
         bookAuthor.text = book.getRealAuthor()
-        readTime.text="当前已读  ${ReadRecordActivity.formatDuring( System.currentTimeMillis()-ReadBook.readStartTime)}"
+        readTime.text="今日阅读  ${App.db.timeRecordDao.getBookReadTimeByDay(book.name,book.author, TimeRecord.getDayTime())?.let { ReadRecordActivity.formatDuring(it) }}"
         val readTime =  App.db.readRecordDao.getReadTime(book.name,book.author) ?: 0
         readAllTime.text="本书共读  ${ReadRecordActivity.formatDuring(readTime)}"
     }
