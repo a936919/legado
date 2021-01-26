@@ -94,10 +94,8 @@ class MyFragment : BaseFragment(R.layout.fragment_my_config), FilePickerDialog.C
                     true
                 }
             }
-            if (AppConfig.isGooglePlay) {
-                findPreference<PreferenceCategory>("aboutCategory")
-                    ?.removePreferenceRecursively("donate")
-            }
+            findPreference<PreferenceCategory>("aboutCategory")
+                ?.removePreferenceRecursively("donate")
         }
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

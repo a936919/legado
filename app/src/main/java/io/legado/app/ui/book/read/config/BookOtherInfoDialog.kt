@@ -66,13 +66,16 @@ class BookOtherInfoDialog : BaseDialogFragment()  {
     private fun initView(){
         val bg = requireContext().readCfgBottomBg
         val textColor = requireContext().readCfgBottomText
-        val secondtextColor = ColorUtils.withAlpha(textColor,0.5f)
+        val secondTextColor = ColorUtils.withAlpha(textColor,0.5f)
+        val thirdTextColor = ColorUtils.withAlpha(textColor,0.7f)
+
         binding.apply {
             root.setBackgroundColor(bg)
             bookName.setTextColor(textColor)
-            bookAuthor.setTextColor(secondtextColor)
+            bookAuthor.setTextColor(secondTextColor)
             readTime.setTextColor(textColor)
             readAllTime.setTextColor(textColor)
+            bookChapter.setTextColor(thirdTextColor)
 
             ivAuthorOther.setColorFilter(textColor)
             ivReadAloud.setColorFilter(textColor)
@@ -83,14 +86,14 @@ class BookOtherInfoDialog : BaseDialogFragment()  {
             ivGetProgress.setColorFilter(textColor)
             ivRefresh.setColorFilter(textColor)
 
-            tvAuthorOther.setTextColor(secondtextColor)
-            tvReadAloud.setTextColor(secondtextColor)
-            tvReadPage.setTextColor(secondtextColor)
-            tvSearch.setTextColor(secondtextColor)
-            tvAccessUrl.setTextColor(secondtextColor)
-            tvDownload.setTextColor(secondtextColor)
-            tvGetProgress.setTextColor(secondtextColor)
-            tvRefresh.setTextColor(secondtextColor)
+            tvAuthorOther.setTextColor(secondTextColor)
+            tvReadAloud.setTextColor(secondTextColor)
+            tvReadPage.setTextColor(secondTextColor)
+            tvSearch.setTextColor(secondTextColor)
+            tvAccessUrl.setTextColor(secondTextColor)
+            tvDownload.setTextColor(secondTextColor)
+            tvGetProgress.setTextColor(secondTextColor)
+            tvRefresh.setTextColor(secondTextColor)
         }
     }
 
@@ -139,11 +142,12 @@ class BookOtherInfoDialog : BaseDialogFragment()  {
         binding.ivCover.load(book.getDisplayCover(), book.name, book.author)
         bookName.text = book.name
         bookAuthor.text = book.getRealAuthor()
+        bookChapter.text = book.durChapterTitle
         val nowReadTime = App.db.timeRecordDao.getReadTime(book.name,book.author,TimeRecord.getDate())?:0
         var string = "今日阅读  ${ReadRecordActivity.formatDuring(nowReadTime)} （${book.durChapterIndex+1}/${book.totalChapterNum}）"
         readTime.text =  string
         val readTime =  App.db.timeRecordDao.getReadTime(book.name,book.author) ?: 0
-        string ="本已共读  ${ReadRecordActivity.formatDuring(readTime)}"
+        string ="本书已读  ${ReadRecordActivity.formatDuring(readTime)}"
         readAllTime.text = string
     }
 
