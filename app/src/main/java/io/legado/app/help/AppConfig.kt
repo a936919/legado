@@ -11,7 +11,7 @@ import io.legado.app.utils.*
 @Suppress("MemberVisibilityCanBePrivate")
 object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
     private val context get() = App.INSTANCE
-    val isGooglePlay = context.channel == "google"
+    const val isGooglePlay = true//context.channel == "google"
     var userAgent: String = getPrefUserAgent()
     var replaceEnableDefault = context.getPrefBoolean(PreferKey.replaceEnableDefault, true)
     var isEInkMode = context.getPrefString(PreferKey.themeMode) == "3"

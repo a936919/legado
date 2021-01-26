@@ -40,9 +40,6 @@ class AboutFragment : PreferenceFragmentCompat() {
         addPreferencesFromResource(R.xml.about)
         findPreference<Preference>("update_log")?.summary =
             "${getString(R.string.version)} ${App.versionName}"
-        if (AppConfig.isGooglePlay) {
-            preferenceScreen.removePreferenceRecursively("check_update")
-        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
