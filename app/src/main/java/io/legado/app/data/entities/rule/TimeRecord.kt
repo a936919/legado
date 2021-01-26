@@ -27,6 +27,7 @@ data class TimeRecord (
     var listenTime:Long = 0L
 ){
     companion object{
+
         fun getDate():Long{
             val pattern = "yyyy-MM-dd"
             @SuppressLint("SimpleDateFormat")
@@ -35,6 +36,17 @@ data class TimeRecord (
             val date = format.parse(format.format(now))?:Date(0)
             return date.time
         }
+
+        fun formatDuring(mss: Long): String {
+            val hours = mss / (1000 * 60 * 60)
+            val minutes = mss % (1000 * 60 * 60) / (1000 * 60)
+            val seconds = mss % (1000 * 60) / 1000
+            val h = if (hours > 0) "${hours}小时" else ""
+            val m = if (minutes > 0) "${minutes}分钟" else ""
+            val s = if (mss < 1000 * 60) "${java.lang.Long.max(seconds, 1)}秒" else ""
+            return "$h$m$s"
+        }
+
     }
 }
 

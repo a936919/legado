@@ -20,6 +20,7 @@ import io.legado.app.constant.Theme
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
 import io.legado.app.data.entities.ReadRecord
+import io.legado.app.data.entities.rule.TimeRecord
 import io.legado.app.databinding.ActivityBookInfoBinding
 import io.legado.app.databinding.DialogBookStatusBinding
 import io.legado.app.help.BlurTransformation
@@ -88,9 +89,9 @@ class BookInfoActivity :
     private fun showReadTime(book: Book){
         val time =  App.db.timeRecordDao.getReadTime(book.name,book.author)?:0
         val timeRecord = App.db.timeRecordDao.getRecord(book.name,book.author)
-        var string = "本书已读  ${ReadRecordActivity.formatDuring(time)}"
+        var string = "本书已读  ${TimeRecord.formatDuring(time)}"
         timeRecord?.forEach{
-            string = "${string}\n${StringUtils.dateConvert(it.date,"yyyy年MM月dd日")} ${ReadRecordActivity.formatDuring(it.readTime)}"
+            string = "${string}\n${StringUtils.dateConvert(it.date,"yyyy年MM月dd日")} ${TimeRecord.formatDuring(it.readTime)}"
         }
         binding.tvReadTime?.text = string
     }

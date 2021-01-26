@@ -94,8 +94,6 @@ class MyFragment : BaseFragment(R.layout.fragment_my_config), FilePickerDialog.C
                     true
                 }
             }
-            findPreference<PreferenceCategory>("aboutCategory")
-                ?.removePreferenceRecursively("donate")
         }
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

@@ -108,8 +108,8 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
             val allTime = App.db.timeRecordDao.allTime
             val todayTime = App.db.timeRecordDao.getReadTime(TimeRecord.getDate())?:0
             withContext(Main) {
-                binding.tvReadTime.text = formatDuring(allTime)
-                binding.tvReadTime2.text = formatDuring(todayTime)
+                binding.tvReadTime.text = TimeRecord.formatDuring(allTime)
+                binding.tvReadTime2.text = TimeRecord.formatDuring(todayTime)
             }
 
             var readRecords = App.db.readRecordDao.allShow
@@ -182,7 +182,8 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
                 tvBookName.text = item.bookName
                 tvAuthor.text = item.author
                 ivCover.load(item.coverUrl,item.bookName,item.author)
-                tvReadTime.text ="已阅读  ${formatDuring(item.readTime)} （${item.durChapterIndex+1}/${item.totalChapterNum}）"
+                val string = "已阅读  ${TimeRecord.formatDuring(item.readTime)} （${item.durChapterIndex+1}/${item.totalChapterNum}）"
+                tvReadTime.text = string
                 tvStatus.text = if(item.status == 1) "已读" else if(item.status == 2) "" else ""
                 tvStatus.setTextColor(accentColor)
                 tvChapter.text = item.durChapterTitle
@@ -222,18 +223,6 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
                 noButton()
             }.show()
         }
-
     }
 
-    companion object{
-        fun formatDuring(mss: Long): String {
-            val hours = mss / (1000 * 60 * 60)
-            val minutes = mss % (1000 * 60 * 60) / (1000 * 60)
-            val seconds = mss % (1000 * 60) / 1000
-            val h = if (hours > 0) "${hours}小时" else ""
-            val m = if (minutes > 0) "${minutes}分钟" else ""
-            val s = if (mss < 1000 * 60) "${max(seconds,1)}秒" else ""
-            return "$h$m$s"
-        }
-    }
 }

@@ -73,9 +73,9 @@ class BookOtherInfoDialog : BaseDialogFragment()  {
             root.setBackgroundColor(bg)
             bookName.setTextColor(textColor)
             bookAuthor.setTextColor(secondTextColor)
+            bookChapter.setTextColor(thirdTextColor)
             readTime.setTextColor(textColor)
             readAllTime.setTextColor(textColor)
-            bookChapter.setTextColor(thirdTextColor)
 
             ivAuthorOther.setColorFilter(textColor)
             ivReadAloud.setColorFilter(textColor)
@@ -142,12 +142,13 @@ class BookOtherInfoDialog : BaseDialogFragment()  {
         binding.ivCover.load(book.getDisplayCover(), book.name, book.author)
         bookName.text = book.name
         bookAuthor.text = book.getRealAuthor()
-        bookChapter.text = book.durChapterTitle
+        var string = "[${book.durChapterIndex + 1}/${book.totalChapterNum}]  ${book.durChapterTitle}"
+        bookChapter.text = string
         val nowReadTime = App.db.timeRecordDao.getReadTime(book.name,book.author,TimeRecord.getDate())?:0
-        var string = "今日阅读  ${ReadRecordActivity.formatDuring(nowReadTime)} （${book.durChapterIndex+1}/${book.totalChapterNum}）"
+        string = "今日阅读  ${TimeRecord.formatDuring(nowReadTime)}"
         readTime.text =  string
         val readTime =  App.db.timeRecordDao.getReadTime(book.name,book.author) ?: 0
-        string ="本书已读  ${ReadRecordActivity.formatDuring(readTime)}"
+        string ="本书已读  ${TimeRecord.formatDuring(readTime)}"
         readAllTime.text = string
     }
 
