@@ -89,7 +89,28 @@ class EPUBFile(val book: io.legado.app.data.entities.Book) {
         epubBook?.let { eBook ->
             val resource = eBook.resources.getByHref(chapter.url)
             val doc = Jsoup.parse(String(resource.data, mCharset))
-            val elements = doc.body().children()
+            if(!chapter.resourceUrl.isNullOrBlank()){
+                val elementById = doc.getElementById(chapter.resourceUrl)
+                while (true) {
+                    val element = elementById.nextElementSibling() ?: break;
+                    element.remove();
+                }
+            }
+
+            val fragmentId =  chapter.url.substringAfter("#")
+            var elements = doc.body().children()
+            if(fragmentId != chapter.url){
+                if (elements != null && elements.size > 0) {
+                    for (child  in elements) {
+                        if (fragmentId == child.id()) {
+                            break;
+                        }
+                        child.remove()
+                    }
+                }
+                elements = doc.body().children()
+            }
+
             elements.select("script").remove()
             elements.select("style").remove()
             return elements.outerHtml().htmlFormat()
@@ -167,17 +188,20 @@ class EPUBFile(val book: io.legado.app.data.entities.Book) {
         level: Int
     ) {
         if (refs == null) return
+        var i = -1
         for (ref in refs) {
             if (ref.resource != null) {
                 val chapter = BookChapter()
                 chapter.bookUrl = book.bookUrl
                 chapter.title = ref.title
                 chapter.url = ref.completeHref
+                if(i>=0) chapterList[i].resourceUrl = ref.fragmentId
                 chapterList.add(chapter)
             }
             if (ref.children != null && ref.children.isNotEmpty()) {
                 parseMenu(chapterList, ref.children, level + 1)
             }
+            i++
         }
     }
 
