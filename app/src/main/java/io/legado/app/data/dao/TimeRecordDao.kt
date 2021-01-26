@@ -27,6 +27,12 @@ interface TimeRecordDao {
     @Query("select listenTime from timeRecord where androidId = :id and bookName =:name and author = :author  and date =:date")
     fun getListenTime(id:String, name:String, author:String, date:Long): Long?
 
+    @Query("select sum(readTime) from timeRecord where androidId = :id and bookName =:name and author = :author")
+    fun getReadTime(id:String, name:String, author:String): Long?
+
+    @Query("select sum(listenTime) from timeRecord where androidId = :id and bookName =:name and author = :author")
+    fun getListenTime(id:String, name:String, author:String): Long?
+
     @Query("select sum(readTime) from timeRecord where bookName =:name and author = :author  and date =:date")
     fun getReadTime(name:String, author:String, date:Long): Long?
 

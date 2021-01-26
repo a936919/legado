@@ -8,7 +8,6 @@ import com.jayway.jsonpath.JsonPath
 import com.jayway.jsonpath.Option
 import com.jayway.jsonpath.ParseContext
 import io.legado.app.App
-import io.legado.app.BuildConfig
 import io.legado.app.R
 import io.legado.app.constant.EventBus
 import io.legado.app.constant.PreferKey
@@ -141,9 +140,7 @@ object Restore {
             fileToListT<TopPath>(path, "topPath.json")?.let {
                 App.db.topPathDao.insert(*it.toTypedArray())
             }
-            fileToListT<TimeRecord>(path, "timeRecord.json")?.let {
-                App.db.timeRecordDao.insert(*it.toTypedArray())
-            }
+
             fileToListT<TxtTocRule>(path, DefaultData.txtTocRuleFileName)?.let {
                 App.db.txtTocRule.insert(*it.toTypedArray())
             }
@@ -156,10 +153,26 @@ object Restore {
                     if (readRecord.androidId != App.androidId) {
                         App.db.readRecordDao.insert(readRecord)
                     } else {
-                        val time = App.db.readRecordDao
-                            .getReadTime(readRecord.androidId, readRecord.bookName)
-                        if (time == null || time < readRecord.readTime) {
+                        val book = App.db.readRecordDao
+                            .getBook(readRecord.androidId, readRecord.bookName,readRecord.author)
+                        if (book == null || book.durChapterTime < readRecord.durChapterTime) {
                             App.db.readRecordDao.insert(readRecord)
+                        }
+                    }
+                }
+            }
+            fileToListT<TimeRecord>(path, "timeRecord.json")?.let {
+                it.forEach { timeRecord ->
+                    //判断是不是本机记录
+                    if (timeRecord.androidId != App.androidId) {
+                        App.db.timeRecordDao.insert(timeRecord)
+                    } else {
+                        val readTime = App.db.timeRecordDao
+                            .getReadTime(timeRecord.androidId, timeRecord.bookName,timeRecord.author,timeRecord.date)
+                        val listenTime = App.db.timeRecordDao
+                            .getListenTime(timeRecord.androidId, timeRecord.bookName,timeRecord.author,timeRecord.date)
+                        if (readTime == null || readTime < timeRecord.readTime||listenTime ==null || listenTime < timeRecord.listenTime) {
+                            App.db.timeRecordDao.insert(timeRecord)
                         }
                     }
                 }
