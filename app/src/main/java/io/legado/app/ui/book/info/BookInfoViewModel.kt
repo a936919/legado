@@ -84,8 +84,10 @@ class BookInfoViewModel(application: Application) : BaseViewModel(application) {
         execute {
             if (book.isLocalBook()) {
                 LocalBook.getChapterList(book).let {
-                    App.db.bookDao.update(book)
-                    App.db.bookChapterDao.insert(*it.toTypedArray())
+                    if (inBookshelf){
+                        App.db.bookDao.update(book)
+                        App.db.bookChapterDao.insert(*it.toTypedArray())
+                    }
                     chapterListData.postValue(it)
                 }
             } else {

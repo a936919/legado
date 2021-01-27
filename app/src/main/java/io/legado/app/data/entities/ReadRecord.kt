@@ -29,7 +29,7 @@ data class ReadRecord(
         status = status,
         durChapterIndex = durChapterIndex,
         durChapterPos = durChapterPos,
-        originName = App.db.bookSourceDao.getBookSource(origin)?.bookSourceName?:""
+        originName = if(origin == BookType.local) bookUrl.substringAfterLast("/") else App.db.bookSourceDao.getBookSource(origin)?.bookSourceName?:""
     )
     fun toTimeRecord() = TimeRecord(
         androidId =  App.androidId,
