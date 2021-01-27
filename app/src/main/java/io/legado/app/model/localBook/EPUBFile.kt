@@ -126,7 +126,7 @@ class EPUBFile(val book: io.legado.app.data.entities.Book) {
         val chapterList = ArrayList<BookChapter>()
         epubBook?.let { eBook ->
             val metadata = eBook.metadata
-            book.name = metadata.firstTitle
+            book.name = book.originName//metadata.firstTitle
             if (metadata.authors.size > 0) {
                 val author =
                     metadata.authors[0].toString().replace("^, |, $".toRegex(), "")

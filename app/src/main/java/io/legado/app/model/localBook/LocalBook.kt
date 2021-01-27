@@ -73,7 +73,7 @@ object LocalBook {
         }
         val book = Book(
             bookUrl = path,
-            name = name,
+            name = fileName,
             author = author,
             originName = fileName,
             coverUrl = FileUtils.getPath(
