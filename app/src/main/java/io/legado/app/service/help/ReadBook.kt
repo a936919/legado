@@ -17,6 +17,7 @@ import io.legado.app.ui.book.read.page.entities.TextChapter
 import io.legado.app.ui.book.read.page.entities.TextPage
 import io.legado.app.ui.book.read.page.provider.ChapterProvider
 import io.legado.app.ui.book.read.page.provider.ImageProvider
+import io.legado.app.utils.mqLog
 import kotlinx.coroutines.*
 import org.jetbrains.anko.getStackTraceString
 import org.jetbrains.anko.toast
@@ -48,11 +49,7 @@ object ReadBook {
     fun resetData(book: Book) {
         this.book = book
         contentProcessor = ContentProcessor(book.name, book.origin)
-        readRecord = book.toReadRecord()
-        timeRecord = readRecord.toTimeRecord()
-        timeRecord.date = TimeRecord.getDate()
-        timeRecord.readTime = App.db.timeRecordDao.getReadTime(App.androidId,book.name,book.author,timeRecord.date)?:0
-        timeRecord.listenTime = App.db.timeRecordDao.getListenTime(App.androidId,book.name,book.author,timeRecord.date)?:0
+        saveReadRecord(book)
         durChapterIndex = book.durChapterIndex
         durChapterPos = book.durChapterPos
         isLocalBook = book.origin == BookType.local
@@ -64,6 +61,19 @@ object ReadBook {
         ImageProvider.clearAllCache()
         synchronized(this) {
             loadingChapters.clear()
+        }
+
+    }
+
+    private fun saveReadRecord(book: Book){
+        Coroutine.async {
+            readRecord = book.toReadRecord()
+            timeRecord = readRecord.toTimeRecord()
+            timeRecord.date = TimeRecord.getDate()
+            timeRecord.readTime = App.db.timeRecordDao.getReadTime(App.androidId,book.name,book.author,timeRecord.date)?:0
+            timeRecord.listenTime = App.db.timeRecordDao.getListenTime(App.androidId,book.name,book.author,timeRecord.date)?:0
+            App.db.readRecordDao.insert(readRecord)
+            App.db.timeRecordDao.insert(timeRecord)
         }
     }
 
@@ -116,7 +126,8 @@ object ReadBook {
                 timeRecord.readTime = timeRecord.readTime + dif
             }
             readStartTime = System.currentTimeMillis()
-            App.db.timeRecordDao.insert(timeRecord)
+
+            App.db.timeRecordDao.update(timeRecord)
         }
     }
 
