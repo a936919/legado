@@ -41,7 +41,28 @@ val c = SimpleDateFormat("yyyy-MM-dd").parse("2021-01-25",ParsePosition(0)).time
         val b = TimeRecord.getDate()
         val c = SimpleDateFormat("yyyy-MM-dd").parse("2021-01-26", ParsePosition(0)).time
         mqLog.d("$a $b $c ${format(a)} ${format(b)} ${format(c)}")
-        
+
+
+                    val opf = eBook.opfResource
+                    val doc =
+                        Jsoup.parse(String(opf.data, mCharset))
+                    val item = doc.getElementsByTag("item")
+                    try {
+                        var i = 6
+                        while (i<48){
+                            mqLog.d("${item[i]}")
+                            mqLog.d("${item[i].attr("id")}")//href
+                            val url = item[i].attr("id")
+                            val resource = eBook.resources.getByIdOrHref(url)
+                            mqLog.d("$resource")
+                            val d = Jsoup.parse(String(resource.data, mCharset))
+                            var elements = d.body().children()
+                            mqLog.d("$elements")
+                            i++
+                        }
+                    } catch (e: IOException) {
+                        mqLog.d("err")
+                    }
 ```
 #### file
 ```
