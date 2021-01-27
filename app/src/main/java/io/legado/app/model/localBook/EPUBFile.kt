@@ -89,28 +89,27 @@ class EPUBFile(val book: io.legado.app.data.entities.Book) {
         epubBook?.let { eBook ->
             val resource = eBook.resources.getByHref(chapter.url)
             val doc = Jsoup.parse(String(resource.data, mCharset))
-            if(!chapter.resourceUrl.isNullOrBlank()){
-                val elementById = doc.getElementById(chapter.resourceUrl)
-                while (true) {
-                    val element = elementById.nextElementSibling() ?: break;
-                    element.remove();
-                }
-            }
-
-            val fragmentId =  chapter.url.substringAfter("#")
             var elements = doc.body().children()
-            if(fragmentId != chapter.url){
-                if (elements != null && elements.size > 0) {
-                    for (child  in elements) {
-                        if (fragmentId == child.id()) {
-                            break;
-                        }
-                        child.remove()
+            val startFragmentId =  chapter.startFragmentId
+            val endFragmentId = chapter.endFragmentId
+/*同一resource没有此Id会卡死在接口，兼容性不好*/
+            /*
+            if(!startFragmentId.isNullOrBlank()) doc.getElementById(fragmentId).previousElementSiblings().remove()
+            if(!endFragmentId.isNullOrBlank())  doc.getElementById(fragmentId).nextElementSiblings().remove()
+            */
+            var discard = true
+            if (elements != null && elements.size > 0) {
+                if(!startFragmentId.isNullOrBlank()||!endFragmentId.isNullOrBlank()){
+                    if(startFragmentId.isNullOrBlank())  discard = false
+                    /*一条一条删除，防止内容过多卡死*/
+                    for (child in elements) {
+                        if (startFragmentId == child.id()) discard = false
+                        if (endFragmentId == child.id()) discard = true
+                        if (discard) child.remove()
                     }
                 }
                 elements = doc.body().children()
             }
-
             elements.select("script").remove()
             elements.select("style").remove()
             return elements.outerHtml().htmlFormat()
@@ -195,7 +194,8 @@ class EPUBFile(val book: io.legado.app.data.entities.Book) {
                 chapter.bookUrl = book.bookUrl
                 chapter.title = ref.title
                 chapter.url = ref.completeHref
-                if(i>=0) chapterList[i].resourceUrl = ref.fragmentId
+                chapter.startFragmentId = ref.fragmentId
+                if(i>=0) chapterList[i].endFragmentId = ref.fragmentId
                 chapterList.add(chapter)
             }
             if (ref.children != null && ref.children.isNotEmpty()) {

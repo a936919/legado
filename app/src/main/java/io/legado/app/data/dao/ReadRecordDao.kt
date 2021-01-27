@@ -29,5 +29,5 @@ interface ReadRecordDao {
     fun clear()
 
     @Query("delete from readRecord where bookName = :bookName and author = :author")
-    fun deleteByName(bookName: String,author: String)
+    fun deleteBook(bookName: String, author: String)
 }

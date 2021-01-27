@@ -54,7 +54,7 @@ data class Book(
     var originOrder: Int = 0,                   //书源排序
     var variable: String? = null,               // 自定义书籍变量信息(用于书源规则检索书籍信息)
     var readConfig: ReadConfig? = null,
-    var status:Int=0, //阅读状态 0为在读 1为已读 2为想读
+    var status:Int = 0, //阅读状态  0为在读 1为已读 2为想读
 ) : Parcelable, BaseBook {
 
     fun isLocalBook(): Boolean {

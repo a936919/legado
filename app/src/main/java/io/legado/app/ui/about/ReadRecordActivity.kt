@@ -26,9 +26,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jetbrains.anko.sdk27.listeners.onClick
 import org.jetbrains.anko.startActivity
-import java.lang.Long.max
-import java.text.ParsePosition
-import java.text.SimpleDateFormat
 import java.util.*
 
 class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
@@ -217,7 +214,8 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
             alert(R.string.delete) {
                 message = getString(R.string.sure_del_any, item.bookName)
                 okButton {
-                    App.db.readRecordDao.deleteByName(item.bookName,item.author)
+                    App.db.readRecordDao.deleteBook(item.bookName,item.author)
+                    App.db.timeRecordDao.deleteBook(item.bookName,item.author)
                     initData()
                 }
                 noButton()

@@ -62,4 +62,7 @@ interface TimeRecordDao {
 
     @Query("delete from timeRecord where date = :date")
     fun deleteDay(date:Long)
+
+    @Query("delete from timeRecord where bookName =:name and author = :author")
+    fun deleteBook(name:String, author:String)
 }
