@@ -68,6 +68,8 @@ object ChapterProvider {
     @JvmStatic
     lateinit var contentPaint: TextPaint
 
+    var ignoreImg = 0
+
     init {
         upStyle()
     }
@@ -87,6 +89,7 @@ object ChapterProvider {
         var durY = 0f
         textPages.add(TextPage())
         contents.forEachIndexed { index, text ->
+            if(index==0) ignoreImg = 0
             val matcher = AppPattern.imgPattern.matcher(text)
             if (matcher.find()) {
                 matcher.group(1)?.let {
@@ -96,10 +99,11 @@ object ChapterProvider {
                             book, bookChapter, src, durY, textPages, imageStyle
                         )
                     }
+                    if(index <= book.getDelParagraph()) ignoreImg++
                 }
             } else {
                 val isTitle = index == 0
-                val deleteParagraph = index >0 && index <= book.getDelParagraph()
+                val deleteParagraph = index >0 && index <= book.getDelParagraph()+ignoreImg
                 val textPaint = if (isTitle) titlePaint else contentPaint
                 if (!(isTitle && ReadBookConfig.titleMode == 2) && !deleteParagraph) {
                     durY = setTypeText(text, durY, textPages, stringBuilder, isTitle, textPaint)
