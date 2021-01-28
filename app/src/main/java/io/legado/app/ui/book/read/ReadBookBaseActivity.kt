@@ -28,10 +28,9 @@ import io.legado.app.service.help.ReadBook
 import io.legado.app.ui.book.read.config.BgTextConfigDialog
 import io.legado.app.ui.book.read.config.ClickActionConfigDialog
 import io.legado.app.ui.book.read.config.PaddingConfigDialog
-import io.legado.app.utils.ColorUtils
-import io.legado.app.utils.getPrefString
-import io.legado.app.utils.getViewModel
-import io.legado.app.utils.requestInputMethod
+import io.legado.app.utils.*
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * 阅读界面
@@ -194,16 +193,25 @@ abstract class ReadBookBaseActivity :
     @SuppressLint("InflateParams")
     fun showDelParagraphDialog() {
         ReadBook.book?.let { book ->
-            alert("请选择要删除的段落") {
+            alert("删除本章前面的段落") {
+                val moreId = 4
+                var checkId = min(moreId,book.getDelParagraph())
                 val alertBinding = DialogDeleteParagraphBinding.inflate(layoutInflater).apply {
                     root.setBackgroundColor(root.context.backgroundColor)
-                    editStart.setText((book.getDelParagraph()).toString())
+                    rgLayout.checkByIndex(checkId)
+                    llMore.isVisible = checkId==moreId
+                    val editId = max(moreId,book.getDelParagraph())
+                    editStart.setText(editId.toString())
+                    rgLayout.setOnCheckedChangeListener { _, _ ->
+                        llMore.isVisible = rgLayout.getCheckedIndex()==moreId
+                    }
                 }
                 customView = alertBinding.root
                 yesButton {
                     alertBinding.run {
-                        val start = editStart.text?.toString()?.toInt() ?: 0
-                        book.setDelParagraph(start)
+                        val id = rgLayout.getCheckedIndex()
+                        checkId = if(id==moreId) editStart.text?.toString()?.let { if(it.isNotBlank()) it.toInt() else 0 }?: 0 else id
+                        book.setDelParagraph(checkId)
                         ReadBook.loadContent(resetPageOffset = false)
                     }
                 }
