@@ -91,18 +91,12 @@ class EPUBFile(val book: io.legado.app.data.entities.Book) {
             val doc = Jsoup.parse(String(resource.data, mCharset))
             val startFragmentId =  chapter.startFragmentId
             val endFragmentId = chapter.endFragmentId
+            val body = doc.body()
             if(!startFragmentId.isNullOrBlank())
-                try {
-                    doc.body().getElementById(startFragmentId).previousElementSiblings().remove()
-                }catch (e:Exception){
-                    e.printStackTrace()
-                }
+                body.getElementById(startFragmentId)?.previousElementSiblings()?.remove()
             if(!endFragmentId.isNullOrBlank())
-                try {
-                     doc.body().getElementById(endFragmentId).nextElementSiblings().remove()
-                }catch (e:Exception){
-                    e.printStackTrace()
-                }
+                body.getElementById(endFragmentId)?.nextElementSiblings()?.remove()
+
             /*
             去除标题
             try {
@@ -116,20 +110,7 @@ class EPUBFile(val book: io.legado.app.data.entities.Book) {
                 e.printStackTrace()
             }*/
 
-            val elements = doc.body().children()
-/*          var discard = true
-            if (elements != null && elements.size > 0) {
-                if(!startFragmentId.isNullOrBlank()||!endFragmentId.isNullOrBlank()){
-                    if(startFragmentId.isNullOrBlank())  discard = false
-                    /*一条一条删除，防止内容过多卡死*/
-                    for (child in elements) {
-                        if (startFragmentId == child.id()) discard = false
-                        if (endFragmentId == child.id()) discard = true
-                        if (discard) child.remove()
-                    }
-                }
-                elements = doc.body().children()
-            }*/
+            val elements = body.children()
             elements.select("script").remove()
             elements.select("style").remove()
             return elements.outerHtml().htmlFormat()

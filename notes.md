@@ -75,6 +75,19 @@ val c = SimpleDateFormat("yyyy-MM-dd").parse("2021-01-25",ParsePosition(0)).time
                 elements.to
                 eBook.opfResource.data
             }
+            var discard = true
+            if (elements != null && elements.size > 0) {
+                if(!startFragmentId.isNullOrBlank()||!endFragmentId.isNullOrBlank()){
+                    if(startFragmentId.isNullOrBlank())  discard = false
+                    /*一条一条删除，防止内容过多卡死*/
+                    for (child in elements) {
+                        if (startFragmentId == child.id()) discard = false
+                        if (endFragmentId == child.id()) discard = true
+                        if (discard) child.remove()
+                    }
+                }
+                elements = doc.body().children()
+            }
 ```
 #### file
 ```
