@@ -219,6 +219,9 @@ class ReadBookActivity : ReadBookBaseActivity(),
                 }
             }
             R.id.menu_download -> showDownloadDialog()
+            R.id.menu_delete_paragraph ->{
+                showDelParagraphDialog()
+            }
             R.id.menu_add_bookmark -> {
                 val book = ReadBook.book
                 val page = ReadBook.curTextChapter?.page(ReadBook.durPageIndex())

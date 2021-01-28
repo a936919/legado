@@ -12,10 +12,7 @@ import io.legado.app.R
 import io.legado.app.base.VMBaseActivity
 import io.legado.app.constant.PreferKey
 import io.legado.app.data.entities.Bookmark
-import io.legado.app.databinding.ActivityBookReadBinding
-import io.legado.app.databinding.DialogBookmarkBinding
-import io.legado.app.databinding.DialogDownloadChoiceBinding
-import io.legado.app.databinding.DialogEditTextBinding
+import io.legado.app.databinding.*
 import io.legado.app.help.AppConfig
 import io.legado.app.help.LocalConfig
 import io.legado.app.help.ReadBookConfig
@@ -187,6 +184,27 @@ abstract class ReadBookBaseActivity :
                         val start = editStart.text?.toString()?.toInt() ?: 0
                         val end = editEnd.text?.toString()?.toInt() ?: book.totalChapterNum
                         CacheBook.start(this@ReadBookBaseActivity, book.bookUrl, start - 1, end - 1)
+                    }
+                }
+                noButton()
+            }.show()
+        }
+    }
+
+    @SuppressLint("InflateParams")
+    fun showDelParagraphDialog() {
+        ReadBook.book?.let { book ->
+            alert("请选择要删除的段落") {
+                val alertBinding = DialogDeleteParagraphBinding.inflate(layoutInflater).apply {
+                    root.setBackgroundColor(root.context.backgroundColor)
+                    editStart.setText((book.getDelParagraph()).toString())
+                }
+                customView = alertBinding.root
+                yesButton {
+                    alertBinding.run {
+                        val start = editStart.text?.toString()?.toInt() ?: 0
+                        book.setDelParagraph(start)
+                        ReadBook.loadContent(resetPageOffset = false)
                     }
                 }
                 noButton()

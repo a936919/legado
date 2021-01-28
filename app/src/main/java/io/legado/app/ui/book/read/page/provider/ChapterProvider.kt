@@ -99,8 +99,9 @@ object ChapterProvider {
                 }
             } else {
                 val isTitle = index == 0
+                val deleteParagraph = index >0 && index <= book.getDelParagraph()
                 val textPaint = if (isTitle) titlePaint else contentPaint
-                if (!(isTitle && ReadBookConfig.titleMode == 2)) {
+                if (!(isTitle && ReadBookConfig.titleMode == 2) && !deleteParagraph) {
                     durY = setTypeText(text, durY, textPages, stringBuilder, isTitle, textPaint)
                 }
             }

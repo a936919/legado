@@ -89,15 +89,34 @@ class EPUBFile(val book: io.legado.app.data.entities.Book) {
         epubBook?.let { eBook ->
             val resource = eBook.resources.getByHref(chapter.url)
             val doc = Jsoup.parse(String(resource.data, mCharset))
-            var elements = doc.body().children()
             val startFragmentId =  chapter.startFragmentId
             val endFragmentId = chapter.endFragmentId
-/*同一resource没有此Id会卡死在接口，兼容性不好*/
+
+            try {
+                if(!startFragmentId.isNullOrBlank()) doc.body().getElementById(startFragmentId).previousElementSiblings().remove()
+            }catch (e:Exception){
+                e.printStackTrace()
+            }
+            try {
+                if(!endFragmentId.isNullOrBlank())  doc.body().getElementById(endFragmentId).nextElementSiblings().remove()
+            }catch (e:Exception){
+                e.printStackTrace()
+            }
             /*
-            if(!startFragmentId.isNullOrBlank()) doc.getElementById(fragmentId).previousElementSiblings().remove()
-            if(!endFragmentId.isNullOrBlank())  doc.getElementById(fragmentId).nextElementSiblings().remove()
-            */
-            var discard = true
+            去除标题
+            try {
+                doc.body().getElementsByTag("h1").remove()
+                doc.body().getElementsByTag("h2").remove()
+                doc.body().getElementsByTag("h3").remove()
+                doc.body().getElementsByTag("h4").remove()
+                doc.body().getElementsByTag("h5").remove()
+                doc.body().getElementsByTag("h6").remove()
+            }catch (e:Exception){
+                e.printStackTrace()
+            }*/
+
+            val elements = doc.body().children()
+/*          var discard = true
             if (elements != null && elements.size > 0) {
                 if(!startFragmentId.isNullOrBlank()||!endFragmentId.isNullOrBlank()){
                     if(startFragmentId.isNullOrBlank())  discard = false
@@ -109,7 +128,7 @@ class EPUBFile(val book: io.legado.app.data.entities.Book) {
                     }
                 }
                 elements = doc.body().children()
-            }
+            }*/
             elements.select("script").remove()
             elements.select("style").remove()
             return elements.outerHtml().htmlFormat()

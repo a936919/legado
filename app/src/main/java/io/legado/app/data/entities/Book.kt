@@ -147,6 +147,14 @@ data class Book(
         config().pageAnim = pageAnim
     }
 
+    fun getDelParagraph(): Int {
+        return config().delParagraph
+    }
+
+    fun setDelParagraph(num: Int) {
+        config().delParagraph = num
+    }
+
     fun getFolderName(): String {
         //防止书名过长,只取9位
         var folderName = name.replace(AppPattern.fileNameRegex, "")
@@ -227,6 +235,7 @@ data class Book(
         var pageAnim: Int = -1,
         var reSegment: Boolean = false,
         var useReplaceRule: Boolean = AppConfig.replaceEnableDefault,         // 正文使用净化替换规则
+        var delParagraph:Int = 0
     ) : Parcelable
 
     class Converters {

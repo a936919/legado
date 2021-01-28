@@ -91,7 +91,10 @@
         android:id="@+id/menu_get_progress"
         android:title="@string/get_book_progress"
         app:showAsAction="never" />
-
+    <item
+        android:id="@+id/menu_delete_paragraph"
+        android:title="删除段首"
+        app:showAsAction="never" />
     <item
         android:id="@+id/menu_enable_replace"
         android:title="@string/replace_rule_title"
