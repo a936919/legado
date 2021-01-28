@@ -63,6 +63,18 @@ val c = SimpleDateFormat("yyyy-MM-dd").parse("2021-01-25",ParsePosition(0)).time
                     } catch (e: IOException) {
                         mqLog.d("err")
                     }
+
+            val refs = eBook.tableOfContents.tocReferences
+            if((refs == null || refs.isEmpty())&&eBook.opfResource!=null&&eBook.spine==null){
+                val d =
+                        Jsoup.parse(String(eBook.opfResource.data, mCharset))
+                val elements = d.getElementsByTag("package")
+                elements.remove()
+                val ele: Document? = Jsoup.parse("<package version=\"2.0\" unique-identifier=\"PrimaryID\" xmlns=\"http://www.idpf.org/2007/opf\">")
+                elements.add(0,ele)
+                elements.to
+                eBook.opfResource.data
+            }
 ```
 #### file
 ```
