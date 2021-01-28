@@ -91,17 +91,18 @@ class EPUBFile(val book: io.legado.app.data.entities.Book) {
             val doc = Jsoup.parse(String(resource.data, mCharset))
             val startFragmentId =  chapter.startFragmentId
             val endFragmentId = chapter.endFragmentId
-
-            try {
-                if(!startFragmentId.isNullOrBlank()) doc.body().getElementById(startFragmentId).previousElementSiblings().remove()
-            }catch (e:Exception){
-                e.printStackTrace()
-            }
-            try {
-                if(!endFragmentId.isNullOrBlank())  doc.body().getElementById(endFragmentId).nextElementSiblings().remove()
-            }catch (e:Exception){
-                e.printStackTrace()
-            }
+            if(!startFragmentId.isNullOrBlank())
+                try {
+                    doc.body().getElementById(startFragmentId).previousElementSiblings().remove()
+                }catch (e:Exception){
+                    e.printStackTrace()
+                }
+            if(!endFragmentId.isNullOrBlank())
+                try {
+                     doc.body().getElementById(endFragmentId).nextElementSiblings().remove()
+                }catch (e:Exception){
+                    e.printStackTrace()
+                }
             /*
             去除标题
             try {
