@@ -19,7 +19,7 @@ import java.util.*
         ReplaceRule::class, SearchBook::class, SearchKeyword::class, Cookie::class,
         RssSource::class, Bookmark::class, RssArticle::class, RssReadRecord::class,
         RssStar::class, TxtTocRule::class, ReadRecord::class, HttpTTS::class, Cache::class,
-        RuleSub::class,TopPath::class, TimeRecord::class],
+        RuleSub::class,TopPath::class, TimeRecord::class, EpubChapter::class],
     version = 28,
     exportSchema = true
 )
@@ -44,7 +44,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract val ruleSubDao: RuleSubDao
     abstract val topPathDao: TopPathDao
     abstract val timeRecordDao: TimeRecordDao
-
+    abstract val epubChapter: EpubChapterDao
     companion object {
 
         private const val DATABASE_NAME = "legado.db"

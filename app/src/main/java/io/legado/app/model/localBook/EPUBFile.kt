@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.text.TextUtils
 import io.legado.app.App
+import io.legado.app.data.entities.EpubChapter
 import io.legado.app.data.entities.BookChapter
 import io.legado.app.utils.*
 import nl.siegmann.epublib.domain.Book
@@ -93,26 +94,37 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
     }
 
     private fun getContent(chapter: BookChapter): String? {
-        epubBook?.let { eBook ->
-            val resource = eBook.resources.getByHref(chapter.url)
-            val doc = Jsoup.parse(String(resource.data, mCharset))
-            val startFragmentId =  chapter.startFragmentId
-            val endFragmentId = chapter.endFragmentId
-            val body = doc.body()
-            if(!startFragmentId.isNullOrBlank())
-                body.getElementById(startFragmentId)?.previousElementSiblings()?.remove()
-            if(!endFragmentId.isNullOrBlank()&&endFragmentId!=startFragmentId)
-                body.getElementById(endFragmentId)?.nextElementSiblings()?.remove()
+        var string = getChildChapter(chapter,chapter.url)
+        val childContends = App.db.epubChapter.get(chapter.url)
+        if(childContends!=null){
+            for(child in childContends){
+                string += child.href?.let { getChildChapter(chapter,it) }
+            }
+        }
+        return string
+    }
 
-            if(book.getDelHTag()){
-                doc.body().getElementsByTag("h1")?.remove()
-                doc.body().getElementsByTag("h2")?.remove()
-                doc.body().getElementsByTag("h3")?.remove()
-                doc.body().getElementsByTag("h4")?.remove()
-                doc.body().getElementsByTag("h5")?.remove()
-                doc.body().getElementsByTag("h6")?.remove()
+    private fun getChildChapter(chapter: BookChapter, href:String): String? {
+        epubBook?.let {
+            val body = Jsoup.parse(String(it.resources.getByHref(href).data, mCharset)).body()
+
+            if(chapter.url==href){
+                val startFragmentId =  chapter.startFragmentId
+                val endFragmentId = chapter.endFragmentId
+                if(!startFragmentId.isNullOrBlank())
+                    body.getElementById(startFragmentId)?.previousElementSiblings()?.remove()
+                if(!endFragmentId.isNullOrBlank()&&endFragmentId!=startFragmentId)
+                    body.getElementById(endFragmentId)?.nextElementSiblings()?.remove()
             }
 
+            if(book.getDelHTag()){
+                body.getElementsByTag("h1")?.remove()
+                body.getElementsByTag("h2")?.remove()
+                body.getElementsByTag("h3")?.remove()
+                body.getElementsByTag("h4")?.remove()
+                body.getElementsByTag("h5")?.remove()
+                body.getElementsByTag("h6")?.remove()
+            }
             val elements = body.children()
             elements.select("script").remove()
             elements.select("style").remove()
@@ -186,11 +198,41 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
                 for (i in chapterList.indices) {
                     chapterList[i].index = i
                 }
+                getChildChapter(chapterList)
             }
         }
         book.latestChapterTitle = chapterList.lastOrNull()?.title
         book.totalChapterNum = chapterList.size
         return chapterList
+    }
+
+    private fun getChildChapter(chapterList: ArrayList<BookChapter>){
+        epubBook?.let{
+            val contents = it.contents
+            var i = 0
+            var j = 0
+            var parentHref:String? = null
+            val chapters = ArrayList<EpubChapter>()
+            if(contents != null) {
+                while (i < contents.size){
+                    val content = contents[i]
+                    if(content.href == chapterList[j].url){
+                        parentHref = content.href
+                        j++
+                    }else if(!parentHref.isNullOrBlank()&&content.mediaType.toString().contains("htm")){
+                        val epubChapter = EpubChapter()
+                        epubChapter.index = i
+                        epubChapter.href = content.href
+                        epubChapter.parentHref = parentHref
+                        chapters.add(epubChapter)
+                    }
+                    i++
+                }
+            }
+
+            App.db.epubChapter.clear()
+            if(chapters.size>0) App.db.epubChapter.insert(*chapters.toTypedArray())
+        }
     }
 
     private fun parseMenu(

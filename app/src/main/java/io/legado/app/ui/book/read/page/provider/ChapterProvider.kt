@@ -93,13 +93,13 @@ object ChapterProvider {
             val matcher = AppPattern.imgPattern.matcher(text)
             if (matcher.find()) {
                 matcher.group(1)?.let {
-                    if (!book.isEpub()) {
+                    if (book.isEpub()) {
                         val src = NetworkUtils.getAbsoluteURL(bookChapter.url, it)
                         durY = setTypeImage(
                             book, bookChapter, src, durY, textPages, imageStyle
                         )
                     }
-                    if(index <= book.getDelParagraph()) ignoreImg++
+                    if(index <= book.getDelParagraph()+ignoreImg) ignoreImg++
                 }
             } else {
                 val isTitle = index == 0
