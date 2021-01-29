@@ -133,6 +133,7 @@ class ArrangeBookActivity : VMBaseActivity<ActivityArrangeBookBinding, ArrangeBo
                 else -> list.sortedByDescending { it.durChapterTime }
             }
             adapter.setItems(position,books)
+            position = -1
         })
     }
 

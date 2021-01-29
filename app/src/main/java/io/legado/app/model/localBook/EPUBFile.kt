@@ -174,7 +174,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
                             val doc =
                                 Jsoup.parse(String(resource.data, mCharset))
                             val elements = doc.getElementsByTag("title")
-                            if (elements.size > 0) {
+                            if (elements != null && elements.size > 0) {
                                 title = elements[0].text()
                             }
                         } catch (e: IOException) {
