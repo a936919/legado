@@ -94,7 +94,7 @@ class EPUBFile(val book: io.legado.app.data.entities.Book) {
             val body = doc.body()
             if(!startFragmentId.isNullOrBlank())
                 body.getElementById(startFragmentId)?.previousElementSiblings()?.remove()
-            if(!endFragmentId.isNullOrBlank())
+            if(!endFragmentId.isNullOrBlank()&&endFragmentId!=startFragmentId)
                 body.getElementById(endFragmentId)?.nextElementSiblings()?.remove()
 
             /*
@@ -125,6 +125,11 @@ class EPUBFile(val book: io.legado.app.data.entities.Book) {
 
     private fun getChapterList(): ArrayList<BookChapter> {
         val chapterList = ArrayList<BookChapter>()
+        if(epubBook == null) {
+            eFile = null
+            book.intro = "书籍导入异常"
+            return chapterList
+        }
         epubBook?.let { eBook ->
             val metadata = eBook.metadata
             book.name = book.originName//metadata.firstTitle
