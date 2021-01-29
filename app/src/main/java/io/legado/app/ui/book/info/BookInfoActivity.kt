@@ -19,8 +19,7 @@ import io.legado.app.constant.BookType
 import io.legado.app.constant.Theme
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
-import io.legado.app.data.entities.ReadRecord
-import io.legado.app.data.entities.rule.TimeRecord
+import io.legado.app.data.entities.TimeRecord
 import io.legado.app.databinding.ActivityBookInfoBinding
 import io.legado.app.databinding.DialogBookStatusBinding
 import io.legado.app.help.BlurTransformation
@@ -30,7 +29,6 @@ import io.legado.app.lib.dialogs.alert
 import io.legado.app.lib.theme.backgroundColor
 import io.legado.app.lib.theme.bottomBackground
 import io.legado.app.lib.theme.getPrimaryTextColor
-import io.legado.app.ui.about.ReadRecordActivity
 import io.legado.app.ui.audio.AudioPlayActivity
 import io.legado.app.ui.book.changecover.ChangeCoverDialog
 import io.legado.app.ui.book.changesource.ChangeSourceDialog

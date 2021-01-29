@@ -12,7 +12,7 @@ import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.base.adapter.RecyclerAdapter
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.ReadRecordShow
-import io.legado.app.data.entities.rule.TimeRecord
+import io.legado.app.data.entities.TimeRecord
 import io.legado.app.databinding.ActivityReadRecordBinding
 import io.legado.app.databinding.DialogBookStatusBinding
 import io.legado.app.databinding.ItemReadRecordBinding

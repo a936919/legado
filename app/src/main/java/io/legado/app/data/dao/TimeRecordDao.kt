@@ -1,7 +1,7 @@
 package io.legado.app.data.dao
 
 import androidx.room.*
-import io.legado.app.data.entities.rule.TimeRecord
+import io.legado.app.data.entities.TimeRecord
 
 @Dao
 interface TimeRecordDao {

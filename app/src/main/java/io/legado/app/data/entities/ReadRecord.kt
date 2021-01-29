@@ -3,7 +3,6 @@ package io.legado.app.data.entities
 import androidx.room.Entity
 import io.legado.app.App
 import io.legado.app.constant.BookType
-import io.legado.app.data.entities.rule.TimeRecord
 
 @Entity(tableName = "readRecord", primaryKeys = ["androidId", "bookName","author"])
 data class ReadRecord(

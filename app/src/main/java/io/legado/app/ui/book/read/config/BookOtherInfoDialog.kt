@@ -7,12 +7,11 @@ import io.legado.app.App
 import io.legado.app.R
 import io.legado.app.base.BaseDialogFragment
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.rule.TimeRecord
+import io.legado.app.data.entities.TimeRecord
 import io.legado.app.databinding.DialogReadBookOtherInfoBinding
 import io.legado.app.lib.theme.readCfgBottomBg
 import io.legado.app.lib.theme.readCfgBottomText
 import io.legado.app.service.help.ReadBook
-import io.legado.app.ui.about.ReadRecordActivity
 import io.legado.app.ui.book.info.BookInfoActivity
 import io.legado.app.ui.book.info.BookInfoViewModel
 import io.legado.app.ui.book.read.ReadBookActivity
@@ -144,7 +143,7 @@ class BookOtherInfoDialog : BaseDialogFragment()  {
         bookAuthor.text = book.getRealAuthor()
         var string = "[${book.durChapterIndex + 1}/${book.totalChapterNum}]  ${book.durChapterTitle}"
         bookChapter.text = string
-        val nowReadTime = App.db.timeRecordDao.getReadTime(book.name,book.author,TimeRecord.getDate())?:0
+        val nowReadTime = App.db.timeRecordDao.getReadTime(book.name,book.author, TimeRecord.getDate())?:0
         string = "今日阅读  ${TimeRecord.formatDuring(nowReadTime)}"
         readTime.text =  string
         val readTime =  App.db.timeRecordDao.getReadTime(book.name,book.author) ?: 0

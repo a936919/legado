@@ -12,7 +12,7 @@ import io.legado.app.R
 import io.legado.app.constant.EventBus
 import io.legado.app.constant.PreferKey
 import io.legado.app.data.entities.*
-import io.legado.app.data.entities.rule.TimeRecord
+import io.legado.app.data.entities.TimeRecord
 import io.legado.app.help.DefaultData
 import io.legado.app.help.LauncherIconHelp
 import io.legado.app.help.ReadBookConfig

@@ -6,7 +6,7 @@ import com.hankcs.hanlp.HanLP
 import io.legado.app.App
 import io.legado.app.constant.BookType
 import io.legado.app.data.entities.*
-import io.legado.app.data.entities.rule.TimeRecord
+import io.legado.app.data.entities.TimeRecord
 import io.legado.app.help.*
 import io.legado.app.help.ReadBookConfig.context
 import io.legado.app.help.coroutine.Coroutine
@@ -17,7 +17,6 @@ import io.legado.app.ui.book.read.page.entities.TextChapter
 import io.legado.app.ui.book.read.page.entities.TextPage
 import io.legado.app.ui.book.read.page.provider.ChapterProvider
 import io.legado.app.ui.book.read.page.provider.ImageProvider
-import io.legado.app.utils.mqLog
 import kotlinx.coroutines.*
 import org.jetbrains.anko.getStackTraceString
 import org.jetbrains.anko.toast

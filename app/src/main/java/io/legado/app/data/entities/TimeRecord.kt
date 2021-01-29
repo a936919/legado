@@ -1,4 +1,4 @@
-package io.legado.app.data.entities.rule
+package io.legado.app.data.entities
 
 import android.annotation.SuppressLint
 import androidx.room.Entity
