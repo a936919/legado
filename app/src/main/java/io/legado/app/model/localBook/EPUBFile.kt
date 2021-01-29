@@ -49,6 +49,11 @@ class EPUBFile(val book: io.legado.app.data.entities.Book) {
         ): InputStream? {
             return getEFile(book).getImage(href)
         }
+
+        @Synchronized
+        fun getBookInfo(book: io.legado.app.data.entities.Book){
+            return getEFile(book).getBookInfo()
+        }
     }
 
     private var epubBook: Book? = null
@@ -64,6 +69,7 @@ class EPUBFile(val book: io.legado.app.data.entities.Book) {
                 File(book.bookUrl).inputStream()
             }
             epubBook = epubReader.readEpub(inputStream)
+
             if (book.coverUrl.isNullOrEmpty()) {
                 book.coverUrl = FileUtils.getPath(
                     App.INSTANCE.externalFilesDir,
@@ -123,25 +129,28 @@ class EPUBFile(val book: io.legado.app.data.entities.Book) {
         return epubBook?.resources?.getByHref(abHref)?.inputStream
     }
 
-    private fun getChapterList(): ArrayList<BookChapter> {
-        val chapterList = ArrayList<BookChapter>()
+    private fun getBookInfo(){
         if(epubBook == null) {
             eFile = null
             book.intro = "书籍导入异常"
-            return chapterList
         }
-        epubBook?.let { eBook ->
-            val metadata = eBook.metadata
-            book.name = book.originName//metadata.firstTitle
+        else{
+            val metadata = epubBook!!.metadata
+            book.name = book.originName
             if (metadata.authors.size > 0) {
                 val author =
-                    metadata.authors[0].toString().replace("^, |, $".toRegex(), "")
+                        metadata.authors[0].toString().replace("^, |, $".toRegex(), "")
                 book.author = author
             }
             if (metadata.descriptions.size > 0) {
                 book.intro = Jsoup.parse(metadata.descriptions[0]).text()
             }
+        }
+    }
 
+    private fun getChapterList(): ArrayList<BookChapter> {
+        val chapterList = ArrayList<BookChapter>()
+        epubBook?.let { eBook ->
             val refs = eBook.tableOfContents.tocReferences
             if (refs == null || refs.isEmpty()) {
                 val spineReferences = eBook.spine.spineReferences

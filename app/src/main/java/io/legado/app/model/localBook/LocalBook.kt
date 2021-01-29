@@ -71,6 +71,8 @@ object LocalBook {
         if (smhStart != -1 && smhEnd != -1) {
             name = (name.substring(smhStart + 1, smhEnd))
         }
+
+
         val book = Book(
             bookUrl = path,
             name = fileName,
@@ -82,6 +84,7 @@ object LocalBook {
                 "${MD5Utils.md5Encode16(path)}.jpg"
             )
         )
+        if(book.isEpub()) EPUBFile.getBookInfo(book)
         App.db.bookDao.insert(book)
         return book
     }
