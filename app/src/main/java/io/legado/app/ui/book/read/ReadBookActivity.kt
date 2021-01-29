@@ -180,7 +180,6 @@ class ReadBookActivity : ReadBookBaseActivity(),
                     else -> when (item.itemId) {
                         R.id.menu_enable_replace -> item.isChecked = book.getUseReplaceRule()
                         R.id.menu_re_segment -> item.isChecked = book.getReSegment()
-                        R.id.menu_del_h_tag -> item.isChecked = book.getDelHTag()
                         R.id.ReplaceRule -> item.isVisible = true
                     }
                 }
@@ -191,6 +190,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
                     R.id.menu_get_progress,
                     R.id.menu_book_info,
                     R.id.menu_help -> item.isVisible = false
+                    R.id.menu_del_h_tag -> item.isChecked = book.getDelHTag()
                 }
             }
         }

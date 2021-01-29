@@ -18,7 +18,7 @@ import java.io.InputStream
 import java.nio.charset.Charset
 import java.util.*
 
-class EPUBFile(val book: io.legado.app.data.entities.Book) {
+class EPUBFile(var book: io.legado.app.data.entities.Book) {
 
     companion object {
         private var eFile: EPUBFile? = null
@@ -29,6 +29,7 @@ class EPUBFile(val book: io.legado.app.data.entities.Book) {
                 eFile = EPUBFile(book)
                 return eFile!!
             }
+            eFile?.book = book
             return eFile!!
         }
 
