@@ -103,18 +103,14 @@ class EPUBFile(val book: io.legado.app.data.entities.Book) {
             if(!endFragmentId.isNullOrBlank()&&endFragmentId!=startFragmentId)
                 body.getElementById(endFragmentId)?.nextElementSiblings()?.remove()
 
-            /*
-            去除标题
-            try {
-                doc.body().getElementsByTag("h1").remove()
-                doc.body().getElementsByTag("h2").remove()
-                doc.body().getElementsByTag("h3").remove()
-                doc.body().getElementsByTag("h4").remove()
-                doc.body().getElementsByTag("h5").remove()
-                doc.body().getElementsByTag("h6").remove()
-            }catch (e:Exception){
-                e.printStackTrace()
-            }*/
+            if(book.getDelHTag()){
+                doc.body().getElementsByTag("h1")?.remove()
+                doc.body().getElementsByTag("h2")?.remove()
+                doc.body().getElementsByTag("h3")?.remove()
+                doc.body().getElementsByTag("h4")?.remove()
+                doc.body().getElementsByTag("h5")?.remove()
+                doc.body().getElementsByTag("h6")?.remove()
+            }
 
             val elements = body.children()
             elements.select("script").remove()

@@ -180,6 +180,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
                     else -> when (item.itemId) {
                         R.id.menu_enable_replace -> item.isChecked = book.getUseReplaceRule()
                         R.id.menu_re_segment -> item.isChecked = book.getReSegment()
+                        R.id.menu_del_h_tag -> item.isChecked = book.getDelHTag()
                         R.id.ReplaceRule -> item.isVisible = true
                     }
                 }
@@ -236,6 +237,11 @@ class ReadBookActivity : ReadBookBaseActivity(),
                     )
                     showBookMark(bookmark)
                 }
+            }
+            R.id.menu_del_h_tag->ReadBook.book?.let {
+                it.setDelHTag(!it.getDelHTag())
+                menu?.findItem(R.id.menu_del_h_tag)?.isChecked = it.getDelHTag()
+                ReadBook.loadContent(resetPageOffset = false)
             }
             R.id.menu_copy_text ->
                 TextDialog.show(supportFragmentManager, ReadBook.curTextChapter?.getContent())

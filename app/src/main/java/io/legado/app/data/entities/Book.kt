@@ -162,6 +162,14 @@ data class Book(
         return folderName + MD5Utils.md5Encode16(bookUrl)
     }
 
+    fun setDelHTag(b:Boolean){
+        config().delH = b
+    }
+
+    fun getDelHTag():Boolean{
+        return config().delH
+    }
+
     fun toSearchBook() = SearchBook(
         name = name,
         author = author,
@@ -235,7 +243,8 @@ data class Book(
         var pageAnim: Int = -1,
         var reSegment: Boolean = false,
         var useReplaceRule: Boolean = AppConfig.replaceEnableDefault,         // 正文使用净化替换规则
-        var delParagraph:Int = 0
+        var delParagraph:Int = 0,//去除段首
+        var delH:Boolean =false//去除H标签
     ) : Parcelable
 
     class Converters {

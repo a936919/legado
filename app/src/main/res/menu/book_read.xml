@@ -44,7 +44,12 @@
             android:icon="@drawable/ic_book_source_line"
             android:title="@string/set_charset"
             app:showAsAction="always" />
-
+        <item
+            android:id="@+id/menu_del_h_tag"
+            android:title="删除H标签"
+            android:checkable="true"
+            android:checked="false"
+            app:showAsAction="never" />
     </group>
 
     <item
