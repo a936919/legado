@@ -149,7 +149,7 @@ class BookInfoActivity :
 
     override fun onMenuOpened(featureId: Int, menu: Menu): Boolean {
         menu.findItem(R.id.menu_can_update)?.isChecked =
-            viewModel.bookData.value?.canUpdate ?: true
+            viewModel.bookData.value?.canUpdate ?: false
         return super.onMenuOpened(featureId, menu)
     }
 
