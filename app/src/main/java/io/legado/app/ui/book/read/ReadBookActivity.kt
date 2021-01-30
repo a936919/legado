@@ -189,6 +189,8 @@ class ReadBookActivity : ReadBookBaseActivity(),
                     R.id.menu_download,
                     R.id.menu_get_progress,
                     R.id.menu_book_info,
+                    R.id.menu_page_anim,
+                    R.id.menu_disable_book_source,
                     R.id.menu_help -> item.isVisible = false
                     R.id.menu_del_h_tag -> item.isChecked =  book.getDelTag(Book.hTag)
                     R.id.menu_del_img_tag -> item.isChecked =  book.getDelTag(Book.imgTag)
