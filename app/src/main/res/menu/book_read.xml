@@ -50,6 +50,18 @@
             android:checkable="true"
             android:checked="false"
             app:showAsAction="never" />
+        <item
+            android:id="@+id/menu_del_img_tag"
+            android:title="删除img标签"
+            android:checkable="true"
+            android:checked="false"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/menu_del_a_rt_tag"
+            android:title="删除a/rt标签"
+            android:checkable="true"
+            android:checked="false"
+            app:showAsAction="never" />
     </group>
 
     <item

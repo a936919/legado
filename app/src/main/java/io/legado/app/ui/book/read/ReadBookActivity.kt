@@ -190,7 +190,9 @@ class ReadBookActivity : ReadBookBaseActivity(),
                     R.id.menu_get_progress,
                     R.id.menu_book_info,
                     R.id.menu_help -> item.isVisible = false
-                    R.id.menu_del_h_tag -> item.isChecked = book.getDelHTag()
+                    R.id.menu_del_h_tag -> item.isChecked =  book.getDelTag(Book.hTag)
+                    R.id.menu_del_img_tag -> item.isChecked =  book.getDelTag(Book.imgTag)
+                    R.id.menu_del_a_rt_tag -> item.isChecked =  book.getDelTag(Book.artTag)
                 }
             }
         }
@@ -239,8 +241,18 @@ class ReadBookActivity : ReadBookBaseActivity(),
                 }
             }
             R.id.menu_del_h_tag->ReadBook.book?.let {
-                it.setDelHTag(!it.getDelHTag())
-                menu?.findItem(R.id.menu_del_h_tag)?.isChecked = it.getDelHTag()
+                it.setDelTag(Book.hTag)
+                menu?.findItem(R.id.menu_del_h_tag)?.isChecked =  it.getDelTag(Book.hTag)
+                ReadBook.loadContent(resetPageOffset = false)
+            }
+            R.id.menu_del_img_tag->ReadBook.book?.let {
+                it.setDelTag(Book.imgTag)
+                menu?.findItem(R.id.menu_del_img_tag)?.isChecked =  it.getDelTag(Book.imgTag)
+                ReadBook.loadContent(resetPageOffset = false)
+            }
+            R.id.menu_del_a_rt_tag->ReadBook.book?.let {
+                it.setDelTag(Book.artTag)
+                menu?.findItem(R.id.menu_del_a_rt_tag)?.isChecked =  it.getDelTag(Book.artTag)
                 ReadBook.loadContent(resetPageOffset = false)
             }
             R.id.menu_copy_text ->

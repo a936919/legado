@@ -162,12 +162,12 @@ data class Book(
         return folderName + MD5Utils.md5Encode16(bookUrl)
     }
 
-    fun setDelHTag(b:Boolean){
-        config().delH = b
+    fun setDelTag(tag:Long){
+        config().delTag = if((config().delTag and tag) == tag) config().delTag and tag.inv() else config().delTag or tag
     }
 
-    fun getDelHTag():Boolean{
-        return config().delH
+    fun getDelTag(tag:Long):Boolean{
+        return  config().delTag and tag == tag
     }
 
     fun toSearchBook() = SearchBook(
@@ -238,13 +238,19 @@ data class Book(
         }
     }
 
+    companion object{
+        const val hTag = 2L
+        const val artTag = 4L
+        const val imgTag = 8L
+    }
+
     @Parcelize
     data class ReadConfig(
         var pageAnim: Int = -1,
         var reSegment: Boolean = false,
         var useReplaceRule: Boolean = AppConfig.replaceEnableDefault,         // 正文使用净化替换规则
         var delParagraph:Int = 0,//去除段首
-        var delH:Boolean =false//去除H标签
+        var delTag:Long =0L//去除标签
     ) : Parcelable
 
     class Converters {
