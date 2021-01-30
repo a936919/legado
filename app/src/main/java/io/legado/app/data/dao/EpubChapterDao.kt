@@ -5,15 +5,23 @@ import io.legado.app.data.entities.EpubChapter
 
 @Dao
 interface EpubChapterDao {
+    @get:Query("select * from epubChapters")
+    val all: List<EpubChapter>
 
-    @Query("select * from epubChapters Where parentHref = :parentHref ")
-    fun get(parentHref: String): List<EpubChapter>?
+    @Query("select bookUrl from epubChapters Where bookUrl = :bookUrl")
+    fun get(bookUrl: String):String
+
+    @Query("select * from epubChapters Where bookUrl = :bookUrl and parentHref = :parentHref ")
+    fun get(bookUrl: String,parentHref: String): List<EpubChapter>?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(vararg chapter: EpubChapter)
 
     @Query("delete from epubChapters")
     fun clear()
+
+    @Query("delete from epubChapters Where bookUrl = :bookUrl")
+    fun deleteByName(bookUrl: String)
 
     @Delete
     fun delete(vararg chapter: EpubChapter)

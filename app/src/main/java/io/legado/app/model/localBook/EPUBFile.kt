@@ -95,7 +95,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
 
     private fun getContent(chapter: BookChapter): String? {
         var string = getChildChapter(chapter,chapter.url)
-        val childContends = App.db.epubChapter.get(chapter.url)
+        val childContends = App.db.epubChapter.get(book.bookUrl,chapter.url)
         if(childContends!=null){
             for(child in childContends){
                 string += child.href?.let { getChildChapter(chapter,it) }
@@ -219,12 +219,13 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
 
     private fun getChildChapter(chapterList: ArrayList<BookChapter>){
         epubBook?.let{
+            if(App.db.epubChapter.get(book.bookUrl)==book.bookUrl) return
             val contents = it.contents
-            var i = 0
-            var j = 0
-            var parentHref:String? = null
             val chapters = ArrayList<EpubChapter>()
             if(contents != null) {
+                var i = 0
+                var j = 0
+                var parentHref:String? = null
                 while (i < contents.size){
                     val content = contents[i]
                     if(content.href == chapterList[j].url){
@@ -232,7 +233,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
                         j++
                     }else if(!parentHref.isNullOrBlank()&&content.mediaType.toString().contains("htm")){
                         val epubChapter = EpubChapter()
-                        epubChapter.index = i
+                        epubChapter.bookUrl = book.bookUrl
                         epubChapter.href = content.href
                         epubChapter.parentHref = parentHref
                         chapters.add(epubChapter)
@@ -241,7 +242,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
                 }
             }
 
-            App.db.epubChapter.clear()
+            App.db.epubChapter.deleteByName(book.bookUrl)
             if(chapters.size>0) App.db.epubChapter.insert(*chapters.toTypedArray())
         }
     }
