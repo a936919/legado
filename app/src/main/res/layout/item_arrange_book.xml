@@ -51,6 +51,7 @@
         app:layout_constraintTop_toBottomOf="@+id/tv_name"
         app:layout_constraintLeft_toRightOf="@+id/iv_cover"
         app:layout_constraintBottom_toTopOf="@+id/tv_group_s" />
+
     <TextView
         android:id="@+id/tv_group_s"
         android:layout_width="wrap_content"
@@ -62,15 +63,16 @@
         app:layout_constraintLeft_toRightOf="@+id/iv_cover"
         app:layout_constraintBottom_toBottomOf="parent" />
     <TextView
-        android:id="@+id/tv_group"
+        android:id="@+id/tv_status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:padding="8dp"
-        android:text="@string/group"
+        android:text="标记"
         app:layout_constraintTop_toBottomOf="@id/tv_author"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintRight_toLeftOf="@+id/tv_delete" />
+
 
     <TextView
         android:id="@+id/tv_delete"
@@ -81,15 +83,15 @@
         android:text="@string/delete"
         app:layout_constraintTop_toBottomOf="@id/tv_author"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintRight_toLeftOf="@+id/tv_status" />
+        app:layout_constraintRight_toLeftOf="@+id/tv_group" />
 
     <TextView
-        android:id="@+id/tv_status"
+        android:id="@+id/tv_group"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:padding="8dp"
-        android:text="标记"
+        android:text="@string/group"
         app:layout_constraintTop_toBottomOf="@id/tv_author"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintRight_toLeftOf="@+id/tv_info" />
