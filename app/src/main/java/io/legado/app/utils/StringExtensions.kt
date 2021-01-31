@@ -60,6 +60,8 @@ fun String?.htmlFormat(): String {
         .replace("\\s*\\n+\\s*".toRegex(), "\n　　")
         .replace("^[\\n\\s]+".toRegex(), "　　")
         .replace("[\\n\\s]+$".toRegex(), "")
+        .replace("&amp;".toRegex(), "&")
+        .replace("&nbsp;".toRegex(), " ")
 }
 
 fun String.splitNotBlank(vararg delimiter: String): Array<String> = run {
