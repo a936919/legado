@@ -98,7 +98,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
         val childContends = App.db.epubChapter.get(book.bookUrl,chapter.url)
         if(childContends!=null){
             for(child in childContends){
-                string += child.href?.let { getChildChapter(chapter,it) }
+                string += "\n"+getChildChapter(chapter,child.href)
             }
         }
         return string

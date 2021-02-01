@@ -51,8 +51,8 @@ object ReadBook {
         readRecord = book.toReadRecord()
         timeRecord = readRecord.toTimeRecord()
         timeRecord.date = TimeRecord.getDate()
-        timeRecord.readTime = App.db.timeRecordDao.getReadTime(App.androidId,book.name,book.author,timeRecord.date)?:0
-        timeRecord.listenTime = App.db.timeRecordDao.getListenTime(App.androidId,book.name,book.author,timeRecord.date)?:0
+        timeRecord.readTime = App.db.timeRecordDao.getReadTime(App.androidId,timeRecord.bookName,timeRecord.author,timeRecord.date)?:0
+        timeRecord.listenTime = App.db.timeRecordDao.getListenTime(App.androidId,timeRecord.bookName,timeRecord.author,timeRecord.date)?:0
         saveReadRecord()
         durChapterIndex = book.durChapterIndex
         durChapterPos = book.durChapterPos
@@ -115,16 +115,24 @@ object ReadBook {
 
     fun upReadStartTime() {
         Coroutine.async {
+            val dataChange =  timeRecord.date != TimeRecord.getDate()
             var dif =  System.currentTimeMillis() - readStartTime
             val maxInterval = 3*60*1000L
-            //翻页时间超过3分钟，不计为阅读时间
-            dif = min(dif,maxInterval)
+            dif = min(dif,maxInterval)//翻页时间超过3分钟，不计为阅读时间
+            readStartTime = System.currentTimeMillis()
+
+            if(dataChange){
+                timeRecord.date = TimeRecord.getDate()
+                timeRecord.readTime = App.db.timeRecordDao.getReadTime(App.androidId,timeRecord.bookName,timeRecord.author,timeRecord.date)?:0
+                timeRecord.listenTime = App.db.timeRecordDao.getListenTime(App.androidId,timeRecord.bookName,timeRecord.author,timeRecord.date)?:0
+            }
+
             if (BaseReadAloudService.isRun)
                 timeRecord.listenTime = timeRecord.listenTime + dif
             else
                 timeRecord.readTime = timeRecord.readTime + dif
-            readStartTime = System.currentTimeMillis()
-            App.db.timeRecordDao.update(timeRecord)
+
+            if(dataChange) App.db.timeRecordDao.insert(timeRecord) else App.db.timeRecordDao.update(timeRecord)
         }
     }
 
