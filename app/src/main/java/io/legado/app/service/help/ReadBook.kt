@@ -107,7 +107,6 @@ object ReadBook {
     fun uploadProgress(syncBookProgress: Boolean = AppConfig.syncBookProgress) {
         if (syncBookProgress) {
             book?.let {
-                Toast.makeText(context,"上传阅读记录中",Toast.LENGTH_SHORT).show()
                 BookWebDav.uploadBookProgress(it)
             }
         }
