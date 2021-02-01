@@ -1,19 +1,19 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "414c7503fa98c3f2e328",
-    "url": "css/about.dbe575e1.css"
+    "revision": "a9004c63fa23ebf0d178",
+    "url": "css/about.2e301c2a.css"
   },
   {
-    "revision": "13925596cfa342cbb55d",
-    "url": "css/app.e4c919b7.css"
+    "revision": "a7e3680814e7c9bf2b96",
+    "url": "css/app.e1c0d2e4.css"
   },
   {
-    "revision": "d53f06b957b78ddb78b7",
-    "url": "css/chunk-vendors.ad4ff18f.css"
+    "revision": "d29a2f0c6da9bf76319c",
+    "url": "css/chunk-vendors.3f89146a.css"
   },
   {
-    "revision": "0607c99f49945c348397",
-    "url": "css/detail.b4324411.css"
+    "revision": "4b6ce394786d96e3a94e",
+    "url": "css/detail.5a9cce66.css"
   },
   {
     "revision": "535877f50039c0cb49a6196a5b7517cd",
@@ -40,35 +40,35 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "img/noCover.b5c48bc1.jpeg"
   },
   {
-    "revision": "8ff165c058a9618dc10065e65133a4e7",
+    "revision": "0db525f4fa72ef8801d9ed61e1b7eaff",
     "url": "index.html"
   },
   {
-    "revision": "414c7503fa98c3f2e328",
-    "url": "js/about.d8b0dc91.js"
+    "revision": "a9004c63fa23ebf0d178",
+    "url": "js/about.829f15ca.js"
   },
   {
-    "revision": "2c81bd893f3a92f018d8",
-    "url": "js/about~detail.1caf6ef5.js"
+    "revision": "4b21671ca8ef533aded5",
+    "url": "js/about~detail.7b1f6d4f.js"
   },
   {
-    "revision": "13925596cfa342cbb55d",
-    "url": "js/app.d60dad33.js"
+    "revision": "a7e3680814e7c9bf2b96",
+    "url": "js/app.6618a559.js"
   },
   {
-    "revision": "d53f06b957b78ddb78b7",
-    "url": "js/chunk-vendors.060eee33.js"
+    "revision": "d29a2f0c6da9bf76319c",
+    "url": "js/chunk-vendors.8e99d533.js"
   },
   {
-    "revision": "0607c99f49945c348397",
-    "url": "js/detail.6a5cc86c.js"
+    "revision": "4b6ce394786d96e3a94e",
+    "url": "js/detail.eec51a24.js"
   },
   {
-    "revision": "b46d04eb43bc31ca0f9f95121646440d",
+    "revision": "e600f18b9b0fb7da8ce9e738fc74ea87",
     "url": "manifest.json"
   },
   {
-    "revision": "b6216d61c03e6ce0c9aea6ca7808f7ca",
+    "revision": "735ab4f94fbcd57074377afca324c813",
     "url": "robots.txt"
   }
 ]);

@@ -8,10 +8,7 @@ import io.legado.app.data.entities.ReplaceRule
 import io.legado.app.help.BookHelp
 import io.legado.app.model.webBook.WebBook
 import io.legado.app.service.help.ReadBook
-import io.legado.app.utils.GSON
-import io.legado.app.utils.cnCompare
-import io.legado.app.utils.fromJsonObject
-import io.legado.app.utils.getPrefInt
+import io.legado.app.utils.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -46,6 +43,17 @@ object BookshelfController {
         }
         val chapterList = App.db.bookChapterDao.getChapterList(bookUrl)
         return returnData.setData(chapterList)
+    }
+
+    fun saveReadRecord(parameters: Map<String, List<String>>): ReturnData {
+        val bookUrl = parameters["url"]?.getOrNull(0)
+        val returnData = ReturnData()
+        if (bookUrl.isNullOrEmpty()) {
+            return returnData.setErrorMsg("参数url不能为空，请指定书籍地址")
+        }
+        val book = App.db.bookDao.getBook(bookUrl)
+        mqLog.d("saveReadRecord ${book?.name} ${book?.author}")
+        return returnData.setData(" ")
     }
 
     fun getBookContent(parameters: Map<String, List<String>>): ReturnData {
