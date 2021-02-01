@@ -4,6 +4,7 @@ import io.legado.app.App
 import io.legado.app.api.ReturnData
 import io.legado.app.constant.PreferKey
 import io.legado.app.data.entities.Book
+import io.legado.app.data.entities.ReplaceRule
 import io.legado.app.help.BookHelp
 import io.legado.app.model.webBook.WebBook
 import io.legado.app.service.help.ReadBook
@@ -11,7 +12,10 @@ import io.legado.app.utils.GSON
 import io.legado.app.utils.cnCompare
 import io.legado.app.utils.fromJsonObject
 import io.legado.app.utils.getPrefInt
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import org.jetbrains.anko.toast
 
 object BookshelfController {
 
@@ -59,22 +63,50 @@ object BookshelfController {
         if (book == null || chapter == null) {
             returnData.setErrorMsg("未找到")
         } else {
-            val content: String? = BookHelp.getContent(book, chapter)
-            if (content != null) {
-                saveBookReadIndex(book, index)
-                returnData.setData(content)
-            } else {
+            var content: String? = BookHelp.getContent(book, chapter)
+            if (content == null){
                 App.db.bookSourceDao.getBookSource(book.origin)?.let { source ->
                     runBlocking {
                         WebBook(source).getContentAwait(this, book, chapter)
                     }.let {
-                        saveBookReadIndex(book, index)
-                        returnData.setData(it)
+                        content = it
                     }
                 } ?: returnData.setErrorMsg("未找到书源")
             }
+
+            if(content!=null){
+                content = processReplace(book, content!!)
+                saveBookReadIndex(book, index)
+                returnData.setData(content!!)
+            }
+            else{
+                returnData.setErrorMsg("未找到")
+            }
         }
         return returnData
+    }
+
+    private fun processReplace(book:Book, content:String):String{
+        val replaceRules = arrayListOf<ReplaceRule>()
+        replaceRules.clear()
+        replaceRules.addAll(App.db.replaceRuleDao.findEnabledByScope(book.name, book.origin))
+        var content1 = content
+        if (book.getUseReplaceRule()) {
+            replaceRules.forEach { item ->
+                if (item.pattern.isNotEmpty()) {
+                    try {
+                        content1 = if (item.isRegex) {
+                            content1.replace(item.pattern.toRegex(), item.replacement)
+                        } else {
+                            content1.replace(item.pattern, item.replacement)
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+        }
+        return content1
     }
 
     fun saveBook(postData: String?): ReturnData {
