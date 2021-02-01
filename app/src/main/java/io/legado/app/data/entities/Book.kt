@@ -240,7 +240,7 @@ data class Book(
 
     companion object{
         const val hTag = 2L
-        const val artTag = 4L
+        const val rubyTag = 4L
         const val imgTag = 8L
     }
 

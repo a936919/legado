@@ -194,7 +194,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
                     R.id.menu_help -> item.isVisible = false
                     R.id.menu_del_h_tag -> item.isChecked =  book.getDelTag(Book.hTag)
                     R.id.menu_del_img_tag -> item.isChecked =  book.getDelTag(Book.imgTag)
-                    R.id.menu_del_a_rt_tag -> item.isChecked =  book.getDelTag(Book.artTag)
+                    R.id.menu_del_ruby_tag -> item.isChecked =  book.getDelTag(Book.rubyTag)
                 }
             }
         }
@@ -252,9 +252,9 @@ class ReadBookActivity : ReadBookBaseActivity(),
                 menu?.findItem(R.id.menu_del_img_tag)?.isChecked =  it.getDelTag(Book.imgTag)
                 ReadBook.loadContent(resetPageOffset = false)
             }
-            R.id.menu_del_a_rt_tag->ReadBook.book?.let {
-                it.setDelTag(Book.artTag)
-                menu?.findItem(R.id.menu_del_a_rt_tag)?.isChecked =  it.getDelTag(Book.artTag)
+            R.id.menu_del_ruby_tag->ReadBook.book?.let {
+                it.setDelTag(Book.rubyTag)
+                menu?.findItem(R.id.menu_del_ruby_tag)?.isChecked =  it.getDelTag(Book.rubyTag)
                 ReadBook.loadContent(resetPageOffset = false)
             }
             R.id.menu_copy_text ->

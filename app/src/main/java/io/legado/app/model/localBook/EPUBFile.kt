@@ -126,20 +126,22 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
                 body.getElementsByTag("h5")?.remove()
                 body.getElementsByTag("h6")?.remove()
             }
+
             tag = io.legado.app.data.entities.Book.imgTag
             if(book.getDelTag(tag)){
                 body.getElementsByTag("img")?.remove()
             }
-            tag = io.legado.app.data.entities.Book.artTag
-            if(book.getDelTag(tag)){
-                body.getElementsByTag("a")?.remove()
-                body.getElementsByTag("rt")?.remove()
-            }
-            
+
             val elements = body.children()
             elements.select("script").remove()
             elements.select("style").remove()
-            return elements.outerHtml().htmlFormat()
+
+            tag = io.legado.app.data.entities.Book.rubyTag
+            var html = elements.outerHtml()
+            if(book.getDelTag(tag)){
+                html = html.replace("<ruby>\\s?([\\u4e00-\\u9fa5])\\s?.*?</ruby>".toRegex(),"$1")
+            }
+            return html.htmlFormat()
         }
         return null
     }
