@@ -95,7 +95,7 @@ object ReadBookConfig {
     }
 
     fun initComicConfig() {
-        val configFile = File(comicConfigFileName)
+        val configFile = File(comicConfigFilePath)
         var c: Config? = null
         if (configFile.exists()) {
             try {
@@ -105,7 +105,7 @@ object ReadBookConfig {
                 e.printStackTrace()
             }
         }
-        comicConfig = c ?: configList.getOrNull(5) ?: Config()
+        comicConfig = c ?: Config()
     }
 
 
@@ -137,8 +137,8 @@ object ReadBookConfig {
                     FileUtils.createFileIfNotExist(shareConfigFilePath).writeText(it)
                 }
                 GSON.toJson(comicConfig).let {
-                    FileUtils.deleteFile(comicConfigFileName)
-                    FileUtils.createFileIfNotExist(comicConfigFileName).writeText(it)
+                    FileUtils.deleteFile(comicConfigFilePath)
+                    FileUtils.createFileIfNotExist(comicConfigFilePath).writeText(it)
                 }
             }
         }
@@ -189,7 +189,7 @@ object ReadBookConfig {
     val textBottomJustify get() = context.getPrefBoolean(PreferKey.textBottomJustify, true)
     var hideStatusBar = context.getPrefBoolean(PreferKey.hideStatusBar)
     var hideNavigationBar = context.getPrefBoolean(PreferKey.hideNavigationBar)
-    val config get() = if(isComicMod) comicConfig else if (shareLayout) shareConfig else durConfig
+    val config get() = if(isComicMod) comicConfig else if(shareLayout) shareConfig else durConfig
 
     var pageAnim: Int
         get() = config.curPageAnim()
