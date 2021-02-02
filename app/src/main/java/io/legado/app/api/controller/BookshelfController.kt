@@ -7,6 +7,7 @@ import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.ReplaceRule
 import io.legado.app.data.entities.TimeRecord
 import io.legado.app.help.BookHelp
+import io.legado.app.help.ReadBookConfig
 import io.legado.app.help.coroutine.Coroutine
 import io.legado.app.model.webBook.WebBook
 import io.legado.app.service.help.ReadBook
@@ -133,6 +134,8 @@ object BookshelfController {
             if(content!=null){
                 content = processReplace(book, content!!)
                 saveBookReadIndex(book, index)
+                if(ReadBookConfig.isComic(book.origin))
+                    content = content!!.replace("\\s*\\n+\\s*".toRegex(),"")
                 returnData.setData(content!!)
             }
             else{
@@ -180,8 +183,10 @@ object BookshelfController {
     }
 
     private fun saveBookReadIndex(book: Book, index: Int) {
-        book.durChapterIndex = index
-        book.durChapterPos = 0
+        if(book.durChapterIndex != index){
+            book.durChapterIndex = index
+            book.durChapterPos = 0
+        }
         book.durChapterTime = System.currentTimeMillis()
         App.db.bookChapterDao.getChapter(book.bookUrl, index)?.let {
             book.durChapterTitle = it.title
