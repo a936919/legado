@@ -15,8 +15,10 @@ import io.legado.app.model.localBook.LocalBook
 import io.legado.app.model.webBook.PreciseSearch
 import io.legado.app.model.webBook.WebBook
 import io.legado.app.service.BaseReadAloudService
+import io.legado.app.service.WebService
 import io.legado.app.service.help.ReadAloud
 import io.legado.app.service.help.ReadBook
+import io.legado.app.utils.mqLog
 import io.legado.app.utils.msg
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
@@ -74,7 +76,7 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
                 autoChangeSource(book.name, book.author)
                 return
             }
-            ReadBook.chapterSize = App.db.bookChapterDao.getChapterCount(book.bookUrl)
+
             if (ReadBook.chapterSize == 0) {
                 if (book.tocUrl.isEmpty()) {
                     loadBookInfo(book)
@@ -82,7 +84,7 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
                     loadChapterList(book)
                 }
             } else {
-                if (ReadBook.curTextChapter != null) {
+                if (ReadBook.curTextChapter != null&&!WebService.isRun) {
                     ReadBook.callBack?.upContent(resetPageOffset = false)
                 } else {
                     ReadBook.loadContent(resetPageOffset = true)

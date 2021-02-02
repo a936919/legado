@@ -51,7 +51,7 @@ object BookshelfController {
     fun saveReadRecord(parameters: Map<String, List<String>>): ReturnData {
         val returnData = ReturnData()
         val dif =  System.currentTimeMillis() - readStartTime
-        if(dif<10*1000) return returnData.setErrorMsg("发送过快")
+        //if(dif<10*1000) return returnData.setErrorMsg("发送过快")
         val bookUrl = parameters["url"]?.getOrNull(0)
         if (bookUrl.isNullOrEmpty()) {
             return returnData.setErrorMsg("参数url不能为空，请指定书籍地址")
@@ -180,18 +180,18 @@ object BookshelfController {
     }
 
     private fun saveBookReadIndex(book: Book, index: Int) {
-        if (index > book.durChapterIndex) {
-            book.durChapterIndex = index
-            book.durChapterTime = System.currentTimeMillis()
-            App.db.bookChapterDao.getChapter(book.bookUrl, index)?.let {
-                book.durChapterTitle = it.title
-            }
-            App.db.bookDao.update(book)
-            if (ReadBook.book?.bookUrl == book.bookUrl) {
-                ReadBook.book = book
-                ReadBook.durChapterIndex = index
-            }
+        book.durChapterIndex = index
+        book.durChapterPos = 0
+        book.durChapterTime = System.currentTimeMillis()
+        App.db.bookChapterDao.getChapter(book.bookUrl, index)?.let {
+            book.durChapterTitle = it.title
+        }
+        val readRecord = book.toReadRecord()
+        App.db.readRecordDao.update(readRecord)
+        App.db.bookDao.update(book)
+        if (ReadBook.book?.bookUrl == book.bookUrl) {
+            ReadBook.book = book
+            ReadBook.durChapterIndex = index
         }
     }
-
 }
