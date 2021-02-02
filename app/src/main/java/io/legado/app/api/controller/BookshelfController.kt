@@ -5,14 +5,14 @@ import io.legado.app.api.ReturnData
 import io.legado.app.constant.PreferKey
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.ReplaceRule
+import io.legado.app.data.entities.TimeRecord
 import io.legado.app.help.BookHelp
+import io.legado.app.help.coroutine.Coroutine
 import io.legado.app.model.webBook.WebBook
 import io.legado.app.service.help.ReadBook
 import io.legado.app.utils.*
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
-import org.jetbrains.anko.toast
+import kotlin.math.min
 
 object BookshelfController {
 
@@ -41,19 +41,67 @@ object BookshelfController {
         if (bookUrl.isNullOrEmpty()) {
             return returnData.setErrorMsg("参数url不能为空，请指定书籍地址")
         }
+        App.db.bookDao.getBook(bookUrl)?.let { insertReadRecord(it) }
         val chapterList = App.db.bookChapterDao.getChapterList(bookUrl)
         return returnData.setData(chapterList)
     }
 
+    var timeRecord :TimeRecord? = null
+    var readStartTime: Long = System.currentTimeMillis()
     fun saveReadRecord(parameters: Map<String, List<String>>): ReturnData {
-        val bookUrl = parameters["url"]?.getOrNull(0)
         val returnData = ReturnData()
+        val dif =  System.currentTimeMillis() - readStartTime
+        if(dif<10*1000) return returnData.setErrorMsg("发送过快")
+        val bookUrl = parameters["url"]?.getOrNull(0)
         if (bookUrl.isNullOrEmpty()) {
             return returnData.setErrorMsg("参数url不能为空，请指定书籍地址")
         }
-        val book = App.db.bookDao.getBook(bookUrl)
-        mqLog.d("saveReadRecord ${book?.name} ${book?.author}")
+        upReadStartTime(bookUrl)
         return returnData.setData(" ")
+    }
+
+    private fun insertReadRecord(book: Book){
+        Coroutine.async{
+            val readRecord = book.toReadRecord()
+            val nowTimeRecord = readRecord.toTimeRecord()
+            if(timeRecord==null||!timeRecord!!.equals(nowTimeRecord)) {
+                book.durChapterTime = System.currentTimeMillis()
+                readRecord.durChapterTime = System.currentTimeMillis()
+                timeRecord = nowTimeRecord
+                timeRecord?.let {
+                    readStartTime = System.currentTimeMillis()
+                    it.date = TimeRecord.getDate()
+                    it.readTime = App.db.timeRecordDao.getReadTime(App.androidId, it.bookName, it.author, it.date) ?: 0
+                    App.db.bookDao.update(book)
+                    App.db.readRecordDao.update(readRecord)
+                    App.db.timeRecordDao.insert(it)
+                }
+            }
+        }
+    }
+
+    private fun upReadStartTime(bookUrl:String) {
+        Coroutine.async {
+            timeRecord?.let {
+                val dataChange =  it.date != TimeRecord.getDate()
+                var dif =  System.currentTimeMillis() - readStartTime
+                val maxInterval = 3*60*1000L
+                dif = min(dif,maxInterval)//翻页时间超过3分钟，不计为阅读时间
+                readStartTime = System.currentTimeMillis()
+
+                if(dataChange){
+                    it.date = TimeRecord.getDate()
+                    it.readTime = App.db.timeRecordDao.getReadTime(App.androidId, it.bookName, it.author, it.date)?:0
+                }else{
+                    App.db.timeRecordDao.getReadTime(App.androidId, it.bookName, it.author, it.date)?.let {readTime->
+                        if(readTime > it.readTime) it.readTime = readTime
+                    }
+                }
+
+                it.readTime = it.readTime + dif
+                if(dataChange) App.db.timeRecordDao.insert(it) else App.db.timeRecordDao.update(it)
+            }
+        }
     }
 
     fun getBookContent(parameters: Map<String, List<String>>): ReturnData {

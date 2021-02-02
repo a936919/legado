@@ -13,6 +13,7 @@ import io.legado.app.help.coroutine.Coroutine
 import io.legado.app.help.storage.BookWebDav
 import io.legado.app.model.webBook.WebBook
 import io.legado.app.service.BaseReadAloudService
+import io.legado.app.service.WebService
 import io.legado.app.ui.book.read.page.entities.TextChapter
 import io.legado.app.ui.book.read.page.entities.TextPage
 import io.legado.app.ui.book.read.page.provider.ChapterProvider
@@ -41,18 +42,20 @@ object ReadBook {
     var webBook: WebBook? = null
     var msg: String? = null
     private val loadingChapters = arrayListOf<Int>()
-    private var readRecord = ReadRecord()
-    private var timeRecord = TimeRecord()
+    private var readRecord: ReadRecord? = null
+    private var timeRecord: TimeRecord? = null
     var readStartTime: Long = System.currentTimeMillis()
 
     fun resetData(book: Book) {
         this.book = book
         contentProcessor = ContentProcessor(book.name, book.origin)
         readRecord = book.toReadRecord()
-        timeRecord = readRecord.toTimeRecord()
-        timeRecord.date = TimeRecord.getDate()
-        timeRecord.readTime = App.db.timeRecordDao.getReadTime(App.androidId,timeRecord.bookName,timeRecord.author,timeRecord.date)?:0
-        timeRecord.listenTime = App.db.timeRecordDao.getListenTime(App.androidId,timeRecord.bookName,timeRecord.author,timeRecord.date)?:0
+        timeRecord = readRecord?.toTimeRecord()
+        timeRecord?.let { timeRecord ->
+            timeRecord.date = TimeRecord.getDate()
+            timeRecord.readTime = App.db.timeRecordDao.getReadTime(App.androidId, timeRecord.bookName, timeRecord.author, timeRecord.date)?:0
+            timeRecord.listenTime = App.db.timeRecordDao.getListenTime(App.androidId, timeRecord.bookName, timeRecord.author, timeRecord.date)?:0
+        }
         saveReadRecord()
         durChapterIndex = book.durChapterIndex
         durChapterPos = book.durChapterPos
@@ -71,8 +74,8 @@ object ReadBook {
 
     private fun saveReadRecord(){
         Coroutine.async {
-            App.db.readRecordDao.insert(readRecord)
-            App.db.timeRecordDao.insert(timeRecord)
+            readRecord?.let { App.db.readRecordDao.insert(it) }
+            timeRecord?.let {  App.db.timeRecordDao.insert(it) }
         }
     }
 
@@ -114,24 +117,34 @@ object ReadBook {
 
     fun upReadStartTime() {
         Coroutine.async {
-            val dataChange =  timeRecord.date != TimeRecord.getDate()
-            var dif =  System.currentTimeMillis() - readStartTime
-            val maxInterval = 3*60*1000L
-            dif = min(dif,maxInterval)//翻页时间超过3分钟，不计为阅读时间
-            readStartTime = System.currentTimeMillis()
+            timeRecord?.let { timeRecord ->
+                val dataChange =  timeRecord.date != TimeRecord.getDate()
+                var dif =  System.currentTimeMillis() - readStartTime
+                val maxInterval = 3*60*1000L
+                dif = min(dif,maxInterval)//翻页时间超过3分钟，不计为阅读时间
+                readStartTime = System.currentTimeMillis()
 
-            if(dataChange){
-                timeRecord.date = TimeRecord.getDate()
-                timeRecord.readTime = App.db.timeRecordDao.getReadTime(App.androidId,timeRecord.bookName,timeRecord.author,timeRecord.date)?:0
-                timeRecord.listenTime = App.db.timeRecordDao.getListenTime(App.androidId,timeRecord.bookName,timeRecord.author,timeRecord.date)?:0
+                if(dataChange){
+                    timeRecord.date = TimeRecord.getDate()
+                    timeRecord.readTime = App.db.timeRecordDao.getReadTime(App.androidId, timeRecord.bookName, timeRecord.author, timeRecord.date)?:0
+                    timeRecord.listenTime = App.db.timeRecordDao.getListenTime(App.androidId, timeRecord.bookName, timeRecord.author, timeRecord.date)?:0
+                }
+                else if(WebService.isRun){
+                    val readTime = App.db.timeRecordDao.getReadTime(App.androidId, timeRecord.bookName, timeRecord.author, timeRecord.date)
+                    if (readTime != null) {
+                        if(readTime> timeRecord.readTime){
+                            timeRecord.readTime = readTime
+                        }
+                    }
+                }
+
+                if (BaseReadAloudService.isRun)
+                    timeRecord.listenTime = timeRecord.listenTime + dif
+                else
+                    timeRecord.readTime = timeRecord.readTime + dif
+
+                if(dataChange) App.db.timeRecordDao.insert(timeRecord) else App.db.timeRecordDao.update(timeRecord)
             }
-
-            if (BaseReadAloudService.isRun)
-                timeRecord.listenTime = timeRecord.listenTime + dif
-            else
-                timeRecord.readTime = timeRecord.readTime + dif
-
-            if(dataChange) App.db.timeRecordDao.insert(timeRecord) else App.db.timeRecordDao.update(timeRecord)
         }
     }
 
@@ -504,11 +517,13 @@ object ReadBook {
                     book.durChapterTitle = it.title
                 }
                 App.db.bookDao.update(book)
-                readRecord.durChapterTime = book.durChapterTime
-                readRecord.durChapterIndex = book.durChapterIndex
-                readRecord.durChapterPos = book.durChapterPos
-                readRecord.durChapterTitle = book.durChapterTitle.toString()
-                App.db.readRecordDao.update(readRecord)
+                readRecord?.let { readRecord ->
+                    readRecord.durChapterTime = book.durChapterTime
+                    readRecord.durChapterIndex = book.durChapterIndex
+                    readRecord.durChapterPos = book.durChapterPos
+                    readRecord.durChapterTitle = book.durChapterTitle.toString()
+                    App.db.readRecordDao.update(readRecord)
+                }
             }
         }
     }

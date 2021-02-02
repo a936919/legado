@@ -38,7 +38,9 @@ data class TimeRecord (
             val s = if (mss < 1000 * 60) "${java.lang.Long.max(seconds, 1)}秒" else ""
             return "$h$m$s"
         }
-
     }
+
+    fun equals(timeRecord:TimeRecord)= timeRecord.bookName == bookName && timeRecord.androidId == androidId && timeRecord.author == author
+
 }
 
