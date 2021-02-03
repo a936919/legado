@@ -54,6 +54,8 @@ object BookshelfController {
         val dif =  System.currentTimeMillis() - readStartTime
         if(dif<2*1000) return returnData.setErrorMsg("发送过快")
         val bookUrl = parameters["url"]?.getOrNull(0)
+        val pos = parameters["pos"]?.getOrNull(0)?.toFloat()
+        mqLog.d("$bookUrl $pos")
         if (bookUrl.isNullOrEmpty()) {
             return returnData.setErrorMsg("参数url不能为空，请指定书籍地址")
         }
