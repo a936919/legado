@@ -51,10 +51,8 @@ object BookshelfController {
     var readStartTime: Long = System.currentTimeMillis()
     fun saveReadRecord(parameters: Map<String, List<String>>): ReturnData {
         val returnData = ReturnData()
-        /*
         val dif =  System.currentTimeMillis() - readStartTime
-        if(dif<5*1000) return returnData.setErrorMsg("发送过快")
-         */
+        if(dif<2*1000) return returnData.setErrorMsg("发送过快")
         val bookUrl = parameters["url"]?.getOrNull(0)
         if (bookUrl.isNullOrEmpty()) {
             return returnData.setErrorMsg("参数url不能为空，请指定书籍地址")
