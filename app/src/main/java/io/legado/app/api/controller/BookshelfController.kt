@@ -4,6 +4,7 @@ import io.legado.app.App
 import io.legado.app.api.ReturnData
 import io.legado.app.constant.PreferKey
 import io.legado.app.data.entities.Book
+import io.legado.app.data.entities.ReadRecord
 import io.legado.app.data.entities.ReplaceRule
 import io.legado.app.data.entities.TimeRecord
 import io.legado.app.help.BookHelp
@@ -47,22 +48,6 @@ object BookshelfController {
         return returnData.setData(chapterList)
     }
 
-    var timeRecord :TimeRecord? = null
-    var readStartTime: Long = System.currentTimeMillis()
-    fun saveReadRecord(parameters: Map<String, List<String>>): ReturnData {
-        val returnData = ReturnData()
-        val dif =  System.currentTimeMillis() - readStartTime
-        if(dif<2*1000) return returnData.setErrorMsg("发送过快")
-        val bookUrl = parameters["url"]?.getOrNull(0)
-        val pos = parameters["pos"]?.getOrNull(0)?.toFloat()
-        mqLog.d("$bookUrl $pos")
-        if (bookUrl.isNullOrEmpty()) {
-            return returnData.setErrorMsg("参数url不能为空，请指定书籍地址")
-        }
-        upReadStartTime(bookUrl)
-        return returnData.setData(" ")
-    }
-
     private fun insertReadRecord(book: Book){
         Coroutine.async{
             val readRecord = book.toReadRecord()
@@ -83,15 +68,34 @@ object BookshelfController {
         }
     }
 
-    private fun upReadStartTime(bookUrl:String) {
+    private var book :Book? = null
+    private var timeRecord :TimeRecord? = null
+    private var readRecord :ReadRecord? = null
+    private var readStartTime: Long = System.currentTimeMillis()
+    fun saveReadRecord(parameters: Map<String, List<String>>): ReturnData {
+        val returnData = ReturnData()
+        val dif =  System.currentTimeMillis() - readStartTime
+        if(dif<2*1000) return returnData.setErrorMsg("发送过快")
+        val pos = parameters["pos"]?.getOrNull(0)?.toInt()
+            ?: return returnData.setErrorMsg("参数url不能为空，请指定书籍地址")
+        upReadRecord(pos)
+        return returnData.setData("成功")
+    }
+
+    private fun upReadRecord(pos:Int) {
         Coroutine.async {
+            book?.let {
+                it.setWebPos(pos)
+                it.setWebTime(System.currentTimeMillis())
+                App.db.bookDao.update(it)
+            }
+
             timeRecord?.let {
                 val dataChange =  it.date != TimeRecord.getDate()
                 var dif =  System.currentTimeMillis() - readStartTime
                 val maxInterval = 3*60*1000L
                 dif = min(dif,maxInterval)//翻页时间超过3分钟，不计为阅读时间
                 readStartTime = System.currentTimeMillis()
-
                 if(dataChange){
                     it.date = TimeRecord.getDate()
                     it.readTime = App.db.timeRecordDao.getReadTime(App.androidId, it.bookName, it.author, it.date)?:0
@@ -100,7 +104,6 @@ object BookshelfController {
                         if(readTime > it.readTime) it.readTime = readTime
                     }
                 }
-
                 it.readTime = it.readTime + dif
                 if(dataChange) App.db.timeRecordDao.insert(it) else App.db.timeRecordDao.update(it)
             }
@@ -185,20 +188,20 @@ object BookshelfController {
     }
 
     private fun saveBookReadIndex(book: Book, index: Int) {
-        if(book.durChapterIndex != index){
-            book.durChapterIndex = index
-            book.durChapterPos = 0
-        }
+        book.durChapterIndex = index
+        book.durChapterPos = 0
         book.durChapterTime = System.currentTimeMillis()
         App.db.bookChapterDao.getChapter(book.bookUrl, index)?.let {
-            book.durChapterTitle = it.title
+            book.durChapterTitle = "[Web]"+it.title
         }
-        val readRecord = book.toReadRecord()
-        App.db.readRecordDao.update(readRecord)
-        App.db.bookDao.update(book)
-        if (ReadBook.book?.bookUrl == book.bookUrl) {
-            ReadBook.book = book
-            ReadBook.durChapterIndex = index
+        readRecord = book.toReadRecord()
+        App.db.readRecordDao.update(readRecord!!)
+        App.db.bookDao.getBook(book.bookUrl)?.let {
+            this.book = it
+            this.book!!.setWebIndex(index)
+            this.book!!.setWebTime(book.durChapterTime)
+            this.book!!.setWebPercent(0.toFloat())
+            App.db.bookDao.update(this.book!!)
         }
     }
 }

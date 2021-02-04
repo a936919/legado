@@ -558,6 +558,10 @@ class ReadBookActivity : ReadBookBaseActivity(),
         return false
     }
 
+    var oldChapterIndex:Int = 0
+    var oldChapterPos:Int = 0
+    var oldBookUrl:String? = null
+
     override fun synProgress() {
         ReadBook.book?.let {
             viewModel.syncBookProgress(it) { progress ->

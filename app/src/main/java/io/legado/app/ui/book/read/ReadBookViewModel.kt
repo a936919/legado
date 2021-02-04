@@ -163,16 +163,32 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
             execute {
                 BookWebDav.getBookProgress(book)
             }.onSuccess {
-                it?.let { progress ->
-                    if (progress.durChapterIndex < book.durChapterIndex ||
-                        (progress.durChapterIndex == book.durChapterIndex && progress.durChapterPos < book.durChapterPos)
-                    ) {
-                        alertSync?.invoke(progress)
-                    } else {
-                        ReadBook.setProgress(progress)
-                    }
-                }
+                processBookProgress(book,it)
+            }.onError {
+                processBookProgress(book,null)
             }
+    }
+
+    private fun processBookProgress(book:Book, webDavProgress:BookProgress?){
+        var progress1:BookProgress?=null
+        var progress2:BookProgress?=null
+        if(book.webProgress!=null&&book.durChapterTime<book.webProgress!!.durChapterTime) {
+            progress1 = BookProgress(
+                book.name,
+                book.author,
+                book.webProgress!!.index,
+                book.webProgress!!.chapterPos,
+                book.webProgress!!.durChapterTime,
+                null)
+        }
+        if(webDavProgress!=null&&book.durChapterTime< webDavProgress.durChapterTime){
+            progress2 = webDavProgress
+        }
+
+        if(progress1!=null||progress2!=null){
+            mqLog.d("$progress1 $progress2")
+            ReadBook.setProgress(progress1!!)
+        }
     }
 
     fun changeTo(newBook: Book) {

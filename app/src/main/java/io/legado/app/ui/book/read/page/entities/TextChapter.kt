@@ -39,6 +39,15 @@ data class TextChapter(
         return length
     }
 
+    fun getChapterLength(): Int {
+        var length = 0
+        val maxIndex = pages.size
+        for (index in 0 until maxIndex) {
+            length += pages[index].charSize
+        }
+        return length
+    }
+
     fun getNextPageLength(length: Int): Int {
         return getReadLength(getPageIndexByCharIndex(length) + 1)
     }

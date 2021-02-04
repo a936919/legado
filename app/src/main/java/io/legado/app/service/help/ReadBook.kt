@@ -18,6 +18,7 @@ import io.legado.app.ui.book.read.page.entities.TextChapter
 import io.legado.app.ui.book.read.page.entities.TextPage
 import io.legado.app.ui.book.read.page.provider.ChapterProvider
 import io.legado.app.ui.book.read.page.provider.ImageProvider
+import io.legado.app.utils.mqLog
 import kotlinx.coroutines.*
 import org.jetbrains.anko.getStackTraceString
 import org.jetbrains.anko.toast
@@ -237,6 +238,9 @@ object ReadBook {
 
     fun setPageIndex(index: Int) {
         durChapterPos = curTextChapter?.getReadLength(index) ?: index
+        val allLength = curTextChapter?.getChapterLength() ?: index
+        val allIndex = curTextChapter?.pageSize ?: index
+        mqLog.d("$durChapterPos $allLength ${durChapterPos.toDouble()/allLength*100}  $index $allIndex ${index.toDouble()/allIndex*100}")
         saveRead()
         curPageChanged()
     }

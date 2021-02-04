@@ -47,6 +47,7 @@ data class Book(
     var durChapterTitle: String? = null,        // 当前章节名称
     var durChapterIndex: Int = 0,               // 当前章节索引
     var durChapterPos: Int = 0,                 // 当前阅读的进度(首行字符的索引位置)
+    var durChapterLength: Int = 0,                 // 当前章节总字数
     var durChapterTime: Long = System.currentTimeMillis(),               // 最近一次阅读书籍的时间(打开正文的时间)
     override var wordCount: String? = null,
     var canUpdate: Boolean = false,              // 刷新书架时更新书籍信息
@@ -54,6 +55,7 @@ data class Book(
     var originOrder: Int = 0,                   //书源排序
     var variable: String? = null,               // 自定义书籍变量信息(用于书源规则检索书籍信息)
     var readConfig: ReadConfig? = null,
+    var webProgress: WebProgress? = null,
     var status:Int = 0, //阅读状态  0为在读 1为已读 2为想读
 ) : Parcelable, BaseBook {
 
@@ -122,6 +124,7 @@ data class Book(
         }
         return readConfig!!
     }
+
 
     fun setUseReplaceRule(useReplaceRule: Boolean) {
         config().useReplaceRule = useReplaceRule
@@ -251,6 +254,32 @@ data class Book(
         var useReplaceRule: Boolean = AppConfig.replaceEnableDefault,         // 正文使用净化替换规则
         var delParagraph:Int = 0,//去除段首
         var delTag:Long =0L//去除标签
+    ) : Parcelable
+
+    fun setWebIndex(index:Int){
+        webProgress().index = index
+    }
+
+    fun setWebPos(pos:Int){
+        webProgress().chapterPos = pos
+    }
+
+    fun setWebTime(time:Long){
+        webProgress().durChapterTime = time
+    }
+
+    private fun webProgress(): WebProgress {
+        if (webProgress == null) {
+            webProgress = WebProgress()
+        }
+        return webProgress!!
+    }
+
+    @Parcelize
+    data class WebProgress(
+        var index:Int = 0,
+        var chapterPos:Int = 0,
+        var durChapterTime: Long = System.currentTimeMillis()
     ) : Parcelable
 
     class Converters {
