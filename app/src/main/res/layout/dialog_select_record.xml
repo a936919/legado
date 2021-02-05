@@ -13,7 +13,7 @@
         android:textColor="@color/primaryText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingStart="20dp"
+        android:padding="6dp"
         tools:ignore="RtlSymmetry"
         />
 
@@ -33,7 +33,7 @@
             android:textColor="@color/secondaryText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingStart="28dp"
+            android:paddingStart="32dp"
             tools:ignore="RtlSymmetry"
             />
         <RadioButton
@@ -47,7 +47,7 @@
             android:textColor="@color/secondaryText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingStart="28dp"
+            android:paddingStart="32dp"
             tools:ignore="RtlSymmetry"
             />
         <RadioButton
@@ -61,7 +61,7 @@
             android:textColor="@color/secondaryText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingStart="28dp"
+            android:paddingStart="32dp"
             tools:ignore="RtlSymmetry"
             />
     </RadioGroup>
