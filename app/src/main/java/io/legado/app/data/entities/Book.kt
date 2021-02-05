@@ -55,8 +55,11 @@ data class Book(
     var originOrder: Int = 0,                   //书源排序
     var variable: String? = null,               // 自定义书籍变量信息(用于书源规则检索书籍信息)
     var readConfig: ReadConfig? = null,
-    var webProgress: WebProgress? = null,
     var status:Int = 0, //阅读状态  0为在读 1为已读 2为想读
+    //web相关的存储记录
+    var webChapterIndex:Int = 0,
+    var webChapterPos:Int = 0,
+    var webDurChapterTime:Long = System.currentTimeMillis(),
 ) : Parcelable, BaseBook {
 
     fun isLocalBook(): Boolean {
@@ -254,32 +257,6 @@ data class Book(
         var useReplaceRule: Boolean = AppConfig.replaceEnableDefault,         // 正文使用净化替换规则
         var delParagraph:Int = 0,//去除段首
         var delTag:Long =0L//去除标签
-    ) : Parcelable
-
-    fun setWebIndex(index:Int){
-        webProgress().index = index
-    }
-
-    fun setWebPos(pos:Int){
-        webProgress().chapterPos = pos
-    }
-
-    fun setWebTime(time:Long){
-        webProgress().durChapterTime = time
-    }
-
-    private fun webProgress(): WebProgress {
-        if (webProgress == null) {
-            webProgress = WebProgress()
-        }
-        return webProgress!!
-    }
-
-    @Parcelize
-    data class WebProgress(
-        var index:Int = 0,
-        var chapterPos:Int = 0,
-        var durChapterTime: Long = System.currentTimeMillis()
     ) : Parcelable
 
     class Converters {

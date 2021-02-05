@@ -17,6 +17,7 @@ data class ReadRecord(
         var totalChapterNum: Int = 0,               // 书籍目录总数
         var durChapterTitle: String? = null,        // 当前章节名称
         var durChapterPos: Int = 0,                 // 当前阅读的进度(首行字符的索引位置)
+        var readSpeed:Int = 0,
         var durChapterTime:Long = System.currentTimeMillis()
 ){
     fun toBook()=Book(

@@ -46,6 +46,9 @@ object ReadBook {
     private var readRecord: ReadRecord? = null
     private var timeRecord: TimeRecord? = null
     var readStartTime: Long = System.currentTimeMillis()
+    var oldChapterTime:Long = 0L
+    var oldChapterIndex:Int? = null
+    var oldChapterPos:Int? = null
 
     fun resetData(book: Book) {
         this.book = book

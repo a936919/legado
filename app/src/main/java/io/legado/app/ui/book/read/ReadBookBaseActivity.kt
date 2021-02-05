@@ -11,6 +11,7 @@ import io.legado.app.App
 import io.legado.app.R
 import io.legado.app.base.VMBaseActivity
 import io.legado.app.constant.PreferKey
+import io.legado.app.data.entities.BookProgress
 import io.legado.app.data.entities.Bookmark
 import io.legado.app.databinding.*
 import io.legado.app.help.AppConfig
@@ -29,6 +30,8 @@ import io.legado.app.ui.book.read.config.BgTextConfigDialog
 import io.legado.app.ui.book.read.config.ClickActionConfigDialog
 import io.legado.app.ui.book.read.config.PaddingConfigDialog
 import io.legado.app.utils.*
+import org.jetbrains.anko.button
+import rxhttp.wrapper.entity.Progress
 import kotlin.math.max
 import kotlin.math.min
 
@@ -218,6 +221,65 @@ abstract class ReadBookBaseActivity :
                 noButton()
             }.show()
         }
+    }
+
+    @SuppressLint("InflateParams")
+    fun showSelectRecord(local:BookProgress?, web: BookProgress?, net: BookProgress?) {
+        alert("请选择阅读进度") {
+            var string = ""
+            var progress:BookProgress?
+            val alertBinding = DialogSelectRecordBinding.inflate(layoutInflater).apply {
+                root.setBackgroundColor(root.context.backgroundColor)
+                ReadBook.let {
+                    string = "当前进度：[${it.durChapterIndex + 1}/${it.durChapterPos}]"
+                }
+                tvDur.text = string
+                progress = net
+                if (progress==null){
+                    string = "云端进度为空"
+                    tvNet.text = string
+                } else{
+                    string = "[${progress!!.durChapterIndex + 1}/${progress!!.durChapterPos}]  "
+                    string += StringUtils.dateConvert(progress!!.durChapterTime,"yy年MM月dd日HH时mm分")
+                    tvNet.text = string
+                }
+                progress = web
+                if (progress==null){
+                    string = "网页进度为空"
+                    tvWeb.text = string
+                } else{
+                    string = "[${progress!!.durChapterIndex + 1}/${progress!!.durChapterPos}]  "
+                    string += StringUtils.dateConvert(progress!!.durChapterTime,"yy年MM月dd日HH时mm分")
+                    tvWeb.text = string
+                }
+                progress = local
+                if (progress==null){
+                    string = "历史进度为空"
+                    tvLocal.text = string
+                } else{
+                    string = "[${progress!!.durChapterIndex + 1}/${progress!!.durChapterPos}]  "
+                    string += StringUtils.dateConvert(progress!!.durChapterTime, "yy年MM月dd日HH时mm分")
+                    tvLocal.text = string
+                }
+
+            }
+            customView = alertBinding.root
+            yesButton {
+                alertBinding.run {
+                    when(rgLayout.getCheckedIndex()){
+                        0-> progress = net
+                        2-> progress = web
+                        4-> progress = local
+                    }
+                    progress?.let{progress->
+                        ReadBook.setProgress(progress)
+                        ReadBook.oldChapterIndex = ReadBook.book?.durChapterIndex
+                        ReadBook.oldChapterPos = ReadBook.book?.durChapterPos
+                    }
+                }
+            }
+            noButton()
+        }.show()
     }
 
     @SuppressLint("InflateParams")

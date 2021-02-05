@@ -137,6 +137,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
 
     override fun onPause() {
         super.onPause()
+        mqLog.d("save 1")
         ReadBook.saveRead()
         timeBatteryReceiver?.let {
             unregisterReceiver(it)
@@ -291,13 +292,33 @@ class ReadBookActivity : ReadBookBaseActivity(),
             R.id.menu_set_charset -> showCharsetConfig()
             R.id.menu_get_progress -> ReadBook.book?.let {
                 viewModel.syncBookProgress(it) { progress ->
-                    sureSyncProgress(progress)
+                    processBookProgress(it, progress)
                 }
             }
             R.id.menu_help -> showReadMenuHelp()
             R.id.ReplaceRule -> openReplaceRule()
         }
         return super.onCompatOptionsItemSelected(item)
+    }
+
+    private fun processBookProgress(book:Book, webDavProgress:BookProgress?){
+        val local = if(ReadBook.oldChapterIndex == null||ReadBook.oldChapterPos == null) null
+            else BookProgress(
+            book.name,
+            book.author,
+            ReadBook.oldChapterIndex!!,
+            ReadBook.oldChapterPos!!,
+            ReadBook.oldChapterTime,
+            book.durChapterTitle)
+        val web =  if(book.webChapterIndex == 0 && book.webChapterPos == 0) null
+            else BookProgress(
+            book.name,
+            book.author,
+            book.webChapterIndex,
+            book.webChapterPos,
+            book.webDurChapterTime,
+            null)
+        showSelectRecord(local,web, webDavProgress)
     }
 
     /**
@@ -565,7 +586,8 @@ class ReadBookActivity : ReadBookBaseActivity(),
     override fun synProgress() {
         ReadBook.book?.let {
             viewModel.syncBookProgress(it) { progress ->
-                sureSyncProgress(progress)
+                //sureSyncProgress(progress)
+                processBookProgress(it, progress)
             }
         }
     }

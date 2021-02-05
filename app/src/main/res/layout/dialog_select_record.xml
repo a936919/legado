@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <TextView
+        android:id="@+id/tv_dur"
+        android:textSize="16sp"
+        android:textColor="@color/primaryText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="20dp"
+        tools:ignore="RtlSymmetry"
+        />
+
+    <RadioGroup
+        android:id="@+id/rg_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:ignore="MissingConstraints">
+        <RadioButton
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="17sp"
+            android:text="选择云端进度" />
+        <TextView
+            android:id="@+id/tv_net"
+            android:textSize="15sp"
+            android:textColor="@color/secondaryText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="28dp"
+            tools:ignore="RtlSymmetry"
+            />
+        <RadioButton
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="17sp"
+            android:text="选择网页进度" />
+        <TextView
+            android:id="@+id/tv_web"
+            android:textSize="15sp"
+            android:textColor="@color/secondaryText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="28dp"
+            tools:ignore="RtlSymmetry"
+            />
+        <RadioButton
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="17sp"
+            android:text="选择历史进度" />
+        <TextView
+            android:id="@+id/tv_local"
+            android:textSize="15sp"
+            android:textColor="@color/secondaryText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="28dp"
+            tools:ignore="RtlSymmetry"
+            />
+    </RadioGroup>
+</LinearLayout>

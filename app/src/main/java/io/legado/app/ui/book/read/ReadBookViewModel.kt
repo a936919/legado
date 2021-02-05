@@ -1,16 +1,18 @@
 package io.legado.app.ui.book.read
 
 import android.app.Application
-import android.widget.Toast
 import io.legado.app.App
 import io.legado.app.R
 import io.legado.app.base.BaseViewModel
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
 import io.legado.app.data.entities.BookProgress
+import io.legado.app.databinding.DialogSelectRecordBinding
 import io.legado.app.help.AppConfig
 import io.legado.app.help.BookHelp
 import io.legado.app.help.storage.BookWebDav
+import io.legado.app.lib.dialogs.alert
+import io.legado.app.lib.theme.backgroundColor
 import io.legado.app.model.localBook.LocalBook
 import io.legado.app.model.webBook.PreciseSearch
 import io.legado.app.model.webBook.WebBook
@@ -18,8 +20,7 @@ import io.legado.app.service.BaseReadAloudService
 import io.legado.app.service.WebService
 import io.legado.app.service.help.ReadAloud
 import io.legado.app.service.help.ReadBook
-import io.legado.app.utils.mqLog
-import io.legado.app.utils.msg
+import io.legado.app.utils.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.withContext
@@ -33,6 +34,7 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
            if(book!=null) initBook(book)
         }.onFinally {
             if (ReadBook.inBookshelf) {
+                ReadBook.book?.let { ReadBook.oldChapterTime = it.durChapterTime }
                 ReadBook.saveRead()
             }
         }
@@ -41,6 +43,8 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
     private fun initBook(book: Book) {
         if (ReadBook.book?.bookUrl != book.bookUrl) {
             ReadBook.resetData(book)
+            ReadBook.oldChapterIndex = null
+            ReadBook.oldChapterPos = null
             isInitFinish = true
             if (!book.isLocalBook() && ReadBook.webBook == null) {
                 autoChangeSource(book.name, book.author)
@@ -71,6 +75,8 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
             }
             ReadBook.titleDate.postValue(book.name)
             ReadBook.upWebBook(book)
+            ReadBook.oldChapterIndex = null
+            ReadBook.oldChapterPos = null
             isInitFinish = true
             if (!book.isLocalBook() && ReadBook.webBook == null) {
                 autoChangeSource(book.name, book.author)
@@ -158,38 +164,15 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
         syncBookProgress: Boolean = AppConfig.syncBookProgress,
         alertSync: ((progress: BookProgress) -> Unit)? = null
     ) {
-        if (syncBookProgress)
-            Toast.makeText(context,"获取阅读记录中", Toast.LENGTH_SHORT).show()
+        if (syncBookProgress){
             execute {
                 BookWebDav.getBookProgress(book)
             }.onSuccess {
-                processBookProgress(book,it)
-            }.onError {
-                processBookProgress(book,null)
+                alertSync?.invoke(it!!)
             }
-    }
-
-    private fun processBookProgress(book:Book, webDavProgress:BookProgress?){
-        var progress1:BookProgress?=null
-        var progress2:BookProgress?=null
-        if(book.webProgress!=null&&book.durChapterTime<book.webProgress!!.durChapterTime) {
-            progress1 = BookProgress(
-                book.name,
-                book.author,
-                book.webProgress!!.index,
-                book.webProgress!!.chapterPos,
-                book.webProgress!!.durChapterTime,
-                null)
-        }
-        if(webDavProgress!=null&&book.durChapterTime< webDavProgress.durChapterTime){
-            progress2 = webDavProgress
-        }
-
-        if(progress1!=null||progress2!=null){
-            mqLog.d("$progress1 $progress2")
-            ReadBook.setProgress(progress1!!)
         }
     }
+
 
     fun changeTo(newBook: Book) {
         execute {
