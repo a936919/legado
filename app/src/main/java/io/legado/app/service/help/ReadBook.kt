@@ -99,6 +99,8 @@ object ReadBook {
     }
 
     fun setProgress(progress: BookProgress) {
+        oldChapterIndex = durChapterIndex
+        oldChapterPos = durChapterPos
         durChapterIndex = progress.durChapterIndex
         durChapterPos = progress.durChapterPos
         clearTextChapter()
@@ -107,7 +109,9 @@ object ReadBook {
 
     fun updateLocalProgress():Boolean{
         return book?.let {  book->
-           if(readStartTime<book.durChapterTime &&( book.durChapterIndex!= durChapterIndex||book.durChapterPos!= durChapterPos)) {
+           if(readStartTime < book.durChapterTime &&( book.durChapterIndex!= durChapterIndex||book.durChapterPos!= durChapterPos)) {
+               oldChapterIndex = durChapterIndex
+               oldChapterPos = durChapterPos
                durChapterIndex = book.durChapterIndex
                durChapterPos = book.durChapterPos
                clearTextChapter()

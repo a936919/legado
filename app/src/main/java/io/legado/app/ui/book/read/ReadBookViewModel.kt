@@ -31,7 +31,7 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
 
     fun initData(book: Book?) {
         execute {
-           if(book!=null) initBook(book)
+            if (book != null) initBook(book)
         }.onFinally {
             if (ReadBook.inBookshelf) {
                 ReadBook.book?.let { ReadBook.oldChapterTime = it.durChapterTime }
@@ -65,13 +65,15 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
             }
             syncBookProgress(book)
         } else {
+            var offset =false
             ReadBook.book = book
-            if (ReadBook.durChapterIndex != book.durChapterIndex) {
+            if (ReadBook.durChapterIndex != book.durChapterIndex || ReadBook.durChapterPos != book.durChapterPos) {
                 ReadBook.durChapterIndex = book.durChapterIndex
                 ReadBook.durChapterPos = book.durChapterPos
                 ReadBook.prevTextChapter = null
                 ReadBook.curTextChapter = null
                 ReadBook.nextTextChapter = null
+                offset = true
             }
             ReadBook.titleDate.postValue(book.name)
             ReadBook.upWebBook(book)
@@ -90,7 +92,7 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
                     loadChapterList(book)
                 }
             } else {
-                if (ReadBook.curTextChapter != null&& !ReadBook.updateLocalProgress()) {
+                if (ReadBook.curTextChapter != null &&!offset) {
                     ReadBook.callBack?.upContent(resetPageOffset = false)
                 } else {
                     ReadBook.loadContent(resetPageOffset = true)
@@ -104,22 +106,22 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
     }
 
     private fun loadBookInfo(
-        book: Book,
-        changeDruChapterIndex: ((chapters: List<BookChapter>) -> Unit)? = null,
+            book: Book,
+            changeDruChapterIndex: ((chapters: List<BookChapter>) -> Unit)? = null,
     ) {
         if (book.isLocalBook()) {
             loadChapterList(book, changeDruChapterIndex)
         } else {
             ReadBook.webBook?.getBookInfo(this, book, canReName = false)
-                ?.onSuccess {
-                    loadChapterList(book, changeDruChapterIndex)
-                }
+                    ?.onSuccess {
+                        loadChapterList(book, changeDruChapterIndex)
+                    }
         }
     }
 
     fun loadChapterList(
-        book: Book,
-        changeDruChapterIndex: ((chapters: List<BookChapter>) -> Unit)? = null,
+            book: Book,
+            changeDruChapterIndex: ((chapters: List<BookChapter>) -> Unit)? = null,
     ) {
         if (book.isLocalBook()) {
             execute {
@@ -140,32 +142,32 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
             }
         } else {
             ReadBook.webBook?.getChapterList(this, book)
-                ?.onSuccess(IO) { cList ->
-                    if (cList.isNotEmpty()) {
-                        if (changeDruChapterIndex == null) {
-                            App.db.bookChapterDao.insert(*cList.toTypedArray())
-                            App.db.bookDao.update(book)
-                            ReadBook.chapterSize = cList.size
-                            ReadBook.upMsg(null)
-                            ReadBook.loadContent(resetPageOffset = true)
+                    ?.onSuccess(IO) { cList ->
+                        if (cList.isNotEmpty()) {
+                            if (changeDruChapterIndex == null) {
+                                App.db.bookChapterDao.insert(*cList.toTypedArray())
+                                App.db.bookDao.update(book)
+                                ReadBook.chapterSize = cList.size
+                                ReadBook.upMsg(null)
+                                ReadBook.loadContent(resetPageOffset = true)
+                            } else {
+                                changeDruChapterIndex(cList)
+                            }
                         } else {
-                            changeDruChapterIndex(cList)
+                            ReadBook.upMsg(context.getString(R.string.error_load_toc))
                         }
-                    } else {
+                    }?.onError {
                         ReadBook.upMsg(context.getString(R.string.error_load_toc))
                     }
-                }?.onError {
-                    ReadBook.upMsg(context.getString(R.string.error_load_toc))
-                }
         }
     }
 
     fun syncBookProgress(
-        book: Book,
-        syncBookProgress: Boolean = AppConfig.syncBookProgress,
-        alertSync: ((progress: BookProgress) -> Unit)? = null
+            book: Book,
+            syncBookProgress: Boolean = AppConfig.syncBookProgress,
+            alertSync: ((progress: BookProgress) -> Unit)? = null
     ) {
-        if (syncBookProgress){
+        if (syncBookProgress) {
             execute {
                 BookWebDav.getBookProgress(book)
             }.onSuccess {
@@ -229,10 +231,10 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
     private fun upChangeDurChapterIndex(book: Book, oldTocSize: Int, chapters: List<BookChapter>) {
         execute {
             ReadBook.durChapterIndex = BookHelp.getDurChapter(
-                book.durChapterIndex,
-                oldTocSize,
-                book.durChapterTitle,
-                chapters
+                    book.durChapterIndex,
+                    oldTocSize,
+                    book.durChapterTitle,
+                    chapters
             )
             book.durChapterIndex = ReadBook.durChapterIndex
             book.durChapterTitle = chapters[ReadBook.durChapterIndex].title
@@ -282,10 +284,10 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
     fun refreshContent(book: Book) {
         execute {
             App.db.bookChapterDao.getChapter(book.bookUrl, ReadBook.durChapterIndex)
-                ?.let { chapter ->
-                    BookHelp.delContent(book, chapter)
-                    ReadBook.loadContent(ReadBook.durChapterIndex, resetPageOffset = false)
-                }
+                    ?.let { chapter ->
+                        BookHelp.delContent(book, chapter)
+                        ReadBook.loadContent(ReadBook.durChapterIndex, resetPageOffset = false)
+                    }
         }
     }
 
