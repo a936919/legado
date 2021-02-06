@@ -1,6 +1,5 @@
 package io.legado.app.service.help
 
-import android.widget.Toast
 import androidx.lifecycle.MutableLiveData
 import com.hankcs.hanlp.HanLP
 import io.legado.app.App
@@ -8,7 +7,6 @@ import io.legado.app.constant.BookType
 import io.legado.app.data.entities.*
 import io.legado.app.data.entities.TimeRecord
 import io.legado.app.help.*
-import io.legado.app.help.ReadBookConfig.context
 import io.legado.app.help.coroutine.Coroutine
 import io.legado.app.help.storage.BookWebDav
 import io.legado.app.model.webBook.WebBook
@@ -18,7 +16,6 @@ import io.legado.app.ui.book.read.page.entities.TextChapter
 import io.legado.app.ui.book.read.page.entities.TextPage
 import io.legado.app.ui.book.read.page.provider.ChapterProvider
 import io.legado.app.ui.book.read.page.provider.ImageProvider
-import io.legado.app.utils.mqLog
 import kotlinx.coroutines.*
 import org.jetbrains.anko.getStackTraceString
 import org.jetbrains.anko.toast
@@ -46,9 +43,10 @@ object ReadBook {
     private var readRecord: ReadRecord? = null
     private var timeRecord: TimeRecord? = null
     var readStartTime: Long = System.currentTimeMillis()
-    var oldChapterTime:Long = 0L
-    var oldChapterIndex:Int? = null
-    var oldChapterPos:Int? = null
+    var oldChapterTime: Long = 0L
+    var isReading = false//判断当前Activity是否在前台，是否正在阅读界面。
+    var oldChapterIndex: Int? = null
+    var oldChapterPos: Int? = null
 
     fun resetData(book: Book) {
         this.book = book
@@ -57,8 +55,10 @@ object ReadBook {
         timeRecord = readRecord?.toTimeRecord()
         timeRecord?.let { timeRecord ->
             timeRecord.date = TimeRecord.getDate()
-            timeRecord.readTime = App.db.timeRecordDao.getReadTime(App.androidId, timeRecord.bookName, timeRecord.author, timeRecord.date)?:0
-            timeRecord.listenTime = App.db.timeRecordDao.getListenTime(App.androidId, timeRecord.bookName, timeRecord.author, timeRecord.date)?:0
+            timeRecord.readTime = App.db.timeRecordDao.getReadTime(App.androidId, timeRecord.bookName, timeRecord.author, timeRecord.date)
+                    ?: 0
+            timeRecord.listenTime = App.db.timeRecordDao.getListenTime(App.androidId, timeRecord.bookName, timeRecord.author, timeRecord.date)
+                    ?: 0
         }
         saveReadRecord()
         durChapterIndex = book.durChapterIndex
@@ -73,13 +73,25 @@ object ReadBook {
         synchronized(this) {
             loadingChapters.clear()
         }
-
     }
 
-    private fun saveReadRecord(){
+    fun resumeData() {
+        book?.let { it ->
+            App.db.bookDao.getBook(it.bookUrl)?.let { book ->
+                if (durChapterIndex != book.durChapterIndex || durChapterPos != book.durChapterPos) {
+                    durChapterIndex = book.durChapterIndex
+                    durChapterPos = book.durChapterPos
+                    loadContent(resetPageOffset = true)
+                    saveRead()
+                }
+            }
+        }
+    }
+
+    private fun saveReadRecord() {
         Coroutine.async {
             readRecord?.let { App.db.readRecordDao.insert(it) }
-            timeRecord?.let {  App.db.timeRecordDao.insert(it) }
+            timeRecord?.let { App.db.timeRecordDao.insert(it) }
         }
     }
 
@@ -107,21 +119,6 @@ object ReadBook {
         loadContent(resetPageOffset = true)
     }
 
-    fun updateLocalProgress():Boolean{
-        return book?.let {  book->
-           if(readStartTime < book.durChapterTime &&( book.durChapterIndex!= durChapterIndex||book.durChapterPos!= durChapterPos)) {
-               oldChapterIndex = durChapterIndex
-               oldChapterPos = durChapterPos
-               durChapterIndex = book.durChapterIndex
-               durChapterPos = book.durChapterPos
-               clearTextChapter()
-               loadContent(resetPageOffset = true)
-               true
-           }else{false}
-        }?:false
-    }
-
-
     fun clearTextChapter() {
         prevTextChapter = null
         curTextChapter = null
@@ -139,21 +136,22 @@ object ReadBook {
     fun upReadStartTime() {
         Coroutine.async {
             timeRecord?.let { timeRecord ->
-                val dataChange =  timeRecord.date != TimeRecord.getDate()
-                var dif =  System.currentTimeMillis() - readStartTime
-                val maxInterval = 3*60*1000L
-                dif = min(dif,maxInterval)//翻页时间超过3分钟，不计为阅读时间
+                val dataChange = timeRecord.date != TimeRecord.getDate()
+                var dif = System.currentTimeMillis() - readStartTime
+                val maxInterval = 3 * 60 * 1000L
+                dif = min(dif, maxInterval)//翻页时间超过3分钟，不计为阅读时间
                 readStartTime = System.currentTimeMillis()
 
-                if(dataChange){
+                if (dataChange) {
                     timeRecord.date = TimeRecord.getDate()
-                    timeRecord.readTime = App.db.timeRecordDao.getReadTime(App.androidId, timeRecord.bookName, timeRecord.author, timeRecord.date)?:0
-                    timeRecord.listenTime = App.db.timeRecordDao.getListenTime(App.androidId, timeRecord.bookName, timeRecord.author, timeRecord.date)?:0
-                }
-                else if(WebService.isRun){
+                    timeRecord.readTime = App.db.timeRecordDao.getReadTime(App.androidId, timeRecord.bookName, timeRecord.author, timeRecord.date)
+                            ?: 0
+                    timeRecord.listenTime = App.db.timeRecordDao.getListenTime(App.androidId, timeRecord.bookName, timeRecord.author, timeRecord.date)
+                            ?: 0
+                } else if (WebService.isRun) {
                     val readTime = App.db.timeRecordDao.getReadTime(App.androidId, timeRecord.bookName, timeRecord.author, timeRecord.date)
                     if (readTime != null) {
-                        if(readTime> timeRecord.readTime){
+                        if (readTime > timeRecord.readTime) {
                             timeRecord.readTime = readTime
                         }
                     }
@@ -164,7 +162,7 @@ object ReadBook {
                 else
                     timeRecord.readTime = timeRecord.readTime + dif
 
-                if(dataChange) App.db.timeRecordDao.insert(timeRecord) else App.db.timeRecordDao.update(timeRecord)
+                if (dataChange) App.db.timeRecordDao.insert(timeRecord) else App.db.timeRecordDao.update(timeRecord)
             }
         }
     }
@@ -175,6 +173,7 @@ object ReadBook {
             callBack?.upContent()
         }
     }
+
     /*目前只有TTS在调用*/
     fun moveToNextPage() {
         durChapterPos = curTextChapter?.getNextPageLength(durChapterPos) ?: durChapterPos
@@ -258,9 +257,6 @@ object ReadBook {
 
     fun setPageIndex(index: Int) {
         durChapterPos = curTextChapter?.getReadLength(index) ?: index
-        val allLength = curTextChapter?.getChapterLength() ?: index
-        val allIndex = curTextChapter?.pageSize ?: index
-        mqLog.d("$durChapterPos $allLength ${durChapterPos.toDouble()/allLength*100}  $index $allIndex ${index.toDouble()/allIndex*100}")
         saveRead()
         curPageChanged()
     }
@@ -282,7 +278,7 @@ object ReadBook {
         if (book != null && textChapter != null) {
             val key = IntentDataHelp.putData(textChapter)
             ReadAloud.play(
-                App.INSTANCE, book.name, textChapter.title, durPageIndex(), key, play
+                    App.INSTANCE, book.name, textChapter.title, durPageIndex(), key, play
             )
         }
     }
@@ -318,10 +314,10 @@ object ReadBook {
     }
 
     fun loadContent(
-        index: Int,
-        upContent: Boolean = true,
-        resetPageOffset: Boolean,
-        success: (() -> Unit)? = null
+            index: Int,
+            upContent: Boolean = true,
+            resetPageOffset: Boolean,
+            success: (() -> Unit)? = null
     ) {
         book?.let { book ->
             if (addLoading(index)) {
@@ -361,9 +357,9 @@ object ReadBook {
     }
 
     private fun download(
-        chapter: BookChapter,
-        resetPageOffset: Boolean,
-        success: (() -> Unit)? = null
+            chapter: BookChapter,
+            resetPageOffset: Boolean,
+            success: (() -> Unit)? = null
     ) {
         val book = book
         val webBook = webBook
@@ -371,7 +367,7 @@ object ReadBook {
             CacheBook.download(Coroutine.DEFAULT, webBook, book, chapter)
         } else if (book != null) {
             contentLoadFinish(
-                book, chapter, "没有书源", resetPageOffset = resetPageOffset
+                    book, chapter, "没有书源", resetPageOffset = resetPageOffset
             ) {
                 success?.invoke()
             }
@@ -396,9 +392,9 @@ object ReadBook {
     }
 
     fun searchResultPositions(
-        pages: List<TextPage>,
-        indexWithinChapter: Int,
-        query: String
+            pages: List<TextPage>,
+            indexWithinChapter: Int,
+            query: String
     ): Array<Int> {
         // calculate search result's pageIndex
         var content = ""
@@ -459,12 +455,12 @@ object ReadBook {
      * 内容加载完成
      */
     fun contentLoadFinish(
-        book: Book,
-        chapter: BookChapter,
-        content: String,
-        upContent: Boolean = true,
-        resetPageOffset: Boolean,
-        success: (() -> Unit)? = null
+            book: Book,
+            chapter: BookChapter,
+            content: String,
+            upContent: Boolean = true,
+            resetPageOffset: Boolean,
+            success: (() -> Unit)? = null
     ) {
         Coroutine.async {
             ImageProvider.clearOut(durChapterIndex)
@@ -478,9 +474,9 @@ object ReadBook {
                 when (chapter.index) {
                     durChapterIndex -> {
                         curTextChapter =
-                            ChapterProvider.getTextChapter(
-                                book, chapter, contents, chapterSize, imageStyle
-                            )
+                                ChapterProvider.getTextChapter(
+                                        book, chapter, contents, chapterSize, imageStyle
+                                )
                         if (upContent) callBack?.upContent(resetPageOffset = resetPageOffset)
                         callBack?.upView()
                         curPageChanged()
@@ -488,16 +484,16 @@ object ReadBook {
                     }
                     durChapterIndex - 1 -> {
                         prevTextChapter =
-                            ChapterProvider.getTextChapter(
-                                book, chapter, contents, chapterSize, imageStyle
-                            )
+                                ChapterProvider.getTextChapter(
+                                        book, chapter, contents, chapterSize, imageStyle
+                                )
                         if (upContent) callBack?.upContent(-1, resetPageOffset)
                     }
                     durChapterIndex + 1 -> {
                         nextTextChapter =
-                            ChapterProvider.getTextChapter(
-                                book, chapter, contents, chapterSize, imageStyle
-                            )
+                                ChapterProvider.getTextChapter(
+                                        book, chapter, contents, chapterSize, imageStyle
+                                )
                         if (upContent) callBack?.upContent(1, resetPageOffset)
                     }
                 }
@@ -557,9 +553,9 @@ object ReadBook {
         fun loadChapterList(book: Book)
 
         fun upContent(
-            relativePosition: Int = 0,
-            resetPageOffset: Boolean = true,
-            success: (() -> Unit)? = null
+                relativePosition: Int = 0,
+                resetPageOffset: Boolean = true,
+                success: (() -> Unit)? = null
         )
 
         fun upView()

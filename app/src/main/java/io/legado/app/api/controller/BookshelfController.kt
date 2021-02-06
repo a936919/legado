@@ -4,7 +4,6 @@ import io.legado.app.App
 import io.legado.app.api.ReturnData
 import io.legado.app.constant.PreferKey
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.ReadRecord
 import io.legado.app.data.entities.ReplaceRule
 import io.legado.app.data.entities.TimeRecord
 import io.legado.app.help.BookHelp
@@ -37,7 +36,7 @@ object BookshelfController {
             }
         }
 
-    private var timeRecord :TimeRecord? = null
+    private var timeRecord: TimeRecord? = null
     private var readStartTime: Long = System.currentTimeMillis()
     fun getChapterList(parameters: Map<String, List<String>>): ReturnData {
         val bookUrl = parameters["url"]?.getOrNull(0)
@@ -66,7 +65,7 @@ object BookshelfController {
             returnData.setErrorMsg("未找到")
         } else {
             var content: String? = BookHelp.getContent(book, chapter)
-            if (content == null){
+            if (content == null) {
                 App.db.bookSourceDao.getBookSource(book.origin)?.let { source ->
                     runBlocking {
                         WebBook(source).getContentAwait(this, book, chapter)
@@ -76,14 +75,13 @@ object BookshelfController {
                 } ?: returnData.setErrorMsg("未找到书源")
             }
 
-            if(content!=null){
+            if (content != null) {
                 content = processReplace(book, content!!)
-                synRecord(book,index,0)
-                if(ReadBookConfig.isComic(book.origin))
-                    content = content!!.replace("\\s*\\n+\\s*".toRegex(),"")
+                synRecord(book, index, 0)
+                if (ReadBookConfig.isComic(book.origin))
+                    content = content!!.replace("\\s*\\n+\\s*".toRegex(), "")
                 returnData.setData(content!!)
-            }
-            else{
+            } else {
                 returnData.setErrorMsg("未找到")
             }
         }
@@ -92,15 +90,14 @@ object BookshelfController {
 
     fun saveReadRecord(parameters: Map<String, List<String>>): ReturnData {
         val returnData = ReturnData()
-        val dif =  System.currentTimeMillis() - readStartTime
-        if(dif<2000) return returnData.setErrorMsg("发送过快")
+        val dif = System.currentTimeMillis() - readStartTime
+        if (dif < 2000) return returnData.setErrorMsg("发送过快")
         val bookUrl = parameters["url"]?.getOrNull(0)
-        val chapterIndex =  parameters["chapterIndex"]?.getOrNull(0)?.toInt()
+        val chapterIndex = parameters["chapterIndex"]?.getOrNull(0)?.toInt()
         val pos = parameters["pos"]?.getOrNull(0)?.toInt()
-        mqLog.d("$bookUrl $chapterIndex $pos")
-        if(bookUrl==null || chapterIndex == null || pos == null)
+        if (bookUrl == null || chapterIndex == null || pos == null)
             return returnData.setErrorMsg("参数url不能为空，请指定书籍地址")
-        App.db.bookDao.getBook(bookUrl)?.let {  synRecord(it,chapterIndex,pos) }
+        App.db.bookDao.getBook(bookUrl)?.let { synRecord(it, chapterIndex, pos) }
         return returnData.setData("成功")
     }
 
@@ -118,18 +115,19 @@ object BookshelfController {
         return returnData.setErrorMsg("格式不对")
     }
 
-    private fun insertReadRecord(book: Book){
-        Coroutine.async{
+    private fun insertReadRecord(book: Book) {
+        Coroutine.async {
             val readRecord = book.toReadRecord()
             val nowTimeRecord = readRecord.toTimeRecord()
-            if(timeRecord==null||!timeRecord!!.equals(nowTimeRecord)) {
+            if (timeRecord == null || !timeRecord!!.equals(nowTimeRecord)) {
                 book.durChapterTime = System.currentTimeMillis()
                 readRecord.durChapterTime = System.currentTimeMillis()
                 timeRecord = nowTimeRecord
                 timeRecord?.let {
                     readStartTime = System.currentTimeMillis()
                     it.date = TimeRecord.getDate()
-                    it.readTime = App.db.timeRecordDao.getReadTime(App.androidId, it.bookName, it.author, it.date) ?: 0
+                    it.readTime = App.db.timeRecordDao.getReadTime(App.androidId, it.bookName, it.author, it.date)
+                            ?: 0
                     App.db.bookDao.update(book)
                     App.db.readRecordDao.insert(readRecord)
                     App.db.timeRecordDao.insert(it)
@@ -138,7 +136,7 @@ object BookshelfController {
         }
     }
 
-    private fun processReplace(book:Book, content:String):String{
+    private fun processReplace(book: Book, content: String): String {
         val replaceRules = arrayListOf<ReplaceRule>()
         replaceRules.clear()
         replaceRules.addAll(App.db.replaceRuleDao.findEnabledByScope(book.name, book.origin))
@@ -161,7 +159,7 @@ object BookshelfController {
         return content1
     }
 
-    private fun synRecord(book:Book,chapterIndex:Int, pos:Int) {
+    private fun synRecord(book: Book, chapterIndex: Int, pos: Int) {
         Coroutine.async {
             book.durChapterTime = System.currentTimeMillis()
             book.durChapterIndex = chapterIndex
@@ -173,21 +171,27 @@ object BookshelfController {
             val readRecord = book.toReadRecord()
             App.db.readRecordDao.update(readRecord)
             timeRecord?.let {
-                val dataChange =  it.date != TimeRecord.getDate()
-                var dif =  System.currentTimeMillis() - readStartTime
-                val maxInterval = 3*60*1000L
-                dif = min(dif,maxInterval)//翻页时间超过3分钟，不计为阅读时间
+                val dataChange = it.date != TimeRecord.getDate()
+                var dif = System.currentTimeMillis() - readStartTime
+                val maxInterval = 3 * 60 * 1000L
+                dif = min(dif, maxInterval)//翻页时间超过3分钟，不计为阅读时间
                 readStartTime = System.currentTimeMillis()
-                if(dataChange){
+                if (dataChange) {
                     it.date = TimeRecord.getDate()
-                    it.readTime = App.db.timeRecordDao.getReadTime(App.androidId, it.bookName, it.author, it.date)?:0
-                }else{
-                    App.db.timeRecordDao.getReadTime(App.androidId, it.bookName, it.author, it.date)?.let {readTime->
-                        if(readTime > it.readTime) it.readTime = readTime
+                    it.readTime = App.db.timeRecordDao.getReadTime(App.androidId, it.bookName, it.author, it.date)
+                            ?: 0
+                } else {
+                    App.db.timeRecordDao.getReadTime(App.androidId, it.bookName, it.author, it.date)?.let { readTime ->
+                        if (readTime > it.readTime) it.readTime = readTime
                     }
                 }
                 it.readTime = it.readTime + dif
-                if(dataChange) App.db.timeRecordDao.insert(it) else App.db.timeRecordDao.update(it)
+                if (dataChange) App.db.timeRecordDao.insert(it) else App.db.timeRecordDao.update(it)
+            }
+            if (ReadBook.isReading && ReadBook.book?.bookUrl == book.bookUrl) {
+                ReadBook.durChapterIndex = chapterIndex
+                ReadBook.durChapterPos = pos
+                ReadBook.loadContent(resetPageOffset = true)
             }
         }
     }

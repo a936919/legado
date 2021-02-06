@@ -60,18 +60,18 @@ import org.jetbrains.anko.startActivityForResult
 import org.jetbrains.anko.toast
 
 class ReadBookActivity : ReadBookBaseActivity(),
-    View.OnTouchListener,
-    ReadView.CallBack,
-    TextActionMenu.CallBack,
-    ContentTextView.CallBack,
-    ReadMenu.CallBack,
-    ReadAloudDialog.CallBack,
-    ChangeSourceDialog.CallBack,
-    ReadBook.CallBack,
-    AutoReadDialog.CallBack,
-    TocRegexDialog.CallBack,
-    BookOtherInfoDialog.CallBack,
-    ColorPickerDialogListener {
+        View.OnTouchListener,
+        ReadView.CallBack,
+        TextActionMenu.CallBack,
+        ContentTextView.CallBack,
+        ReadMenu.CallBack,
+        ReadAloudDialog.CallBack,
+        ChangeSourceDialog.CallBack,
+        ReadBook.CallBack,
+        AutoReadDialog.CallBack,
+        TocRegexDialog.CallBack,
+        BookOtherInfoDialog.CallBack,
+        ColorPickerDialogListener {
 
     private val requestCodeChapterList = 568
     private val requestCodeReplace = 312
@@ -97,6 +97,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
     override val pageFactory: TextPageFactory get() = binding.readView.pageFactory
     override val headerHeight: Int get() = binding.readView.curPage.headerHeight
     override var intentIsComic = false
+    private var resumeData = false
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -133,11 +134,13 @@ class ReadBookActivity : ReadBookBaseActivity(),
         upSystemUiVisibility()
         timeBatteryReceiver = TimeBatteryReceiver.register(this)
         binding.readView.upTime()
+        ReadBook.isReading = true
+        if (resumeData) ReadBook.resumeData()
+        resumeData = false
     }
 
     override fun onPause() {
         super.onPause()
-        mqLog.d("save 1")
         ReadBook.saveRead()
         timeBatteryReceiver?.let {
             unregisterReceiver(it)
@@ -146,6 +149,8 @@ class ReadBookActivity : ReadBookBaseActivity(),
         upSystemUiVisibility()
         ReadBook.uploadProgress()
         Backup.autoBack(this)
+        ReadBook.isReading = false
+        resumeData = true
     }
 
     override fun onCompatCreateOptionsMenu(menu: Menu): Boolean {
@@ -193,9 +198,9 @@ class ReadBookActivity : ReadBookBaseActivity(),
                     R.id.menu_page_anim,
                     R.id.menu_disable_book_source,
                     R.id.menu_help -> item.isVisible = false
-                    R.id.menu_del_h_tag -> item.isChecked =  book.getDelTag(Book.hTag)
-                    R.id.menu_del_img_tag -> item.isChecked =  book.getDelTag(Book.imgTag)
-                    R.id.menu_del_ruby_tag -> item.isChecked =  book.getDelTag(Book.rubyTag)
+                    R.id.menu_del_h_tag -> item.isChecked = book.getDelTag(Book.hTag)
+                    R.id.menu_del_img_tag -> item.isChecked = book.getDelTag(Book.imgTag)
+                    R.id.menu_del_ruby_tag -> item.isChecked = book.getDelTag(Book.rubyTag)
                 }
             }
         }
@@ -225,7 +230,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
                 }
             }
             R.id.menu_download -> showDownloadDialog()
-            R.id.menu_delete_paragraph ->{
+            R.id.menu_delete_paragraph -> {
                 showDelParagraphDialog()
             }
             R.id.menu_add_bookmark -> {
@@ -243,19 +248,19 @@ class ReadBookActivity : ReadBookBaseActivity(),
                     showBookMark(bookmark)
                 }
             }
-            R.id.menu_del_h_tag->ReadBook.book?.let {
+            R.id.menu_del_h_tag -> ReadBook.book?.let {
                 it.setDelTag(Book.hTag)
-                menu?.findItem(R.id.menu_del_h_tag)?.isChecked =  it.getDelTag(Book.hTag)
+                menu?.findItem(R.id.menu_del_h_tag)?.isChecked = it.getDelTag(Book.hTag)
                 ReadBook.loadContent(resetPageOffset = false)
             }
-            R.id.menu_del_img_tag->ReadBook.book?.let {
+            R.id.menu_del_img_tag -> ReadBook.book?.let {
                 it.setDelTag(Book.imgTag)
-                menu?.findItem(R.id.menu_del_img_tag)?.isChecked =  it.getDelTag(Book.imgTag)
+                menu?.findItem(R.id.menu_del_img_tag)?.isChecked = it.getDelTag(Book.imgTag)
                 ReadBook.loadContent(resetPageOffset = false)
             }
-            R.id.menu_del_ruby_tag->ReadBook.book?.let {
+            R.id.menu_del_ruby_tag -> ReadBook.book?.let {
                 it.setDelTag(Book.rubyTag)
-                menu?.findItem(R.id.menu_del_ruby_tag)?.isChecked =  it.getDelTag(Book.rubyTag)
+                menu?.findItem(R.id.menu_del_ruby_tag)?.isChecked = it.getDelTag(Book.rubyTag)
                 ReadBook.loadContent(resetPageOffset = false)
             }
             R.id.menu_copy_text ->
@@ -301,24 +306,24 @@ class ReadBookActivity : ReadBookBaseActivity(),
         return super.onCompatOptionsItemSelected(item)
     }
 
-    private fun processBookProgress(book:Book, webDavProgress:BookProgress?){
-        val local = if(ReadBook.oldChapterIndex == null||ReadBook.oldChapterPos == null) null
-            else BookProgress(
-            book.name,
-            book.author,
-            ReadBook.oldChapterIndex!!,
-            ReadBook.oldChapterPos!!,
-            ReadBook.oldChapterTime,
-            book.durChapterTitle)
-        val web =  if(book.webChapterIndex == 0 && book.webChapterPos == 0) null
-            else BookProgress(
-            book.name,
-            book.author,
-            book.webChapterIndex,
-            book.webChapterPos,
-            book.webDurChapterTime,
-            null)
-        showSelectRecord(local,web, webDavProgress)
+    private fun processBookProgress(book: Book, webDavProgress: BookProgress?) {
+        val local = if (ReadBook.oldChapterIndex == null || ReadBook.oldChapterPos == null) null
+        else BookProgress(
+                book.name,
+                book.author,
+                ReadBook.oldChapterIndex!!,
+                ReadBook.oldChapterPos!!,
+                ReadBook.oldChapterTime,
+                book.durChapterTitle)
+        val web = if (book.webChapterIndex == 0 && book.webChapterPos == 0) null
+        else BookProgress(
+                book.name,
+                book.author,
+                book.webChapterIndex,
+                book.webChapterPos,
+                book.webDurChapterTime,
+                null)
+        showSelectRecord(local, web, webDavProgress)
     }
 
     /**
@@ -579,9 +584,9 @@ class ReadBookActivity : ReadBookBaseActivity(),
         return false
     }
 
-    var oldChapterIndex:Int = 0
-    var oldChapterPos:Int = 0
-    var oldBookUrl:String? = null
+    var oldChapterIndex: Int = 0
+    var oldChapterPos: Int = 0
+    var oldBookUrl: String? = null
 
     override fun synProgress() {
         ReadBook.book?.let {
@@ -624,9 +629,9 @@ class ReadBookActivity : ReadBookBaseActivity(),
      * 更新内容
      */
     override fun upContent(
-        relativePosition: Int,
-        resetPageOffset: Boolean,
-        success: (() -> Unit)?
+            relativePosition: Int,
+            resetPageOffset: Boolean,
+            success: (() -> Unit)?
     ) {
         launch {
             autoPageProgress = 0
@@ -920,18 +925,18 @@ class ReadBookActivity : ReadBookBaseActivity(),
                     delay(20L)
                     when (positions[3]) {
                         0 -> binding.readView.curPage.selectEndMoveIndex(
-                            0,
-                            positions[1],
-                            positions[2] + viewModel.searchContentQuery.length - 1
+                                0,
+                                positions[1],
+                                positions[2] + viewModel.searchContentQuery.length - 1
                         )
                         1 -> binding.readView.curPage.selectEndMoveIndex(
-                            0,
-                            positions[1] + 1,
-                            positions[4]
+                                0,
+                                positions[1] + 1,
+                                positions[4]
                         )
                         //consider change page, jump to scroll position
                         -1 -> binding.readView.curPage
-                            .selectEndMoveIndex(1, 0, positions[4])
+                                .selectEndMoveIndex(1, 0, positions[4])
                     }
                     binding.readView.isTextSelected = true
                     delay(100L)
