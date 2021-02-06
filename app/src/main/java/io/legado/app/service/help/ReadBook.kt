@@ -105,6 +105,19 @@ object ReadBook {
         loadContent(resetPageOffset = true)
     }
 
+    fun updateLocalProgress():Boolean{
+        return book?.let {  book->
+           if(readStartTime<book.durChapterTime &&( book.durChapterIndex!= durChapterIndex||book.durChapterPos!= durChapterPos)) {
+               durChapterIndex = book.durChapterIndex
+               durChapterPos = book.durChapterPos
+               clearTextChapter()
+               loadContent(resetPageOffset = true)
+               true
+           }else{false}
+        }?:false
+    }
+
+
     fun clearTextChapter() {
         prevTextChapter = null
         curTextChapter = null
@@ -534,6 +547,7 @@ object ReadBook {
             }
         }
     }
+
 
     interface CallBack {
         fun loadChapterList(book: Book)

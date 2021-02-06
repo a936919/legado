@@ -90,12 +90,13 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
                     loadChapterList(book)
                 }
             } else {
-                if (ReadBook.curTextChapter != null&&!WebService.isRun) {
+                if (ReadBook.curTextChapter != null&& !ReadBook.updateLocalProgress()) {
                     ReadBook.callBack?.upContent(resetPageOffset = false)
                 } else {
                     ReadBook.loadContent(resetPageOffset = true)
                 }
             }
+
             if (!BaseReadAloudService.isRun) {
                 syncBookProgress(book)
             }

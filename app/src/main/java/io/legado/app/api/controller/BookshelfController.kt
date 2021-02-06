@@ -37,11 +37,8 @@ object BookshelfController {
             }
         }
 
-    private var book :Book? = null
     private var timeRecord :TimeRecord? = null
-    private var readRecord :ReadRecord? = null
     private var readStartTime: Long = System.currentTimeMillis()
-    private var title:String?=null
     fun getChapterList(parameters: Map<String, List<String>>): ReturnData {
         val bookUrl = parameters["url"]?.getOrNull(0)
         val returnData = ReturnData()
@@ -81,7 +78,7 @@ object BookshelfController {
 
             if(content!=null){
                 content = processReplace(book, content!!)
-                saveBookReadIndex(book, index)
+                synRecord(book,index,0)
                 if(ReadBookConfig.isComic(book.origin))
                     content = content!!.replace("\\s*\\n+\\s*".toRegex(),"")
                 returnData.setData(content!!)
@@ -97,11 +94,12 @@ object BookshelfController {
         val returnData = ReturnData()
         val dif =  System.currentTimeMillis() - readStartTime
         if(dif<2000) return returnData.setErrorMsg("发送过快")
+        val bookUrl = parameters["url"]?.getOrNull(0)
         val chapterIndex =  parameters["chapterIndex"]?.getOrNull(0)?.toInt()
         val pos = parameters["pos"]?.getOrNull(0)?.toInt()
-        if(chapterIndex == null || pos == null)
+        if(bookUrl==null || chapterIndex == null || pos == null)
             return returnData.setErrorMsg("参数url不能为空，请指定书籍地址")
-        synRecord(chapterIndex,pos)
+        App.db.bookDao.getBook(bookUrl)?.let {  synRecord(it,chapterIndex,pos) }
         return returnData.setData("成功")
     }
 
@@ -139,26 +137,6 @@ object BookshelfController {
         }
     }
 
-    private fun saveBookReadIndex(book: Book, index: Int) {
-        book.durChapterIndex = index
-        book.durChapterPos = 0
-        book.durChapterTime = System.currentTimeMillis()
-        App.db.bookChapterDao.getChapter(book.bookUrl, index)?.let {
-            title = "[Web]"+ it.title
-            book.durChapterTitle = title
-        }
-        readRecord = book.toReadRecord()
-        App.db.readRecordDao.update(readRecord!!)
-        App.db.bookDao.getBook(book.bookUrl)?.let {
-            this.book = it
-            this.book!!.webChapterIndex = index
-            this.book!!.webDurChapterTime = book.durChapterTime
-            this.book!!.webChapterPos = 0
-            App.db.bookDao.update(this.book!!)
-        }
-        synRecord(index,0)
-    }
-
     private fun processReplace(book:Book, content:String):String{
         val replaceRules = arrayListOf<ReplaceRule>()
         replaceRules.clear()
@@ -182,17 +160,17 @@ object BookshelfController {
         return content1
     }
 
-    private fun synRecord(chapterIndex:Int, pos:Int) {
+    private fun synRecord(book:Book,chapterIndex:Int, pos:Int) {
         Coroutine.async {
-            book?.let {
-                it.webChapterIndex = chapterIndex
-                it.webChapterPos = pos
-                it.webDurChapterTime = System.currentTimeMillis()
-                App.db.bookDao.update(it)
-                val readRecord = it.toReadRecord()
-                readRecord.durChapterTime = it.webDurChapterTime
-                readRecord.durChapterTitle = title
+            book.durChapterTime = System.currentTimeMillis()
+            book.durChapterIndex = chapterIndex
+            book.durChapterPos = pos
+            App.db.bookChapterDao.getChapter(book.bookUrl, chapterIndex)?.let {
+                book.durChapterTitle = it.title
             }
+            App.db.bookDao.update(book)
+            val readRecord = book.toReadRecord()
+            App.db.readRecordDao.update(readRecord)
             timeRecord?.let {
                 val dataChange =  it.date != TimeRecord.getDate()
                 var dif =  System.currentTimeMillis() - readStartTime
