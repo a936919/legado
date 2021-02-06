@@ -5,6 +5,7 @@ import fi.iki.elonen.NanoHTTPD
 import io.legado.app.api.ReturnData
 import io.legado.app.api.controller.BookshelfController
 import io.legado.app.api.controller.SourceController
+import io.legado.app.utils.mqLog
 import io.legado.app.web.utils.AssetsWeb
 import java.util.*
 
@@ -53,6 +54,8 @@ class HttpServer(port: Int) : NanoHTTPD(port) {
                             returnData = BookshelfController.getBookContent(parameters)
                         "/saveReadRecord" ->
                             returnData = BookshelfController.saveReadRecord(parameters)
+                        "/getBook" ->
+                            returnData = BookshelfController.getBook(parameters)
                     }
                 }
             }

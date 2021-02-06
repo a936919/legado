@@ -38,6 +38,16 @@ object BookshelfController {
 
     private var timeRecord: TimeRecord? = null
     private var readStartTime: Long = System.currentTimeMillis()
+    fun getBook(parameters: Map<String, List<String>>):ReturnData{
+        val bookUrl = parameters["url"]?.getOrNull(0)
+        val returnData = ReturnData()
+        if (bookUrl.isNullOrEmpty()) {
+            return returnData.setErrorMsg("参数url不能为空，请指定书籍地址")
+        }
+        val book = App.db.bookDao.getBook(bookUrl) ?: return returnData.setData("获取失败")
+        return returnData.setData(book)
+
+    }
     fun getChapterList(parameters: Map<String, List<String>>): ReturnData {
         val bookUrl = parameters["url"]?.getOrNull(0)
         val returnData = ReturnData()
