@@ -107,6 +107,7 @@ object BookshelfController {
         val pos = parameters["pos"]?.getOrNull(0)?.toInt()
         if (bookUrl == null || chapterIndex == null || pos == null)
             return returnData.setErrorMsg("参数url不能为空，请指定书籍地址")
+        mqLog.d("saveReadRecord $chapterIndex $pos")
         App.db.bookDao.getBook(bookUrl)?.let { synRecord(it, chapterIndex, pos) }
         return returnData.setData("成功")
     }

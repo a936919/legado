@@ -896,6 +896,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
                 requestCodeChapterList ->
                     data?.getIntExtra("index", ReadBook.durChapterIndex)?.let { index ->
                         if (index != ReadBook.durChapterIndex) {
+                            resumeData = false
                             val chapterPos = data.getIntExtra("chapterPos", 0)
                             viewModel.openChapter(index, chapterPos)
                         }
