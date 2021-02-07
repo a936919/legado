@@ -132,8 +132,6 @@ object BookshelfController {
             val readRecord = book.toReadRecord()
             val nowTimeRecord = readRecord.toTimeRecord()
             if (timeRecord == null || !timeRecord!!.equals(nowTimeRecord)) {
-                book.webDurChapterTime = System.currentTimeMillis()
-                readRecord.durChapterTime = System.currentTimeMillis()
                 timeRecord = nowTimeRecord
                 timeRecord?.let {
                     readStartTime = System.currentTimeMillis()

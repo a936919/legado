@@ -59,7 +59,7 @@ data class Book(
         //web相关的存储记录
         var webChapterIndex: Int = 0,
         var webChapterPos: Int = 0,
-        var webDurChapterTime: Long = System.currentTimeMillis(),
+        var webDurChapterTime: Long = 0L,
 ) : Parcelable, BaseBook {
 
     fun isLocalBook(): Boolean {
