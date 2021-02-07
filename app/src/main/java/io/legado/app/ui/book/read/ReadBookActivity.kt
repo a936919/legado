@@ -97,7 +97,6 @@ class ReadBookActivity : ReadBookBaseActivity(),
     override val pageFactory: TextPageFactory get() = binding.readView.pageFactory
     override val headerHeight: Int get() = binding.readView.curPage.headerHeight
     override var intentIsComic = false
-    private var resumeData = false
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -134,9 +133,6 @@ class ReadBookActivity : ReadBookBaseActivity(),
         upSystemUiVisibility()
         timeBatteryReceiver = TimeBatteryReceiver.register(this)
         binding.readView.upTime()
-        ReadBook.isReading = true
-        if (resumeData) ReadBook.resumeData()
-        resumeData = false
     }
 
     override fun onPause() {
@@ -149,8 +145,6 @@ class ReadBookActivity : ReadBookBaseActivity(),
         upSystemUiVisibility()
         ReadBook.uploadProgress()
         Backup.autoBack(this)
-        ReadBook.isReading = false
-        resumeData = true
     }
 
     override fun onCompatCreateOptionsMenu(menu: Menu): Boolean {
@@ -295,36 +289,13 @@ class ReadBookActivity : ReadBookBaseActivity(),
                 )
             }
             R.id.menu_set_charset -> showCharsetConfig()
-            R.id.menu_get_progress -> ReadBook.book?.let {
-                viewModel.syncBookProgress(it) { progress ->
-                    processBookProgress(it, progress)
-                }
-            }
+            R.id.menu_get_progress -> synProgress()
             R.id.menu_help -> showReadMenuHelp()
             R.id.ReplaceRule -> openReplaceRule()
         }
         return super.onCompatOptionsItemSelected(item)
     }
 
-    private fun processBookProgress(book: Book, webDavProgress: BookProgress?) {
-        val local = if (ReadBook.oldChapterIndex == null || ReadBook.oldChapterPos == null) null
-        else BookProgress(
-                book.name,
-                book.author,
-                ReadBook.oldChapterIndex!!,
-                ReadBook.oldChapterPos!!,
-                ReadBook.oldChapterTime,
-                book.durChapterTitle)
-        val web = if (book.webChapterIndex == 0 && book.webChapterPos == 0) null
-        else BookProgress(
-                book.name,
-                book.author,
-                book.webChapterIndex,
-                book.webChapterPos,
-                book.webDurChapterTime,
-                null)
-        showSelectRecord(local, web, webDavProgress)
-    }
 
     /**
      * 按键拦截,显示菜单
@@ -584,15 +555,35 @@ class ReadBookActivity : ReadBookBaseActivity(),
         return false
     }
 
-    var oldChapterIndex: Int = 0
-    var oldChapterPos: Int = 0
-    var oldBookUrl: String? = null
+    private fun processBookProgress(book: Book, webDavProgress: BookProgress?) {
+        val history = ReadBook.historyRecord
+        val web = if (book.webChapterIndex == 0 && book.webChapterPos == 0) null
+        else BookProgress(
+                book.name,
+                book.author,
+                book.webChapterIndex,
+                book.webChapterPos,
+                book.webDurChapterTime,
+                null)
+        showSelectRecord(history, web, webDavProgress)
+    }
+
+    override fun synProgress(book: Book) {
+        viewModel.getWebDavProgress(book) { progress ->
+            ReadBook.historyRecord?.let {
+                if (it.durChapterTime < book.webDurChapterTime || it.durChapterTime < progress.durChapterTime) {
+                    processBookProgress(book, progress)
+                }
+            }
+        }
+    }
 
     override fun synProgress() {
         ReadBook.book?.let {
-            viewModel.syncBookProgress(it) { progress ->
-                //sureSyncProgress(progress)
-                processBookProgress(it, progress)
+            viewModel.getWebDavProgress(it) { progress ->
+                App.db.bookDao.getBook(it.bookUrl)?.let { newBook ->
+                    processBookProgress(newBook, progress)
+                }
             }
         }
     }
@@ -876,16 +867,6 @@ class ReadBookActivity : ReadBookBaseActivity(),
         }
     }
 
-    private fun sureSyncProgress(progress: BookProgress) {
-        alert(R.string.get_book_progress) {
-            message = getString(R.string.current_progress_exceeds_cloud)
-            okButton {
-                ReadBook.setProgress(progress)
-            }
-            noButton()
-        }.show()
-    }
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == Activity.RESULT_OK) {
@@ -896,7 +877,6 @@ class ReadBookActivity : ReadBookBaseActivity(),
                 requestCodeChapterList ->
                     data?.getIntExtra("index", ReadBook.durChapterIndex)?.let { index ->
                         if (index != ReadBook.durChapterIndex) {
-                            resumeData = false
                             val chapterPos = data.getIntExtra("chapterPos", 0)
                             viewModel.openChapter(index, chapterPos)
                         }

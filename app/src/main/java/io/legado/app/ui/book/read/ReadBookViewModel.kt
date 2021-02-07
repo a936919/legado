@@ -7,17 +7,13 @@ import io.legado.app.base.BaseViewModel
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
 import io.legado.app.data.entities.BookProgress
-import io.legado.app.databinding.DialogSelectRecordBinding
 import io.legado.app.help.AppConfig
 import io.legado.app.help.BookHelp
 import io.legado.app.help.storage.BookWebDav
-import io.legado.app.lib.dialogs.alert
-import io.legado.app.lib.theme.backgroundColor
 import io.legado.app.model.localBook.LocalBook
 import io.legado.app.model.webBook.PreciseSearch
 import io.legado.app.model.webBook.WebBook
 import io.legado.app.service.BaseReadAloudService
-import io.legado.app.service.WebService
 import io.legado.app.service.help.ReadAloud
 import io.legado.app.service.help.ReadBook
 import io.legado.app.utils.*
@@ -34,7 +30,6 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
             if (book != null) initBook(book)
         }.onFinally {
             if (ReadBook.inBookshelf) {
-                ReadBook.book?.let { ReadBook.oldChapterTime = it.durChapterTime }
                 ReadBook.saveRead()
             }
         }
@@ -43,8 +38,7 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
     private fun initBook(book: Book) {
         if (ReadBook.book?.bookUrl != book.bookUrl) {
             ReadBook.resetData(book)
-            ReadBook.oldChapterIndex = null
-            ReadBook.oldChapterPos = null
+            ReadBook.historyRecord = book.toBookProgress()
             isInitFinish = true
             if (!book.isLocalBook() && ReadBook.webBook == null) {
                 autoChangeSource(book.name, book.author)
@@ -63,9 +57,9 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
                 }
                 ReadBook.loadContent(resetPageOffset = true)
             }
-            syncBookProgress(book)
+            ReadBook.synProgress(book)
         } else {
-            var offset =false
+            var offset = false
             ReadBook.book = book
             if (ReadBook.durChapterIndex != book.durChapterIndex || ReadBook.durChapterPos != book.durChapterPos) {
                 ReadBook.durChapterIndex = book.durChapterIndex
@@ -77,8 +71,7 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
             }
             ReadBook.titleDate.postValue(book.name)
             ReadBook.upWebBook(book)
-            ReadBook.oldChapterIndex = null
-            ReadBook.oldChapterPos = null
+            ReadBook.historyRecord = book.toBookProgress()
             isInitFinish = true
             if (!book.isLocalBook() && ReadBook.webBook == null) {
                 autoChangeSource(book.name, book.author)
@@ -92,7 +85,7 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
                     loadChapterList(book)
                 }
             } else {
-                if (ReadBook.curTextChapter != null &&!offset) {
+                if (ReadBook.curTextChapter != null && !offset) {
                     ReadBook.callBack?.upContent(resetPageOffset = false)
                 } else {
                     ReadBook.loadContent(resetPageOffset = true)
@@ -100,7 +93,7 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
             }
 
             if (!BaseReadAloudService.isRun) {
-                syncBookProgress(book)
+                ReadBook.synProgress(book)
             }
         }
     }
@@ -162,7 +155,8 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
         }
     }
 
-    fun syncBookProgress(
+
+    fun getWebDavProgress(
             book: Book,
             syncBookProgress: Boolean = AppConfig.syncBookProgress,
             alertSync: ((progress: BookProgress) -> Unit)? = null

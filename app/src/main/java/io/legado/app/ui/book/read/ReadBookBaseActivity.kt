@@ -21,7 +21,6 @@ import io.legado.app.help.coroutine.Coroutine
 import io.legado.app.lib.dialogs.alert
 import io.legado.app.lib.dialogs.selector
 import io.legado.app.lib.theme.ATH
-import io.legado.app.lib.theme.ThemeStore
 import io.legado.app.lib.theme.backgroundColor
 import io.legado.app.lib.theme.readCfgTopBg
 import io.legado.app.service.help.CacheBook
@@ -30,8 +29,6 @@ import io.legado.app.ui.book.read.config.BgTextConfigDialog
 import io.legado.app.ui.book.read.config.ClickActionConfigDialog
 import io.legado.app.ui.book.read.config.PaddingConfigDialog
 import io.legado.app.utils.*
-import org.jetbrains.anko.button
-import rxhttp.wrapper.entity.Progress
 import kotlin.math.max
 import kotlin.math.min
 
@@ -39,7 +36,7 @@ import kotlin.math.min
  * 阅读界面
  */
 abstract class ReadBookBaseActivity :
-    VMBaseActivity<ActivityBookReadBinding, ReadBookViewModel>() {
+        VMBaseActivity<ActivityBookReadBinding, ReadBookViewModel>() {
 
     override val viewModel: ReadBookViewModel
         get() = getViewModel(ReadBookViewModel::class.java)
@@ -91,8 +88,8 @@ abstract class ReadBookBaseActivity :
      * 更新状态栏,导航栏
      */
     fun upSystemUiVisibility(
-        isInMultiWindow: Boolean,
-        toolBarHide: Boolean = true
+            isInMultiWindow: Boolean,
+            toolBarHide: Boolean = true
     ) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.insetsController?.let {
@@ -115,8 +112,8 @@ abstract class ReadBookBaseActivity :
 
     @Suppress("DEPRECATION")
     private fun upSystemUiVisibilityO(
-        isInMultiWindow: Boolean,
-        toolBarHide: Boolean = true
+            isInMultiWindow: Boolean,
+            toolBarHide: Boolean = true
     ) {
         var flag = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                 or View.SYSTEM_UI_FLAG_IMMERSIVE
@@ -166,7 +163,7 @@ abstract class ReadBookBaseActivity :
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && ReadBookConfig.readBodyToLh) {
             window.attributes = window.attributes.apply {
                 layoutInDisplayCutoutMode =
-                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+                        WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             }
         }
     }
@@ -198,22 +195,23 @@ abstract class ReadBookBaseActivity :
         ReadBook.book?.let { book ->
             alert("删除本章前面的段落") {
                 val moreId = 4
-                var checkId = min(moreId,book.getDelParagraph())
+                var checkId = min(moreId, book.getDelParagraph())
                 val alertBinding = DialogDeleteParagraphBinding.inflate(layoutInflater).apply {
                     root.setBackgroundColor(root.context.backgroundColor)
                     rgLayout.checkByIndex(checkId)
-                    llMore.isVisible = checkId==moreId
-                    val editId = max(moreId,book.getDelParagraph())
+                    llMore.isVisible = checkId == moreId
+                    val editId = max(moreId, book.getDelParagraph())
                     editStart.setText(editId.toString())
                     rgLayout.setOnCheckedChangeListener { _, _ ->
-                        llMore.isVisible = rgLayout.getCheckedIndex()==moreId
+                        llMore.isVisible = rgLayout.getCheckedIndex() == moreId
                     }
                 }
                 customView = alertBinding.root
                 yesButton {
                     alertBinding.run {
                         val id = rgLayout.getCheckedIndex()
-                        checkId = if(id==moreId) editStart.text?.toString()?.let { if(it.isNotBlank()) it.toInt() else 0 }?: 0 else id
+                        checkId = if (id == moreId) editStart.text?.toString()?.let { if (it.isNotBlank()) it.toInt() else 0 }
+                                ?: 0 else id
                         book.setDelParagraph(checkId)
                         ReadBook.loadContent(resetPageOffset = false)
                     }
@@ -224,40 +222,40 @@ abstract class ReadBookBaseActivity :
     }
 
     @SuppressLint("InflateParams")
-    fun showSelectRecord(local:BookProgress?, web: BookProgress?, net: BookProgress?) {
+    fun showSelectRecord(history: BookProgress?, web: BookProgress?, net: BookProgress?) {
         alert("请选择阅读进度") {
             var string = ""
-            var progress:BookProgress?
+            var progress: BookProgress?
             val alertBinding = DialogSelectRecordBinding.inflate(layoutInflater).apply {
                 root.setBackgroundColor(root.context.backgroundColor)
                 ReadBook.let {
-                    string = "当前进度：[${it.durChapterIndex + 1}/${it.durChapterPos}]"
+                    string = "当前进度：[${it.durChapterIndex + 1}.${it.durChapterPos}]"
                 }
                 tvDur.text = string
                 progress = net
-                if (progress==null){
+                if (progress == null) {
                     string = "云端进度为空"
                     tvNet.text = string
-                } else{
-                    string = "[${progress!!.durChapterIndex + 1}/${progress!!.durChapterPos}]  "
-                    string += StringUtils.dateConvert(progress!!.durChapterTime,"yy年MM月dd日HH时mm分")
+                } else {
+                    string = "[${progress!!.durChapterIndex + 1}.${progress!!.durChapterPos}]  "
+                    string += StringUtils.dateConvert(progress!!.durChapterTime, "yy年MM月dd日HH时mm分")
                     tvNet.text = string
                 }
                 progress = web
-                if (progress==null){
+                if (progress == null) {
                     string = "网页进度为空"
                     tvWeb.text = string
-                } else{
-                    string = "[${progress!!.durChapterIndex + 1}/${progress!!.durChapterPos}]  "
-                    string += StringUtils.dateConvert(progress!!.durChapterTime,"yy年MM月dd日HH时mm分")
+                } else {
+                    string = "[${progress!!.durChapterIndex + 1}.${progress!!.durChapterPos}]  "
+                    string += StringUtils.dateConvert(progress!!.durChapterTime, "yy年MM月dd日HH时mm分")
                     tvWeb.text = string
                 }
-                progress = local
-                if (progress==null){
+                progress = history
+                if (progress == null) {
                     string = "历史进度为空"
                     tvLocal.text = string
-                } else{
-                    string = "[${progress!!.durChapterIndex + 1}/${progress!!.durChapterPos}]  "
+                } else {
+                    string = "[${progress!!.durChapterIndex + 1}.${progress!!.durChapterPos}]  "
                     string += StringUtils.dateConvert(progress!!.durChapterTime, "yy年MM月dd日HH时mm分")
                     tvLocal.text = string
                 }
@@ -266,15 +264,13 @@ abstract class ReadBookBaseActivity :
             customView = alertBinding.root
             yesButton {
                 alertBinding.run {
-                    when(rgLayout.getCheckedIndex()){
-                        0-> progress = net
-                        2-> progress = web
-                        4-> progress = local
+                    when (rgLayout.getCheckedIndex()) {
+                        0 -> progress = net
+                        2 -> progress = web
+                        4 -> progress = history
                     }
-                    progress?.let{progress->
+                    progress?.let { progress ->
                         ReadBook.setProgress(progress)
-                        ReadBook.oldChapterIndex = ReadBook.book?.durChapterIndex
-                        ReadBook.oldChapterPos = ReadBook.book?.durChapterPos
                     }
                 }
             }
@@ -291,8 +287,8 @@ abstract class ReadBookBaseActivity :
                 editView.setText(bookmark.content)
                 editBookText.textSize = 15f
                 editView.textSize = 15f
-                editBookText.maxLines= 6
-                editView.maxLines= 6
+                editBookText.maxLines = 6
+                editView.maxLines = 6
             }
             customView = alertBinding.root
             yesButton {
@@ -311,7 +307,7 @@ abstract class ReadBookBaseActivity :
     @SuppressLint("InflateParams")
     fun showCharsetConfig() {
         val charsets =
-            arrayListOf("UTF-8", "GB2312", "GBK", "Unicode", "UTF-16", "UTF-16LE", "ASCII")
+                arrayListOf("UTF-8", "GB2312", "GBK", "Unicode", "UTF-16", "UTF-16LE", "ASCII")
         alert(R.string.set_charset) {
             val alertBinding = DialogEditTextBinding.inflate(layoutInflater).apply {
                 editView.setFilterValues(charsets)

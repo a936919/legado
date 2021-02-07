@@ -43,10 +43,8 @@ object ReadBook {
     private var readRecord: ReadRecord? = null
     private var timeRecord: TimeRecord? = null
     var readStartTime: Long = System.currentTimeMillis()
-    var oldChapterTime: Long = 0L
-    var isReading = false//判断当前Activity是否在前台，是否正在阅读界面。
-    var oldChapterIndex: Int? = null
-    var oldChapterPos: Int? = null
+    //历史记录，切换记录后记录切换前的进度
+    var historyRecord:BookProgress?=null
 
     fun resetData(book: Book) {
         this.book = book
@@ -75,19 +73,6 @@ object ReadBook {
         }
     }
 
-    fun resumeData() {
-        book?.let { it ->
-            App.db.bookDao.getBook(it.bookUrl)?.let { book ->
-                if (durChapterIndex != book.durChapterIndex || durChapterPos != book.durChapterPos) {
-                    durChapterIndex = book.durChapterIndex
-                    durChapterPos = book.durChapterPos
-                    loadContent(resetPageOffset = true)
-                    saveRead()
-                }
-            }
-        }
-    }
-
     private fun saveReadRecord() {
         Coroutine.async {
             readRecord?.let { App.db.readRecordDao.insert(it) }
@@ -111,8 +96,6 @@ object ReadBook {
     }
 
     fun setProgress(progress: BookProgress) {
-        oldChapterIndex = durChapterIndex
-        oldChapterPos = durChapterPos
         durChapterIndex = progress.durChapterIndex
         durChapterPos = progress.durChapterPos
         clearTextChapter()
@@ -548,22 +531,21 @@ object ReadBook {
         }
     }
 
+    fun synProgress(book: Book){
+        callBack?.synProgress(book)
+    }
 
     interface CallBack {
         fun loadChapterList(book: Book)
-
         fun upContent(
                 relativePosition: Int = 0,
                 resetPageOffset: Boolean = true,
                 success: (() -> Unit)? = null
         )
-
         fun upView()
-
         fun pageChanged()
-
         fun contentLoadFinish()
-
         fun upPageAnim()
+        fun synProgress(book: Book)
     }
 }

@@ -30,7 +30,7 @@ object BookshelfController {
                         o1.name.cnCompare(o2.name)
                     }
                     3 -> books.sortedBy { it.order }
-                    else -> books.sortedByDescending { it.durChapterTime }
+                    else -> books.sortedByDescending { it.webDurChapterTime }
                 }
                 returnData.setData(data)
             }
@@ -45,8 +45,8 @@ object BookshelfController {
             return returnData.setErrorMsg("参数url不能为空，请指定书籍地址")
         }
         val book = App.db.bookDao.getBook(bookUrl) ?: return returnData.setData("获取失败")
+        insertReadRecord(book)
         return returnData.setData(book)
-
     }
     fun getChapterList(parameters: Map<String, List<String>>): ReturnData {
         val bookUrl = parameters["url"]?.getOrNull(0)
@@ -54,7 +54,6 @@ object BookshelfController {
         if (bookUrl.isNullOrEmpty()) {
             return returnData.setErrorMsg("参数url不能为空，请指定书籍地址")
         }
-        App.db.bookDao.getBook(bookUrl)?.let { insertReadRecord(it) }
         val chapterList = App.db.bookChapterDao.getChapterList(bookUrl)
         return returnData.setData(chapterList)
     }
@@ -107,7 +106,6 @@ object BookshelfController {
         val pos = parameters["pos"]?.getOrNull(0)?.toInt()
         if (bookUrl == null || chapterIndex == null || pos == null)
             return returnData.setErrorMsg("参数url不能为空，请指定书籍地址")
-        mqLog.d("saveReadRecord $chapterIndex $pos")
         App.db.bookDao.getBook(bookUrl)?.let { synRecord(it, chapterIndex, pos) }
         return returnData.setData("成功")
     }
@@ -131,7 +129,7 @@ object BookshelfController {
             val readRecord = book.toReadRecord()
             val nowTimeRecord = readRecord.toTimeRecord()
             if (timeRecord == null || !timeRecord!!.equals(nowTimeRecord)) {
-                book.durChapterTime = System.currentTimeMillis()
+                book.webDurChapterTime = System.currentTimeMillis()
                 readRecord.durChapterTime = System.currentTimeMillis()
                 timeRecord = nowTimeRecord
                 timeRecord?.let {
@@ -172,14 +170,17 @@ object BookshelfController {
 
     private fun synRecord(book: Book, chapterIndex: Int, pos: Int) {
         Coroutine.async {
-            book.durChapterTime = System.currentTimeMillis()
-            book.durChapterIndex = chapterIndex
-            book.durChapterPos = pos
+            book.webDurChapterTime = System.currentTimeMillis()
+            book.webChapterIndex = chapterIndex
+            book.webChapterPos = pos
             App.db.bookChapterDao.getChapter(book.bookUrl, chapterIndex)?.let {
                 book.durChapterTitle = it.title
             }
             App.db.bookDao.update(book)
             val readRecord = book.toReadRecord()
+            readRecord.durChapterTime = book.webDurChapterTime
+            readRecord.durChapterIndex = book.webChapterIndex
+            readRecord.durChapterPos = book.webChapterIndex
             App.db.readRecordDao.update(readRecord)
             timeRecord?.let {
                 val dataChange = it.date != TimeRecord.getDate()
@@ -198,11 +199,6 @@ object BookshelfController {
                 }
                 it.readTime = it.readTime + dif
                 if (dataChange) App.db.timeRecordDao.insert(it) else App.db.timeRecordDao.update(it)
-            }
-            if (ReadBook.isReading && ReadBook.book?.bookUrl == book.bookUrl) {
-                ReadBook.durChapterIndex = chapterIndex
-                ReadBook.durChapterPos = pos
-                ReadBook.loadContent(resetPageOffset = true)
             }
         }
     }
