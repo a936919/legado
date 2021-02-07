@@ -19,7 +19,9 @@ object BookshelfController {
 
     val bookshelf: ReturnData
         get() {
-            val books = App.db.bookDao.all
+            val books = App.db.bookDao.all.filter {
+                it.type != 1
+            }
             val returnData = ReturnData()
             return if (books.isEmpty()) {
                 returnData.setErrorMsg("还没有添加小说")
@@ -38,7 +40,7 @@ object BookshelfController {
 
     private var timeRecord: TimeRecord? = null
     private var readStartTime: Long = System.currentTimeMillis()
-    fun getBook(parameters: Map<String, List<String>>):ReturnData{
+    fun getBook(parameters: Map<String, List<String>>): ReturnData {
         val bookUrl = parameters["url"]?.getOrNull(0)
         val returnData = ReturnData()
         if (bookUrl.isNullOrEmpty()) {
@@ -48,6 +50,7 @@ object BookshelfController {
         insertReadRecord(book)
         return returnData.setData(book)
     }
+
     fun getChapterList(parameters: Map<String, List<String>>): ReturnData {
         val bookUrl = parameters["url"]?.getOrNull(0)
         val returnData = ReturnData()
