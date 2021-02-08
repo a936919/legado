@@ -371,7 +371,7 @@
                             android:layout_weight="1"
                             android:layout_gravity="center"
                             android:contentDescription="@string/read_aloud"
-                            android:src="@drawable/ic_copy_line"
+                            android:src="@drawable/ic_excerpts_line"
                             app:tint="@color/primaryText"
                             tools:ignore="NestedWeights" />
 
