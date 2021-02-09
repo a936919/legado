@@ -36,7 +36,7 @@ import kotlin.math.min
  * 阅读界面
  */
 abstract class ReadBookBaseActivity :
-        VMBaseActivity<ActivityBookReadBinding, ReadBookViewModel>() {
+    VMBaseActivity<ActivityBookReadBinding, ReadBookViewModel>() {
 
     override val viewModel: ReadBookViewModel
         get() = getViewModel(ReadBookViewModel::class.java)
@@ -88,8 +88,8 @@ abstract class ReadBookBaseActivity :
      * 更新状态栏,导航栏
      */
     fun upSystemUiVisibility(
-            isInMultiWindow: Boolean,
-            toolBarHide: Boolean = true
+        isInMultiWindow: Boolean,
+        toolBarHide: Boolean = true
     ) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.insetsController?.let {
@@ -112,8 +112,8 @@ abstract class ReadBookBaseActivity :
 
     @Suppress("DEPRECATION")
     private fun upSystemUiVisibilityO(
-            isInMultiWindow: Boolean,
-            toolBarHide: Boolean = true
+        isInMultiWindow: Boolean,
+        toolBarHide: Boolean = true
     ) {
         var flag = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                 or View.SYSTEM_UI_FLAG_IMMERSIVE
@@ -163,7 +163,7 @@ abstract class ReadBookBaseActivity :
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && ReadBookConfig.readBodyToLh) {
             window.attributes = window.attributes.apply {
                 layoutInDisplayCutoutMode =
-                        WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             }
         }
     }
@@ -210,8 +210,9 @@ abstract class ReadBookBaseActivity :
                 yesButton {
                     alertBinding.run {
                         val id = rgLayout.getCheckedIndex()
-                        checkId = if (id == moreId) editStart.text?.toString()?.let { if (it.isNotBlank()) it.toInt() else 0 }
-                                ?: 0 else id
+                        checkId = if (id == moreId) editStart.text?.toString()
+                            ?.let { if (it.isNotBlank()) it.toInt() else 0 }
+                            ?: 0 else id
                         book.setDelParagraph(checkId)
                         ReadBook.loadContent(resetPageOffset = false)
                     }
@@ -224,7 +225,7 @@ abstract class ReadBookBaseActivity :
     @SuppressLint("InflateParams")
     fun showSelectRecord(history: BookProgress?, web: BookProgress?, net: BookProgress?) {
         alert("请选择阅读进度") {
-            var string = ""
+            var string: String
             var progress: BookProgress?
             val alertBinding = DialogSelectRecordBinding.inflate(layoutInflater).apply {
                 root.setBackgroundColor(root.context.backgroundColor)
@@ -259,7 +260,10 @@ abstract class ReadBookBaseActivity :
                     string += StringUtils.dateConvert(progress!!.durChapterTime, "yy年MM月dd日HH时mm分")
                     tvLocal.text = string
                 }
-
+                val checkId =
+                    if (history?.durChapterTime ?: 0 >= net?.durChapterTime ?: 0 && history?.durChapterTime ?: 0 >= web?.durChapterTime ?: 0) 4
+                    else if (net?.durChapterTime ?: 0 >= web?.durChapterTime ?: 0) 2 else 0
+                rgLayout.checkByIndex(checkId)
             }
             customView = alertBinding.root
             yesButton {
@@ -307,7 +311,7 @@ abstract class ReadBookBaseActivity :
     @SuppressLint("InflateParams")
     fun showCharsetConfig() {
         val charsets =
-                arrayListOf("UTF-8", "GB2312", "GBK", "Unicode", "UTF-16", "UTF-16LE", "ASCII")
+            arrayListOf("UTF-8", "GB2312", "GBK", "Unicode", "UTF-16", "UTF-16LE", "ASCII")
         alert(R.string.set_charset) {
             val alertBinding = DialogEditTextBinding.inflate(layoutInflater).apply {
                 editView.setFilterValues(charsets)
