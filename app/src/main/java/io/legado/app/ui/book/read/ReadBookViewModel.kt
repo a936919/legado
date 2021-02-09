@@ -245,7 +245,7 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
         ReadBook.curTextChapter = null
         ReadBook.nextTextChapter = null
         ReadBook.callBack?.upContent()
-        if (index != ReadBook.durChapterIndex) {
+        if (index != ReadBook.durChapterIndex || durChapterPos != ReadBook.durChapterPos) {
             ReadBook.durChapterIndex = index
             ReadBook.durChapterPos = durChapterPos
         }
