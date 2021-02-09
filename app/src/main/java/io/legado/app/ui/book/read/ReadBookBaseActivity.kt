@@ -262,7 +262,7 @@ abstract class ReadBookBaseActivity :
                 }
                 val checkId =
                     if (history?.durChapterTime ?: 0 >= net?.durChapterTime ?: 0 && history?.durChapterTime ?: 0 >= web?.durChapterTime ?: 0) 4
-                    else if (net?.durChapterTime ?: 0 >= web?.durChapterTime ?: 0) 2 else 0
+                    else if (net?.durChapterTime ?: 0 >= web?.durChapterTime ?: 0) 0 else 2
                 rgLayout.checkByIndex(checkId)
             }
             customView = alertBinding.root
