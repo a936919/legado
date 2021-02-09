@@ -4,6 +4,7 @@ import io.legado.app.App
 import io.legado.app.api.ReturnData
 import io.legado.app.constant.PreferKey
 import io.legado.app.data.entities.Book
+import io.legado.app.data.entities.Bookmark
 import io.legado.app.data.entities.ReplaceRule
 import io.legado.app.data.entities.TimeRecord
 import io.legado.app.help.BookHelp
@@ -110,6 +111,23 @@ object BookshelfController {
         if (bookUrl == null || chapterIndex == null || pos == null)
             return returnData.setErrorMsg("参数url不能为空，请指定书籍地址")
         App.db.bookDao.getBook(bookUrl)?.let { synRecord(it, chapterIndex, pos) }
+        return returnData.setData("成功")
+    }
+
+    fun setBookmark(parameters: Map<String, List<String>>): ReturnData {
+        val returnData = ReturnData()
+        val bookUrl = parameters["url"]?.getOrNull(0)
+        val chapterIndex = parameters["chapterIndex"]?.getOrNull(0)?.toInt()
+        val pos = parameters["pos"]?.getOrNull(0)?.toInt()
+        val bookText = parameters["bookText"]?.getOrNull(0)
+        if (bookUrl == null || chapterIndex == null || pos == null || bookText.isNullOrBlank())
+            return returnData.setErrorMsg("参数url不能为空，请指定书籍地址")
+        val book = App.db.bookDao.getBook(bookUrl) ?: return returnData.setData("获取失败")
+        val chapterName = App.db.bookChapterDao.getChapter(book.bookUrl, chapterIndex)?.title ?: ""
+        val bookmark = Bookmark(System.currentTimeMillis(), bookUrl
+                ?: "", book.name, book.author, chapterIndex, pos, chapterName, bookText ?: "", "")
+        App.db.bookmarkDao.insert(bookmark)
+        synRecord(book, chapterIndex, pos)
         return returnData.setData("成功")
     }
 

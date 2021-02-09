@@ -4,6 +4,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/menu_debug"
+        android:title="调试"
+        android:icon="@drawable/ic_developer_line"
+        app:showAsAction="always"
+        tools:ignore="AlwaysShowAction" />
+
+    <item
         android:id="@+id/menu_help"
         android:title="@string/help"
         android:icon="@drawable/ic_help"

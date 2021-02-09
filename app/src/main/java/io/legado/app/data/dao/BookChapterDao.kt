@@ -10,6 +10,9 @@ import io.legado.app.data.entities.BookChapter
 @Dao
 interface BookChapterDao {
 
+    @Query("select * from chapters")
+    fun observeAll(): List<BookChapter>
+
     @Query("select * from chapters where bookUrl = :bookUrl order by `index`")
     fun observeByBook(bookUrl: String): LiveData<List<BookChapter>>
 
