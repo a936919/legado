@@ -56,6 +56,7 @@ class MyFragment : BaseFragment(R.layout.fragment_my_config), FilePickerDialog.C
                 val text = String(requireContext().assets.open("help/appHelp.md").readBytes())
                 TextDialog.show(childFragmentManager, text, TextDialog.MD)
             }
+            R.id.menu_debug -> mqLog.debug()
         }
     }
 
