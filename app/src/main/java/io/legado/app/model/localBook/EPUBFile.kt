@@ -207,6 +207,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
                     i++
                 }
             } else {
+                refIndex = -1
                 parseMenu(chapterList, refs, 0)
                 for (i in chapterList.indices) {
                     chapterList[i].index = i
@@ -230,7 +231,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
                 var parentHref:String? = null
                 while (i < contents.size){
                     val content = contents[i]
-                    if(content.href == chapterList[j].url){
+                    if(j<chapterList.size&&content.href == chapterList[j].url){
                         parentHref = content.href
                         j++
                     }else if(!parentHref.isNullOrBlank()&&content.mediaType.toString().contains("htm")){
@@ -243,19 +244,18 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
                     i++
                 }
             }
-
             App.db.epubChapter.deleteByName(book.bookUrl)
             if(chapters.size>0) App.db.epubChapter.insert(*chapters.toTypedArray())
         }
     }
 
+    private var refIndex = -1
     private fun parseMenu(
         chapterList: ArrayList<BookChapter>,
         refs: List<TOCReference>?,
         level: Int
     ) {
         if (refs == null) return
-        var i = -1
         for (ref in refs) {
             if (ref.resource != null) {
                 val chapter = BookChapter()
@@ -263,13 +263,13 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
                 chapter.title = ref.title
                 chapter.url = ref.completeHref
                 chapter.startFragmentId = ref.fragmentId
-                if(i>=0) chapterList[i].endFragmentId = ref.fragmentId
+                if(refIndex>=0) chapterList[refIndex].endFragmentId = ref.fragmentId
                 chapterList.add(chapter)
             }
             if (ref.children != null && ref.children.isNotEmpty()) {
                 parseMenu(chapterList, ref.children, level + 1)
             }
-            i++
+            refIndex++
         }
     }
 

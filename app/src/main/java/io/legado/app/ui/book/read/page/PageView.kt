@@ -208,7 +208,7 @@ class PageView(context: Context) : FrameLayout(context) {
     private fun upTimeBattery() {
         tvTimeBattery?.let {
             val time = timeFormat.format(Date(System.currentTimeMillis()))
-            it.text = "$time $battery%"
+            it.text = "$time  [$battery%]"
         }
     }
 
