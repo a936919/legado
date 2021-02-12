@@ -53,7 +53,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
         }
 
         @Synchronized
-        fun getBookInfo(book: io.legado.app.data.entities.Book){
+        fun getBookInfo(book: io.legado.app.data.entities.Book) {
             return getEFile(book).getBookInfo()
         }
     }
@@ -94,31 +94,31 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
     }
 
     private fun getContent(chapter: BookChapter): String? {
-        var string = getChildChapter(chapter,chapter.url)
-        val childContends = App.db.epubChapter.get(book.bookUrl,chapter.url)
-        if(childContends!=null){
-            for(child in childContends){
-                string += "\n"+getChildChapter(chapter,child.href)
+        var string = getChildChapter(chapter, chapter.url)
+        val childContends = App.db.epubChapter.get(book.bookUrl, chapter.url)
+        if (childContends != null) {
+            for (child in childContends) {
+                string += "\n" + getChildChapter(chapter, child.href)
             }
         }
         return string
     }
 
-    private fun getChildChapter(chapter: BookChapter, href:String): String? {
+    private fun getChildChapter(chapter: BookChapter, href: String): String? {
         epubBook?.let {
             val body = Jsoup.parse(String(it.resources.getByHref(href).data, mCharset)).body()
 
-            if(chapter.url==href){
+            if (chapter.url == href) {
                 val startFragmentId = chapter.startFragmentId
                 val endFragmentId = chapter.endFragmentId
-                if(!startFragmentId.isNullOrBlank())
+                if (!startFragmentId.isNullOrBlank())
                     body.getElementById(startFragmentId)?.previousElementSiblings()?.remove()
-                if(!endFragmentId.isNullOrBlank()&&endFragmentId!=startFragmentId)
+                if (!endFragmentId.isNullOrBlank() && endFragmentId != startFragmentId)
                     body.getElementById(endFragmentId)?.nextElementSiblings()?.remove()
             }
 
             var tag = io.legado.app.data.entities.Book.hTag
-            if(book.getDelTag(tag)){
+            if (book.getDelTag(tag)) {
                 body.getElementsByTag("h1")?.remove()
                 body.getElementsByTag("h2")?.remove()
                 body.getElementsByTag("h3")?.remove()
@@ -128,7 +128,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
             }
 
             tag = io.legado.app.data.entities.Book.imgTag
-            if(book.getDelTag(tag)){
+            if (book.getDelTag(tag)) {
                 body.getElementsByTag("img")?.remove()
             }
 
@@ -138,8 +138,8 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
 
             tag = io.legado.app.data.entities.Book.rubyTag
             var html = elements.outerHtml()
-            if(book.getDelTag(tag)){
-                html = html.replace("<ruby>\\s?([\\u4e00-\\u9fa5])\\s?.*?</ruby>".toRegex(),"$1")
+            if (book.getDelTag(tag)) {
+                html = html.replace("<ruby>\\s?([\\u4e00-\\u9fa5])\\s?.*?</ruby>".toRegex(), "$1")
             }
             return html.htmlFormat()
         }
@@ -151,17 +151,16 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
         return epubBook?.resources?.getByHref(abHref)?.inputStream
     }
 
-    private fun getBookInfo(){
-        if(epubBook == null) {
+    private fun getBookInfo() {
+        if (epubBook == null) {
             eFile = null
             book.intro = "书籍导入异常"
-        }
-        else{
+        } else {
             val metadata = epubBook!!.metadata
             book.name = book.originName
             if (metadata.authors.size > 0) {
                 val author =
-                        metadata.authors[0].toString().replace("^, |, $".toRegex(), "")
+                    metadata.authors[0].toString().replace("^, |, $".toRegex(), "")
                 book.author = author
             }
             if (metadata.descriptions.size > 0) {
@@ -207,7 +206,6 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
                     i++
                 }
             } else {
-                refIndex = -1
                 parseMenu(chapterList, refs, 0)
                 for (i in chapterList.indices) {
                     chapterList[i].index = i
@@ -220,21 +218,32 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
         return chapterList
     }
 
-    private fun getChildChapter(chapterList: ArrayList<BookChapter>){
-        epubBook?.let{
-            if(App.db.epubChapter.get(book.bookUrl)==book.bookUrl) return
+    private fun getChildChapter(chapterList: ArrayList<BookChapter>) {
+        epubBook?.let {
+            if (App.db.epubChapter.get(book.bookUrl) == book.bookUrl) return
             val contents = it.contents
             val chapters = ArrayList<EpubChapter>()
-            if(contents != null) {
+            if (contents != null) {
                 var i = 0
                 var j = 0
-                var parentHref:String? = null
-                while (i < contents.size){
+                var parentHref: String? = null
+                while (i < contents.size) {
                     val content = contents[i]
-                    if(j<chapterList.size&&content.href == chapterList[j].url){
+                    if (parentHref == null && content.mediaType.toString().contains("htm")) {
+                        chapterList[0].title = it.metadata.firstTitle
+                        chapterList[0].bookUrl = book.bookUrl
+                        chapterList[0].url = content.href
+                        chapterList[0].startFragmentId =
+                            if (content.href.substringAfter("#") == content.href) null
+                            else content.href.substringAfter("#")
                         parentHref = content.href
                         j++
-                    }else if(!parentHref.isNullOrBlank()&&content.mediaType.toString().contains("htm")){
+                    } else if (j < chapterList.size && content.href == chapterList[j].url) {
+                        parentHref = content.href
+                        j++
+                    } else if (!parentHref.isNullOrBlank() && content.mediaType.toString()
+                            .contains("htm")
+                    ) {
                         val epubChapter = EpubChapter()
                         epubChapter.bookUrl = book.bookUrl
                         epubChapter.href = content.href
@@ -245,7 +254,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
                 }
             }
             App.db.epubChapter.deleteByName(book.bookUrl)
-            if(chapters.size>0) App.db.epubChapter.insert(*chapters.toTypedArray())
+            if (chapters.size > 0) App.db.epubChapter.insert(*chapters.toTypedArray())
         }
     }
 
@@ -256,6 +265,11 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
         level: Int
     ) {
         if (refs == null) return
+        if (level == 0) {
+            val chapter = BookChapter()
+            chapterList.add(chapter)
+            refIndex = 0
+        }
         for (ref in refs) {
             if (ref.resource != null) {
                 val chapter = BookChapter()
@@ -263,7 +277,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
                 chapter.title = ref.title
                 chapter.url = ref.completeHref
                 chapter.startFragmentId = ref.fragmentId
-                if(refIndex>=0) chapterList[refIndex].endFragmentId = ref.fragmentId
+                if (refIndex >= 0) chapterList[refIndex].endFragmentId = ref.fragmentId
                 chapterList.add(chapter)
             }
             if (ref.children != null && ref.children.isNotEmpty()) {
