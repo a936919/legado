@@ -25,7 +25,7 @@ object mqLog {
     private fun upIndex() {
         ReadBook.book?.let {
             val mark = App.db.bookmarkDao.getByBook(it.bookUrl)
-            for(m in mark){
+            for (m in mark) {
                 m.chapterIndex -= 1
             }
             App.db.bookmarkDao.delByBook(it.bookUrl)
