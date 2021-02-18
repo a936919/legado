@@ -208,6 +208,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
                     i++
                 }
             } else {
+                parseFirstPage(chapterList, refs)
                 parseMenu(chapterList, refs, 0)
                 for (i in chapterList.indices) {
                     chapterList[i].index = i
@@ -251,68 +252,70 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
         }
     }
 
-    private var refIndex = 0
+    private var durIndex = 0
+    private fun parseFirstPage(
+        chapterList: ArrayList<BookChapter>,
+        refs: List<TOCReference>?
+    ) {
+        val contents = epubBook?.contents
+        if (epubBook == null || contents == null || refs == null) return
+        var i = 0
+        durIndex = 0
+        while (i < contents.size) {
+            val content = contents[i]
+            if (!content.mediaType.toString().contains("htm")) continue
+            if (refs[0].completeHref == content.href) break
+            val chapter = BookChapter()
+            var title = content.title
+            if (TextUtils.isEmpty(title)) {
+                val elements = Jsoup.parse(
+                    String(
+                        epubBook!!.resources.getByHref(content.href).data,
+                        mCharset
+                    )
+                ).getElementsByTag("title")
+                title =
+                    if (elements != null && elements.size > 0) elements[0].text() else "--卷首--"
+            }
+            chapter.bookUrl = book.bookUrl
+            chapter.title = title
+            chapter.url = content.href
+            chapter.startFragmentId =
+                if (content.href.substringAfter("#") == content.href) null
+                else content.href.substringAfter("#")
+            if (durIndex > 0) {
+                val preIndex = durIndex - 1
+                chapterList[preIndex].endFragmentId = chapter.startFragmentId
+                if (debugBook) mqLog.d("parseHomePage $preIndex ${chapterList[preIndex].title} ${chapterList[preIndex].url} ${chapterList[preIndex].startFragmentId} ${chapterList[preIndex].endFragmentId}")
+            }
+            chapterList.add(chapter)
+            durIndex++
+            i++
+        }
+    }
+
     private fun parseMenu(
         chapterList: ArrayList<BookChapter>,
         refs: List<TOCReference>?,
         level: Int
     ) {
-        if (epubBook == null || refs == null) return
-        val contents = epubBook?.contents
-        if (level == 0 && contents != null) {
-            var i = 0
-            refIndex = 0
-            while (i < contents.size) {
-                val content = contents[i]
-                if (content.mediaType.toString().contains("htm")) {
-                    if (refs[0].completeHref == content.href) {
-                        break
-                    } else {
-                        val chapter = BookChapter()
-                        var title = content.title
-                        if (TextUtils.isEmpty(title)) {
-                            val elements = Jsoup.parse(
-                                String(
-                                    epubBook!!.resources.getByHref(content.href).data,
-                                    mCharset
-                                )
-                            ).getElementsByTag("title")
-                            title =
-                                if (elements != null && elements.size > 0) elements[0].text() else "--卷首--"
-                        }
-                        chapter.bookUrl = book.bookUrl
-                        chapter.title = title
-                        chapter.url = content.href
-                        chapter.startFragmentId =
-                            if (content.href.substringAfter("#") == content.href) null
-                            else content.href.substringAfter("#")
-                        if (refIndex > 0) {
-                            val preIndex = refIndex - 1
-                            chapterList[preIndex].endFragmentId = chapter.startFragmentId
-                            if (debugBook) mqLog.d("parseMenu pre  $preIndex ${chapterList[preIndex].title} ${chapterList[preIndex].url} ${chapterList[preIndex].startFragmentId} ${chapterList[preIndex].endFragmentId}")
-                        }
-                        chapterList.add(chapter)
-                        refIndex++
-                    }
-                }
-                i++
-            }
-        }
-
+        if (refs == null) return
         for (ref in refs) {
             if (ref.resource != null) {
                 val chapter = BookChapter()
                 chapter.bookUrl = book.bookUrl
-                chapter.title = ref.title
+                var lv = ""
+                for (l in 0 until level) lv += "　"
+                chapter.title = lv + ref.title
                 chapter.url = ref.completeHref
                 chapter.startFragmentId = ref.fragmentId
-                if (refIndex > 0) {
-                    val preIndex = refIndex - 1
+                if (durIndex > 0) {
+                    val preIndex = durIndex - 1
                     chapterList[preIndex].endFragmentId = chapter.startFragmentId
-                    if (debugBook) mqLog.d("parseMenu content $preIndex ${chapterList[preIndex].title} ${chapterList[preIndex].url} ${chapterList[preIndex].startFragmentId} ${chapterList[preIndex].endFragmentId}")
+                    if (debugBook) mqLog.d("parseMenu $preIndex ${chapterList[preIndex].title} ${chapterList[preIndex].url} ${chapterList[preIndex].startFragmentId} ${chapterList[preIndex].endFragmentId}")
                 }
                 chapterList.add(chapter)
-                refIndex++
+                durIndex++
             }
             if (ref.children != null && ref.children.isNotEmpty()) {
                 parseMenu(chapterList, ref.children, level + 1)
