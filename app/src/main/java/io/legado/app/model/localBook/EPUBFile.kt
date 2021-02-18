@@ -126,6 +126,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
                 body.getElementsByTag("h4")?.remove()
                 body.getElementsByTag("h5")?.remove()
                 body.getElementsByTag("h6")?.remove()
+                //body.getElementsMatchingOwnText(chapter.title)?.remove()
             }
 
             tag = io.legado.app.data.entities.Book.imgTag
@@ -136,7 +137,6 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
             val elements = body.children()
             elements.select("script").remove()
             elements.select("style").remove()
-
             tag = io.legado.app.data.entities.Book.rubyTag
             var html = elements.outerHtml()
             if (book.getDelTag(tag)) {
@@ -304,9 +304,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
             if (ref.resource != null) {
                 val chapter = BookChapter()
                 chapter.bookUrl = book.bookUrl
-                var lv = ""
-                for (l in 0 until level) lv += "　"
-                chapter.title = lv + ref.title
+                chapter.title = ref.title
                 chapter.url = ref.completeHref
                 chapter.startFragmentId = ref.fragmentId
                 if (durIndex > 0) {
