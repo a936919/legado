@@ -262,7 +262,6 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
         if (level == 0 && contents != null) {
             var i = 0
             refIndex = 0
-            mqLog.d(refs[0].completeHref)
             while (i < contents.size) {
                 val content = contents[i]
                 if (content.mediaType.toString().contains("htm")) {
