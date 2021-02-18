@@ -60,6 +60,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
 
     private var epubBook: Book? = null
     private var mCharset: Charset = Charset.defaultCharset()
+    private var debugBook = false
 
     init {
         try {
@@ -174,6 +175,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
         epubBook?.let { eBook ->
             val refs = eBook.tableOfContents.tocReferences
             if (refs == null || refs.isEmpty()) {
+                if (debugBook) mqLog.d("spine process")
                 val spineReferences = eBook.spine.spineReferences
                 var i = 0
                 val size = spineReferences.size
@@ -220,7 +222,6 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
 
     private fun getChildChapter(chapterList: ArrayList<BookChapter>) {
         epubBook?.let {
-            if (App.db.epubChapter.get(book.bookUrl) == book.bookUrl) return
             val contents = it.contents
             val chapters = ArrayList<EpubChapter>()
             if (contents != null) {
@@ -229,16 +230,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
                 var parentHref: String? = null
                 while (i < contents.size) {
                     val content = contents[i]
-                    if (parentHref == null && content.mediaType.toString().contains("htm")) {
-                        chapterList[0].title = it.metadata.firstTitle
-                        chapterList[0].bookUrl = book.bookUrl
-                        chapterList[0].url = content.href
-                        chapterList[0].startFragmentId =
-                            if (content.href.substringAfter("#") == content.href) null
-                            else content.href.substringAfter("#")
-                        parentHref = content.href
-                        j++
-                    } else if (j < chapterList.size && content.href == chapterList[j].url) {
+                    if (j < chapterList.size && content.href == chapterList[j].url) {
                         parentHref = content.href
                         j++
                     } else if (!parentHref.isNullOrBlank() && content.mediaType.toString()
@@ -248,6 +240,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
                         epubChapter.bookUrl = book.bookUrl
                         epubChapter.href = content.href
                         epubChapter.parentHref = parentHref
+                        if (debugBook) mqLog.d("getChildChapter index is $i $j  info is ${epubChapter.parentHref}  ${epubChapter.href} ")
                         chapters.add(epubChapter)
                     }
                     i++
@@ -258,18 +251,55 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
         }
     }
 
-    private var refIndex = -1
+    private var refIndex = 0
     private fun parseMenu(
         chapterList: ArrayList<BookChapter>,
         refs: List<TOCReference>?,
         level: Int
     ) {
-        if (refs == null) return
-        if (level == 0) {
-            val chapter = BookChapter()
-            chapterList.add(chapter)
+        if (epubBook == null || refs == null) return
+        val contents = epubBook?.contents
+        if (level == 0 && contents != null) {
+            var i = 0
             refIndex = 0
+            mqLog.d(refs[0].completeHref)
+            while (i < contents.size) {
+                val content = contents[i]
+                if (content.mediaType.toString().contains("htm")) {
+                    if (refs[0].completeHref == content.href) {
+                        break
+                    } else {
+                        val chapter = BookChapter()
+                        var title = content.title
+                        if (TextUtils.isEmpty(title)) {
+                            val elements = Jsoup.parse(
+                                String(
+                                    epubBook!!.resources.getByHref(content.href).data,
+                                    mCharset
+                                )
+                            ).getElementsByTag("title")
+                            title =
+                                if (elements != null && elements.size > 0) elements[0].text() else "--卷首--"
+                        }
+                        chapter.bookUrl = book.bookUrl
+                        chapter.title = title
+                        chapter.url = content.href
+                        chapter.startFragmentId =
+                            if (content.href.substringAfter("#") == content.href) null
+                            else content.href.substringAfter("#")
+                        if (refIndex > 0) {
+                            val preIndex = refIndex - 1
+                            chapterList[preIndex].endFragmentId = chapter.startFragmentId
+                            if (debugBook) mqLog.d("parseMenu pre  $preIndex ${chapterList[preIndex].title} ${chapterList[preIndex].url} ${chapterList[preIndex].startFragmentId} ${chapterList[preIndex].endFragmentId}")
+                        }
+                        chapterList.add(chapter)
+                        refIndex++
+                    }
+                }
+                i++
+            }
         }
+
         for (ref in refs) {
             if (ref.resource != null) {
                 val chapter = BookChapter()
@@ -277,13 +307,17 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
                 chapter.title = ref.title
                 chapter.url = ref.completeHref
                 chapter.startFragmentId = ref.fragmentId
-                if (refIndex >= 0) chapterList[refIndex].endFragmentId = ref.fragmentId
+                if (refIndex > 0) {
+                    val preIndex = refIndex - 1
+                    chapterList[preIndex].endFragmentId = chapter.startFragmentId
+                    if (debugBook) mqLog.d("parseMenu content $preIndex ${chapterList[preIndex].title} ${chapterList[preIndex].url} ${chapterList[preIndex].startFragmentId} ${chapterList[preIndex].endFragmentId}")
+                }
                 chapterList.add(chapter)
+                refIndex++
             }
             if (ref.children != null && ref.children.isNotEmpty()) {
                 parseMenu(chapterList, ref.children, level + 1)
             }
-            refIndex++
         }
     }
 

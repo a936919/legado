@@ -1,18 +1,18 @@
 package io.legado.app.data.entities
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Index
-import androidx.room.PrimaryKey
 
 @Entity(tableName = "epubChapters",
     primaryKeys = ["bookUrl","href"],
     indices = [(Index(value = ["bookUrl"], unique = false)),
         (Index(value = ["bookUrl", "href"], unique = true))],
-    foreignKeys = [(androidx.room.ForeignKey(
+    foreignKeys = [(ForeignKey(
         entity = Book::class,
         parentColumns = ["bookUrl"],
         childColumns = ["bookUrl"],
-        onDelete = androidx.room.ForeignKey.CASCADE
+        onDelete = ForeignKey.CASCADE
     ))]
 )
 data class EpubChapter (
