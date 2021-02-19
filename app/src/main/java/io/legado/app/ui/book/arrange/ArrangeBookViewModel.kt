@@ -32,7 +32,7 @@ class ArrangeBookViewModel(application: Application) : BaseViewModel(application
 
     fun insertReadRecord(vararg record: ReadRecord) {
         execute {
-            App.db.readRecordDao.insert(*record)
+            appDb.readRecordDao.insert(*record)
         }
     }
 

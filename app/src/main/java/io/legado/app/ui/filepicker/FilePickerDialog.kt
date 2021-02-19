@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import io.legado.app.App
 import io.legado.app.R
+import io.legado.app.data.appDb
 import io.legado.app.data.entities.TopPath
 import io.legado.app.databinding.DialogFileChooserBinding
 import io.legado.app.lib.theme.primaryColor
@@ -225,18 +226,18 @@ class FilePickerDialog : DialogFragment(),
         if (fileItem?.isDirectory == true) {
             val topPath=TopPath()
             topPath.path = fileItem.path
-            if(App.db.topPathDao.isTopPath(fileItem.path)) {
-                App.db.topPathDao.delete(topPath)
-                toast("取消置顶")
+            if(appDb.topPathDao.isTopPath(fileItem.path)) {
+                appDb.topPathDao.delete(topPath)
+                toastOnUi("取消置顶")
 
             } else {
-                App.db.topPathDao.insert(topPath)
-                toast("置顶")
+                appDb.topPathDao.insert(topPath)
+                toastOnUi("置顶")
             }
             fileAdapter.loadData(File(fileItem.path).parent ?: "")
         }
         else{
-            toast("无法置顶文件")
+            toastOnUi("无法置顶文件")
         }
     }
 

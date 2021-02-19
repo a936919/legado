@@ -2,6 +2,9 @@ package io.legado.app.utils
 
 import android.util.Log
 import io.legado.app.App
+import io.legado.app.constant.androidId
+import io.legado.app.constant.androidIdInfo
+import io.legado.app.data.appDb
 import io.legado.app.service.help.ReadBook
 
 object mqLog {
@@ -14,22 +17,23 @@ object mqLog {
     }
 
     fun debug() {
+        d("$androidId $androidIdInfo")
     }
 
     private fun logChapter() {
-        val data = App.db.bookChapterDao.observeAll()
+        val data = appDb.bookChapterDao.observeAll()
         d("${data.size} ${data}")
     }
 
     var addIndex = 0
     private fun upIndex() {
         ReadBook.book?.let {
-            val mark = App.db.bookmarkDao.getByBook(it.bookUrl)
+            val mark = appDb.bookmarkDao.getByBook(it.bookUrl)
             for (m in mark) {
                 m.chapterIndex -= 1
             }
-            App.db.bookmarkDao.delByBook(it.bookUrl)
-            App.db.bookmarkDao.insert(*mark.toTypedArray())
+            appDb.bookmarkDao.delByBook(it.bookUrl)
+            appDb.bookmarkDao.insert(*mark.toTypedArray())
             d("$mark")
         }
     }

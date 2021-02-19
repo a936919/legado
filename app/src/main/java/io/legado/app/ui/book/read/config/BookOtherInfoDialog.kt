@@ -3,9 +3,12 @@ package io.legado.app.ui.book.read.config
 import android.content.DialogInterface
 import android.os.Bundle
 import android.view.*
+import androidx.activity.viewModels
+import androidx.fragment.app.viewModels
 import io.legado.app.App
 import io.legado.app.R
 import io.legado.app.base.BaseDialogFragment
+import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.TimeRecord
 import io.legado.app.databinding.DialogReadBookOtherInfoBinding
@@ -18,13 +21,12 @@ import io.legado.app.ui.book.read.ReadBookActivity
 import io.legado.app.ui.book.search.SearchActivity
 import io.legado.app.utils.*
 import io.legado.app.utils.viewbindingdelegate.viewBinding
-import org.jetbrains.anko.sdk27.listeners.onClick
 
 class BookOtherInfoDialog : BaseDialogFragment()  {
     private var callBack: CallBack? = null
     private val binding by viewBinding(DialogReadBookOtherInfoBinding::bind)
     val viewModel: BookInfoViewModel
-        get() = getViewModel(BookInfoViewModel::class.java)
+            by viewModels()
     val book = ReadBook.book
 
     override fun onStart() {
@@ -98,29 +100,32 @@ class BookOtherInfoDialog : BaseDialogFragment()  {
 
     private fun initEvent() {
         binding.apply {
-            llBookInfo.onClick {
+            llBookInfo.setOnClickListener {
                 ReadBook.book?.let {
-                    startActivity<BookInfoActivity>(Pair("name", it.name), Pair("author", it.author))
+                    startActivity<BookInfoActivity>{
+                        putExtra("name", it.name)
+                        putExtra("author", it.author)
+                    }
                 }
             }
-            llSearch.onClick {
+            llSearch.setOnClickListener {
                 callBack?.openSearchActivity(null)
             }
-            llReadPage.onClick {
+            llReadPage.setOnClickListener {
                 callBack?.autoPage()
                 dismiss()
             }
-            llReadAloud.onClick {
+            llReadAloud.setOnClickListener {
                 callBack?.onClickReadAloud()
                 dismiss()
             }
-            llGetProgress.onClick {
+            llGetProgress.setOnClickListener {
                 callBack?.synProgress()
             }
-            llAuthorOther.onClick {
-                startActivity<SearchActivity>(Pair("key", book?.author))
+            llAuthorOther.setOnClickListener {
+                startActivity<SearchActivity> { putExtra("key", book?.author)}
             }
-            llAccessUrl.onClick {
+            llAccessUrl.setOnClickListener {
                 val localBook = ReadBook.book?.isLocalBook()?:true
                 if(localBook||ReadBook.curTextChapter?.url==null){
                     requireContext().openUrl("https://www.baidu.com/s?wd=${ReadBook.book?.name}")
@@ -128,10 +133,10 @@ class BookOtherInfoDialog : BaseDialogFragment()  {
                     requireContext().openUrl(ReadBook.curTextChapter?.url.toString())
                 }
             }
-            llRefresh.onClick {
+            llRefresh.setOnClickListener {
                 callBack?.refreshBook()
             }
-            llDownload.onClick {
+            llDownload.setOnClickListener {
                 callBack?.downloadBook()
             }
         }
@@ -143,10 +148,10 @@ class BookOtherInfoDialog : BaseDialogFragment()  {
         bookAuthor.text = book.getRealAuthor()
         var string = "[${book.durChapterIndex + 1}/${book.totalChapterNum}]  ${book.durChapterTitle}"
         bookChapter.text = string
-        val nowReadTime = App.db.timeRecordDao.getReadTime(book.name,book.author, TimeRecord.getDate())?:0
+        val nowReadTime = appDb.timeRecordDao.getReadTime(book.name,book.author, TimeRecord.getDate())?:0
         string = "今日阅读  ${TimeRecord.formatDuring(nowReadTime)}"
         readTime.text =  string
-        val readTime =  App.db.timeRecordDao.getReadTime(book.name,book.author) ?: 0
+        val readTime =  appDb.timeRecordDao.getReadTime(book.name,book.author) ?: 0
         string ="本书已读  ${TimeRecord.formatDuring(readTime)}"
         readAllTime.text = string
     }

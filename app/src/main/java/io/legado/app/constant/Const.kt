@@ -2,10 +2,13 @@ package io.legado.app.constant
 
 import android.provider.Settings
 import splitties.init.appCtx
+import splitties.systemservices.appWidgetManager
 
 val androidId: String by lazy {
     Settings.System.getString(appCtx.contentResolver, Settings.Secure.ANDROID_ID)
 }
+
+val androidIdInfo: String = androidId
 
 val appInfo: AppInfo by lazy {
     val appInfo = AppInfo()

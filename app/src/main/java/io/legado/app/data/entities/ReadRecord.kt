@@ -1,12 +1,13 @@
 package io.legado.app.data.entities
 
 import androidx.room.Entity
-import io.legado.app.App
 import io.legado.app.constant.BookType
+import io.legado.app.constant.androidIdInfo
+import io.legado.app.data.appDb
 
 @Entity(tableName = "readRecord", primaryKeys = ["androidId", "bookName","author"])
 data class ReadRecord(
-        var androidId: String =  App.androidId,
+        var androidId: String =  androidIdInfo,
         var bookName: String = "",
         var author: String = "",                    // 作者名称
         var bookUrl: String = "",
@@ -29,10 +30,10 @@ data class ReadRecord(
         status = status,
         durChapterIndex = durChapterIndex,
         durChapterPos = durChapterPos,
-        originName = if(origin == BookType.local) bookUrl.substringAfterLast("/") else App.db.bookSourceDao.getBookSource(origin)?.bookSourceName?:""
+        originName = if(origin == BookType.local) bookUrl.substringAfterLast("/") else appDb.bookSourceDao.getBookSource(origin)?.bookSourceName?:""
     )
     fun toTimeRecord() = TimeRecord(
-        androidId =  App.androidId,
+        androidId =  androidIdInfo,
         bookName = bookName,
         author = author,
     )

@@ -17,7 +17,7 @@ val c = SimpleDateFormat("yyyy-MM-dd").parse("2021-01-25",ParsePosition(0)).time
 
 ```
 ```kotlin
-        val a = App.db.readRecordDao.all
+        val a = appDb.readRecordDao.all
         a.forEach{
             val b = TimeRecord()
             if(it.readTime>30*1000){
@@ -28,11 +28,11 @@ val c = SimpleDateFormat("yyyy-MM-dd").parse("2021-01-25",ParsePosition(0)).time
                 b.author = it.author
                 b.date = TimeRecord.getDayTime()-(24*60*60*1000)
                 mqLog.d("${b.bookName} ${b.readTime/1000/60} ${StringUtils.dateConvert(b.date,"yyyy-MM-dd-HH-mm-ss")}")
-                App.db.readRecordDao.update(it)
-                App.db.timeRecordDao.insert(b)
+                appDb.readRecordDao.update(it)
+                appDb.timeRecordDao.insert(b)
             }
         }
-        val c =  App.db.timeRecordDao.all
+        val c =  appDb.timeRecordDao.all
         c.forEach {
             mqLog.d("${it.bookName} ${it.author} ${it.androidId} ${StringUtils.dateConvert(it.date,"yyyy-MM-dd-HH-mm-ss")} ${it.readTime/1000/60}")
 

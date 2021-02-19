@@ -17,6 +17,7 @@ import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.SearchBook
 import io.legado.app.databinding.DialogChangeSourceBinding
 import io.legado.app.help.AppConfig
+import io.legado.app.lib.dialogs.alert
 import io.legado.app.lib.theme.backgroundColor
 import io.legado.app.lib.theme.getPrimaryTextColor
 import io.legado.app.lib.theme.primaryColor
@@ -24,7 +25,7 @@ import io.legado.app.ui.book.source.manage.BookSourceActivity
 import io.legado.app.ui.widget.recycler.VerticalDivider
 import io.legado.app.utils.*
 import io.legado.app.utils.viewbindingdelegate.viewBinding
-import org.jetbrains.anko.*
+import splitties.init.appCtx
 
 
 class ChangeSourceDialog : BaseDialogFragment(),
@@ -100,11 +101,11 @@ class ChangeSourceDialog : BaseDialogFragment(),
         val isLight = ColorUtils.isColorLight(requireContext().backgroundColor)
         var string = "书源不在库中"
         callBack?.oldBook?.origin?.let{
-            val bookSource = App.db.bookSourceDao.getBookSource(it)
+            val bookSource = appDb.bookSourceDao.getBookSource(it)
             if(bookSource!=null) string = "书源:${bookSource.bookSourceName} ┇ 分组:${bookSource.bookSourceGroup}"
         }
         binding.sourceName.text = string
-        binding.sourceName.textColor =  requireContext().getPrimaryTextColor(isLight)
+        binding.sourceName.setTextColor(requireContext().getPrimaryTextColor(isLight))
         ChangeSourceViewModel.sourceTime = "请检索书源获取本书的检索时间"
     }
 
@@ -178,14 +179,13 @@ class ChangeSourceDialog : BaseDialogFragment(),
 
     override fun onMenuItemClick(item: MenuItem?): Boolean {
         when (item?.itemId) {
-            R.id.menu_delay -> requireContext().alert("书源检索时间") {
-                title = "书源检索时间:"
+            R.id.menu_delay -> alert("书源检索时间") {
                 var text=""
-                val searchGroup = App.INSTANCE.getPrefString("searchGroup") ?: ""
-                App.db.bookSourceDao.getEnabledByGroupSort(searchGroup).forEach {bookSource ->
+                val searchGroup = appCtx.getPrefString("searchGroup") ?: ""
+                appDb.bookSourceDao.getEnabledByGroupSort(searchGroup).forEach {bookSource ->
                     text = "${text}${bookSource.bookSourceName}  ${bookSource.searchBookName}\n连接速度：${bookSource.searchTime}毫秒\n"
                 }
-                message = text
+                setMessage(text)
                 okButton { }
             }.show()
             R.id.menu_load_toc -> {

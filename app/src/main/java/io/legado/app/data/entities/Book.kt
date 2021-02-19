@@ -4,6 +4,7 @@ import android.os.Parcelable
 import androidx.room.*
 import io.legado.app.constant.AppPattern
 import io.legado.app.constant.BookType
+import io.legado.app.constant.androidIdInfo
 import io.legado.app.data.appDb
 import io.legado.app.help.AppConfig
 import io.legado.app.service.help.ReadBook
@@ -202,7 +203,7 @@ data class Book(
             origin = origin,
             bookUrl = bookUrl,
             coverUrl = getDisplayCover() ?: "",
-            androidId = App.androidId,
+            androidId = androidIdInfo,
             totalChapterNum = totalChapterNum,
             durChapterTitle = durChapterTitle ?: "",
             durChapterIndex = durChapterIndex,
