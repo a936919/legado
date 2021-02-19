@@ -2,15 +2,14 @@ package io.legado.app.help
 
 import android.content.Context
 import android.content.SharedPreferences
-import io.legado.app.App
-import io.legado.app.R
 import io.legado.app.constant.AppConst
 import io.legado.app.constant.PreferKey
 import io.legado.app.utils.*
+import splitties.init.appCtx
 
 @Suppress("MemberVisibilityCanBePrivate")
 object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
-    private val context get() = App.INSTANCE
+    private val context get() = appCtx
     const val isGooglePlay = true//context.channel == "google"
     var userAgent: String = getPrefUserAgent()
     var replaceEnableDefault = context.getPrefBoolean(PreferKey.replaceEnableDefault, true)
@@ -96,7 +95,7 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
         get() = context.getPrefBoolean(PreferKey.showRss, true)
 
     val autoRefreshBook: Boolean
-        get() = context.getPrefBoolean(R.string.pk_auto_refresh)
+        get() = context.getPrefBoolean(PreferKey.autoRefresh)
 
     var threadCount: Int
         get() = context.getPrefInt(PreferKey.threadCount, 16)
@@ -136,6 +135,18 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
         get() = context.getPrefInt(PreferKey.barElevation, AppConst.sysElevation)
         set(value) {
             context.putPrefInt(PreferKey.barElevation, value)
+        }
+
+    var exportCharset: String
+        get() {
+            val c = context.getPrefString(PreferKey.exportCharset)
+            if (c.isNullOrBlank()) {
+                return "UTF-8"
+            }
+            return c
+        }
+        set(value) {
+            context.putPrefString(PreferKey.exportCharset, value)
         }
 
     val autoChangeSource: Boolean

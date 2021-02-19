@@ -14,17 +14,17 @@ import androidx.core.view.get
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.core.view.size
-import io.legado.app.App
 import io.legado.app.R
 import io.legado.app.constant.PreferKey
 import io.legado.app.databinding.ViewReadMenuBinding
 import io.legado.app.help.AppConfig
 import io.legado.app.help.LocalConfig
+import io.legado.app.help.ThemeConfig
 import io.legado.app.lib.theme.*
 import io.legado.app.service.help.ReadBook
 import io.legado.app.ui.widget.seekbar.SeekBarChangeListener
 import io.legado.app.utils.*
-import org.jetbrains.anko.sdk27.listeners.onClick
+import splitties.views.onLongClick
 
 /**
  * 阅读界面菜单
@@ -80,8 +80,8 @@ class ReadMenu @JvmOverloads constructor(
         fabReplaceRule.invisible()
         fabAutoPage.invisible()
         fabSearch.invisible()
-        vwBg.onClick { }
-        vwNavigationBar.onClick { }
+        vwBg.setOnClickListener { }
+        vwNavigationBar.setOnClickListener { }
         seekBrightness.progress = context.getPrefInt("brightness", 100)
     }
 
@@ -108,7 +108,9 @@ class ReadMenu @JvmOverloads constructor(
                 item.icon?.setTint(textColor)
             }
         }
-
+        vwBg.setOnClickListener { }
+        vwNavigationBar.setOnClickListener { }
+        seekBrightness.progress = context.getPrefInt("brightness", 100)
     }
 
     fun upBrightnessState() {
@@ -168,17 +170,16 @@ class ReadMenu @JvmOverloads constructor(
     }
 
     private fun bindEvent() = with(binding) {
-        tvChapterName.onClick {
+        tvChapterName.setOnClickListener {
             callBack.openSourceEditActivity()
         }
-        tvChapterUrl.onClick {
+        tvChapterUrl.setOnClickListener {
             context.openUrl(binding.tvChapterUrl.text.toString())
         }
-
-        tvLogin.onClick {
+        tvLogin.setOnClickListener {
             callBack.showLogin()
         }
-        ivBrightnessAuto.onClick {
+        ivBrightnessAuto.setOnClickListener {
             context.putPrefBoolean("brightnessAuto", !brightnessAuto())
             upBrightnessState()
         }
@@ -205,66 +206,59 @@ class ReadMenu @JvmOverloads constructor(
         })
 
         //搜索
-        fabSearch.onClick {
+        fabSearch.setOnClickListener {
             runMenuOut {
                 callBack.openSearchActivity(null)
             }
         }
 
         //自动翻页
-        fabAutoPage.onClick {
+        fabAutoPage.setOnClickListener {
             runMenuOut {
                 callBack.autoPage()
             }
         }
 
         //替换
-        fabReplaceRule.onClick { callBack.openReplaceRule() }
+        fabReplaceRule.setOnClickListener { callBack.openReplaceRule() }
 
         //夜间模式
-        fabNightTheme.onClick {
+        fabNightTheme.setOnClickListener {
             AppConfig.isNightTheme = !AppConfig.isNightTheme
-            App.INSTANCE.applyDayNight()
+            ThemeConfig.applyDayNight(context)
         }
 
         //上一章
-        tvPre.onClick { ReadBook.moveToPrevChapter(upContent = true, toLast = false) }
+        tvPre.setOnClickListener { ReadBook.moveToPrevChapter(upContent = true, toLast = false) }
 
         //下一章
-        tvNext.onClick { ReadBook.moveToNextChapter(true) }
+        tvNext.setOnClickListener { ReadBook.moveToNextChapter(true) }
 
         //目录
-        llCatalog.onClick {
+        llCatalog.setOnClickListener {
             runMenuOut {
                 callBack.openChapterList()
             }
         }
-/*
+        /*
         //朗读
-        llReadAloud.onClick {
+        llReadAloud.setOnClickListener {
             runMenuOut {
                 callBack.onClickReadAloud()
             }
         }
         llReadAloud.onLongClick {
             runMenuOut { callBack.showReadAloudDialog() }
-            true
         }*/
-
-        llReadAloud.onClick {
-            runMenuOut {
-                callBack.showBookOtherInfo()
-            }
-        }
         //界面
-        llFont.onClick {
+        llFont.setOnClickListener {
             runMenuOut {
                 callBack.showReadStyle()
             }
         }
 
         //设置
-        llSetting.onClick {
+        llSetting.setOnClickListener {
             runMenuOut {
                 callBack.showMoreSetting()
             }
@@ -282,7 +276,7 @@ class ReadMenu @JvmOverloads constructor(
             }
 
             override fun onAnimationEnd(animation: Animation) {
-                binding.vwMenuBg.onClick { runMenuOut() }
+                binding.vwMenuBg.setOnClickListener { runMenuOut() }
                 binding.vwNavigationBar.layoutParams = binding.vwNavigationBar.layoutParams.apply {
                     height = activity!!.navigationBarHeight
                 }

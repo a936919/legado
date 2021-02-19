@@ -13,7 +13,7 @@ import io.legado.app.lib.theme.readCfgBottomText
 import io.legado.app.ui.widget.seekbar.SeekBarChangeListener
 import io.legado.app.utils.ColorUtils
 import io.legado.app.utils.progressAdd
-import org.jetbrains.anko.sdk27.listeners.onClick
+
 
 class DetailSeekBar @JvmOverloads constructor(
     context: Context,
@@ -47,11 +47,11 @@ class DetailSeekBar @JvmOverloads constructor(
         if (isBottomBackground && !isInEditMode) {
             upBackground()
         }
-        binding.ivSeekPlus.onClick {
+        binding.ivSeekPlus.setOnClickListener {
             binding.seekBar.progressAdd(1)
             onChanged?.invoke(binding.seekBar.progress)
         }
-        binding.ivSeekReduce.onClick {
+        binding.ivSeekReduce.setOnClickListener {
             binding.seekBar.progressAdd(-1)
             onChanged?.invoke(binding.seekBar.progress)
         }

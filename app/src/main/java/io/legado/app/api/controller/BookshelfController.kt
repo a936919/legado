@@ -1,8 +1,9 @@
 package io.legado.app.api.controller
 
-import io.legado.app.App
 import io.legado.app.api.ReturnData
 import io.legado.app.constant.PreferKey
+import io.legado.app.constant.androidId
+import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.Bookmark
 import io.legado.app.data.entities.ReplaceRule
@@ -15,19 +16,20 @@ import io.legado.app.service.help.ReadBook
 import io.legado.app.utils.*
 import kotlinx.coroutines.runBlocking
 import kotlin.math.min
+import splitties.init.appCtx
 
 object BookshelfController {
 
     val bookshelf: ReturnData
         get() {
-            val books = App.db.bookDao.all.filter {
+            val books = appDb.bookDao.all.filter {
                 it.type != 1
             }
             val returnData = ReturnData()
             return if (books.isEmpty()) {
                 returnData.setErrorMsg("还没有添加小说")
             } else {
-                val data = when (App.INSTANCE.getPrefInt(PreferKey.bookshelfSort)) {
+                val data = when (appCtx.getPrefInt(PreferKey.bookshelfSort)) {
                     1 -> books.sortedByDescending { it.latestChapterTime }
                     2 -> books.sortedWith { o1, o2 ->
                         o1.name.cnCompare(o2.name)
@@ -47,7 +49,7 @@ object BookshelfController {
         if (bookUrl.isNullOrEmpty()) {
             return returnData.setErrorMsg("参数url不能为空，请指定书籍地址")
         }
-        val book = App.db.bookDao.getBook(bookUrl) ?: return returnData.setData("获取失败")
+        val book = appDb.bookDao.getBook(bookUrl) ?: return returnData.setData("获取失败")
         insertReadRecord(book)
         return returnData.setData(book)
     }
@@ -58,7 +60,7 @@ object BookshelfController {
         if (bookUrl.isNullOrEmpty()) {
             return returnData.setErrorMsg("参数url不能为空，请指定书籍地址")
         }
-        val chapterList = App.db.bookChapterDao.getChapterList(bookUrl)
+        val chapterList = appDb.bookChapterDao.getChapterList(bookUrl)
         return returnData.setData(chapterList)
     }
 
@@ -72,14 +74,14 @@ object BookshelfController {
         if (index == null) {
             return returnData.setErrorMsg("参数index不能为空, 请指定目录序号")
         }
-        val book = App.db.bookDao.getBook(bookUrl)
-        val chapter = App.db.bookChapterDao.getChapter(bookUrl, index)
+        val book = appDb.bookDao.getBook(bookUrl)
+        val chapter = appDb.bookChapterDao.getChapter(bookUrl, index)
         if (book == null || chapter == null) {
             returnData.setErrorMsg("未找到")
         } else {
             var content: String? = BookHelp.getContent(book, chapter)
             if (content == null) {
-                App.db.bookSourceDao.getBookSource(book.origin)?.let { source ->
+                appDb.bookSourceDao.getBookSource(book.origin)?.let { source ->
                     runBlocking {
                         WebBook(source).getContentAwait(this, book, chapter)
                     }.let {
@@ -110,7 +112,7 @@ object BookshelfController {
         val pos = parameters["pos"]?.getOrNull(0)?.toInt()
         if (bookUrl == null || chapterIndex == null || pos == null)
             return returnData.setErrorMsg("参数url不能为空，请指定书籍地址")
-        App.db.bookDao.getBook(bookUrl)?.let { synRecord(it, chapterIndex, pos) }
+        appDb.bookDao.getBook(bookUrl)?.let { synRecord(it, chapterIndex, pos) }
         return returnData.setData("成功")
     }
 
@@ -122,13 +124,13 @@ object BookshelfController {
         val bookText = parameters["bookText"]?.getOrNull(0)
         if (bookUrl == null || chapterIndex == null || pos == null || bookText.isNullOrBlank())
             return returnData.setErrorMsg("参数url不能为空，请指定书籍地址")
-        val book = App.db.bookDao.getBook(bookUrl) ?: return returnData.setData("获取失败")
-        val chapterName = App.db.bookChapterDao.getChapter(book.bookUrl, chapterIndex)?.title ?: ""
+        val book = appDb.bookDao.getBook(bookUrl) ?: return returnData.setData("获取失败")
+        val chapterName = appDb.bookChapterDao.getChapter(book.bookUrl, chapterIndex)?.title ?: ""
         val bookmark = Bookmark(
             System.currentTimeMillis(), bookUrl
                 ?: "", book.name, book.author, chapterIndex, pos, chapterName, bookText ?: "", ""
         )
-        App.db.bookmarkDao.insert(bookmark)
+        appDb.bookmarkDao.insert(bookmark)
         synRecord(book, chapterIndex, pos)
         return returnData.setData("成功")
     }
@@ -137,7 +139,7 @@ object BookshelfController {
         val book = GSON.fromJsonObject<Book>(postData)
         val returnData = ReturnData()
         if (book != null) {
-            App.db.bookDao.insert(book)
+            appDb.bookDao.insert(book)
             if (ReadBook.book?.bookUrl == book.bookUrl) {
                 ReadBook.book = book
                 ReadBook.durChapterIndex = book.durChapterIndex
@@ -156,16 +158,16 @@ object BookshelfController {
                 timeRecord?.let {
                     readStartTime = System.currentTimeMillis()
                     it.date = TimeRecord.getDate()
-                    it.readTime = App.db.timeRecordDao.getReadTime(
-                        App.androidId,
+                    it.readTime = appDb.timeRecordDao.getReadTime(
+                        androidId,
                         it.bookName,
                         it.author,
                         it.date
                     )
                         ?: 0
-                    App.db.bookDao.update(book)
-                    App.db.readRecordDao.insert(readRecord)
-                    App.db.timeRecordDao.insert(it)
+                    appDb.bookDao.update(book)
+                    appDb.readRecordDao.insert(readRecord)
+                    appDb.timeRecordDao.insert(it)
                 }
             }
         }
@@ -174,7 +176,7 @@ object BookshelfController {
     private fun processReplace(book: Book, title: String, content: String): String {
         val replaceRules = arrayListOf<ReplaceRule>()
         replaceRules.clear()
-        replaceRules.addAll(App.db.replaceRuleDao.findEnabledByScope(book.name, book.origin))
+        replaceRules.addAll(appDb.replaceRuleDao.findEnabledByScope(book.name, book.origin))
         var content1 = content
         if (book.getUseReplaceRule()) {
             replaceRules.forEach { item ->
@@ -211,15 +213,15 @@ object BookshelfController {
             book.webDurChapterTime = System.currentTimeMillis()
             book.webChapterIndex = chapterIndex
             book.webChapterPos = pos
-            App.db.bookChapterDao.getChapter(book.bookUrl, chapterIndex)?.let {
+            appDb.bookChapterDao.getChapter(book.bookUrl, chapterIndex)?.let {
                 book.durChapterTitle = it.title
             }
-            App.db.bookDao.update(book)
+            appDb.bookDao.update(book)
             val readRecord = book.toReadRecord()
             readRecord.durChapterTime = book.webDurChapterTime
             readRecord.durChapterIndex = book.webChapterIndex
             readRecord.durChapterPos = book.webChapterIndex
-            App.db.readRecordDao.update(readRecord)
+            appDb.readRecordDao.update(readRecord)
             timeRecord?.let {
                 val dataChange = it.date != TimeRecord.getDate()
                 var dif = System.currentTimeMillis() - readStartTime
@@ -228,21 +230,22 @@ object BookshelfController {
                 readStartTime = System.currentTimeMillis()
                 if (dataChange) {
                     it.date = TimeRecord.getDate()
-                    it.readTime = App.db.timeRecordDao.getReadTime(
-                        App.androidId,
+                    it.readTime = appDb.timeRecordDao.getReadTime(
+                        androidId,
                         it.bookName,
                         it.author,
                         it.date
                     )
                         ?: 0
                 } else {
-                    App.db.timeRecordDao.getReadTime(App.androidId, it.bookName, it.author, it.date)
+                    appDb.timeRecordDao.getReadTime(androidId, it.bookName, it.author, it.date)
                         ?.let { readTime ->
                             if (readTime > it.readTime) it.readTime = readTime
                         }
                 }
                 it.readTime = it.readTime + dif
-                if (dataChange) App.db.timeRecordDao.insert(it) else App.db.timeRecordDao.update(it)
+                if (dataChange) appDb.timeRecordDao.insert(it) else appDb.timeRecordDao.update(it)
+
             }
         }
     }

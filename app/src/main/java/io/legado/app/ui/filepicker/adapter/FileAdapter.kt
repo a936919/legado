@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import io.legado.app.App
 import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.base.adapter.RecyclerAdapter
+import io.legado.app.data.appDb
 import io.legado.app.databinding.ItemFileFilepickerBinding
 import io.legado.app.help.AppConfig
 import io.legado.app.lib.theme.getPrimaryDisabledTextColor
@@ -15,8 +16,6 @@ import io.legado.app.ui.filepicker.utils.ConvertUtils
 import io.legado.app.ui.filepicker.utils.FilePickerIcon
 import io.legado.app.utils.FileUtils
 import io.legado.app.utils.cnCompare
-import org.jetbrains.anko.sdk27.listeners.onClick
-import org.jetbrains.anko.sdk27.listeners.onLongClick
 import java.io.File
 import java.util.*
 
@@ -82,7 +81,7 @@ class FileAdapter(context: Context, val callBack: CallBack) :
                     }
                     fileItem.name = file.name
                     fileItem.path = file.absolutePath
-                    fileItem.top = App.db.topPathDao.isTopPath(fileItem.path)
+                    fileItem.top = appDb.topPathDao.isTopPath(fileItem.path)
                     if( fileItem.top) fileItem.icon = topIcon
                     data.add(fileItem)
                 }
@@ -131,10 +130,10 @@ class FileAdapter(context: Context, val callBack: CallBack) :
     }
 
     override fun registerListener(holder: ItemViewHolder, binding: ItemFileFilepickerBinding) {
-        holder.itemView.onClick {
+        holder.itemView.setOnClickListener {
             callBack.onFileClick(holder.layoutPosition)
         }
-        holder.itemView.onLongClick{
+        holder.itemView.setOnLongClickListener{
             callBack.processTopPath(holder.layoutPosition)
             true
         }

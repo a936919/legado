@@ -5,11 +5,10 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import androidx.lifecycle.MutableLiveData
-import io.legado.app.App
-import io.legado.app.R
 import io.legado.app.base.BaseViewModel
 import io.legado.app.constant.AppPattern
 import io.legado.app.constant.PreferKey
+import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookSource
 import io.legado.app.data.entities.SearchBook
@@ -21,7 +20,7 @@ import io.legado.app.utils.getPrefString
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.ExecutorCoroutineDispatcher
 import kotlinx.coroutines.asCoroutineDispatcher
-import org.jetbrains.anko.debug
+import splitties.init.appCtx
 import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.Executors
 
@@ -40,7 +39,7 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
     private val searchBooks = CopyOnWriteArraySet<SearchBook>()
     private var postTime = 0L
     private val sendRunnable = Runnable { upAdapter() }
-    private val searchGroup get() = App.INSTANCE.getPrefString("searchGroup") ?: ""
+    private val searchGroup get() = appCtx.getPrefString("searchGroup") ?: ""
 
     @Volatile
     private var searchIndex = -1
@@ -65,7 +64,7 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
         execute {
             searchBooks.clear()
             upAdapter()
-            App.db.searchBookDao.getChangeSourceSearch(name, author, searchGroup).let {
+            appDb.searchBookDao.getChangeSourceSearch(name, author, searchGroup).let {
                 searchBooks.addAll(it)
                 searchBooksLiveData.postValue(searchBooks.toList())
                 if (it.isEmpty()) {
@@ -90,7 +89,7 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
 
     private fun searchFinish(searchBook: SearchBook) {
         if (searchBooks.contains(searchBook)) return
-        App.db.searchBookDao.insert(searchBook)
+        appDb.searchBookDao.insert(searchBook)
         if (screenKey.isEmpty()) {
             searchBooks.add(searchBook)
         } else if (searchBook.name.contains(screenKey)) {
@@ -101,15 +100,18 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
 
     private fun startSearch() {
         execute {
+            appDb.searchBookDao.clear(name, author)
+            searchBooks.clear()
+            upAdapter()
             bookSourceList.clear()
             if (searchGroup.isBlank()) {
-                bookSourceList.addAll(App.db.bookSourceDao.allEnabled)
+                bookSourceList.addAll(appDb.bookSourceDao.allEnabled)
             } else {
-                bookSourceList.addAll(App.db.bookSourceDao.getEnabledByGroup(searchGroup))
+                bookSourceList.addAll(appDb.bookSourceDao.getEnabledByGroup(searchGroup))
             }
             searchStateData.postValue(true)
             initSearchPool()
-            App.db.searchBookDao.clearByGroup(name, author,searchGroup)
+            appDb.searchBookDao.clearByGroup(name, author,searchGroup)
             threadCheck = bookSourceList.size
             sourceTime = ""
             for (i in 0 until threadCount) {
@@ -160,10 +162,10 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
                     } else {
                         searchIndex++
                     }
-                     App.db.bookSourceDao.getBookSource(source.bookSourceUrl)?.let {
+                     appDb.bookSourceDao.getBookSource(source.bookSourceUrl)?.let {
                          it.searchTime = System.currentTimeMillis() - startTime
                          it.searchBookName = "$name$status"
-                         App.db.bookSourceDao.update(it)
+                         appDb.bookSourceDao.update(it)
                      }
                     threadCheck--
                     if(threadCheck<=0){
@@ -188,7 +190,7 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
                     searchFinish(searchBook)
                 }
             }.onError {
-                debug { context.getString(R.string.error_get_book_info) }
+                it.printStackTrace()
             }
     }
 
@@ -201,7 +203,7 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
                     searchFinish(searchBook)
                 }
             }.onError {
-                debug { context.getString(R.string.error_get_chapter_list) }
+                it.printStackTrace()
             }
     }
 
@@ -215,7 +217,7 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
                 loadDbSearchBook()
             } else {
                 val items =
-                    App.db.searchBookDao.getChangeSourceSearch(name, author, screenKey, searchGroup)
+                    appDb.searchBookDao.getChangeSourceSearch(name, author, screenKey, searchGroup)
                 searchBooks.clear()
                 searchBooks.addAll(items)
                 upAdapter()
@@ -243,9 +245,9 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
 
     fun disableSource(searchBook: SearchBook) {
         execute {
-            App.db.bookSourceDao.getBookSource(searchBook.origin)?.let { source ->
+            appDb.bookSourceDao.getBookSource(searchBook.origin)?.let { source ->
                 source.enabled = false
-                App.db.bookSourceDao.update(source)
+                appDb.bookSourceDao.update(source)
             }
             searchBooks.remove(searchBook)
             upAdapter()

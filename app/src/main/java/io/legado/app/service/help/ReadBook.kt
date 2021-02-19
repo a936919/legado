@@ -2,8 +2,9 @@ package io.legado.app.service.help
 
 import androidx.lifecycle.MutableLiveData
 import com.hankcs.hanlp.HanLP
-import io.legado.app.App
 import io.legado.app.constant.BookType
+import io.legado.app.constant.androidId
+import io.legado.app.data.appDb
 import io.legado.app.data.entities.*
 import io.legado.app.data.entities.TimeRecord
 import io.legado.app.help.*
@@ -17,10 +18,14 @@ import io.legado.app.ui.book.read.page.entities.TextPage
 import io.legado.app.ui.book.read.page.provider.ChapterProvider
 import io.legado.app.ui.book.read.page.provider.ImageProvider
 import kotlinx.coroutines.*
-import org.jetbrains.anko.getStackTraceString
-import org.jetbrains.anko.toast
 import kotlin.math.min
-
+import io.legado.app.utils.msg
+import io.legado.app.utils.toastOnUi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import splitties.init.appCtx
 
 @Suppress("MemberVisibilityCanBePrivate")
 object ReadBook {
@@ -53,9 +58,9 @@ object ReadBook {
         timeRecord = readRecord?.toTimeRecord()
         timeRecord?.let { timeRecord ->
             timeRecord.date = TimeRecord.getDate()
-            timeRecord.readTime = App.db.timeRecordDao.getReadTime(App.androidId, timeRecord.bookName, timeRecord.author, timeRecord.date)
+            timeRecord.readTime = appDb.timeRecordDao.getReadTime(androidId, timeRecord.bookName, timeRecord.author, timeRecord.date)
                     ?: 0
-            timeRecord.listenTime = App.db.timeRecordDao.getListenTime(App.androidId, timeRecord.bookName, timeRecord.author, timeRecord.date)
+            timeRecord.listenTime = appDb.timeRecordDao.getListenTime(androidId, timeRecord.bookName, timeRecord.author, timeRecord.date)
                     ?: 0
         }
         saveReadRecord()
@@ -75,8 +80,8 @@ object ReadBook {
 
     private fun saveReadRecord() {
         Coroutine.async {
-            readRecord?.let { App.db.readRecordDao.insert(it) }
-            timeRecord?.let { App.db.timeRecordDao.insert(it) }
+            readRecord?.let { appDb.readRecordDao.insert(it) }
+            timeRecord?.let { appDb.timeRecordDao.insert(it) }
         }
     }
 
@@ -85,7 +90,7 @@ object ReadBook {
             bookSource = null
             webBook = null
         } else {
-            App.db.bookSourceDao.getBookSource(book.origin)?.let {
+            appDb.bookSourceDao.getBookSource(book.origin)?.let {
                 bookSource = it
                 webBook = WebBook(it)
             } ?: let {
@@ -127,12 +132,12 @@ object ReadBook {
 
                 if (dataChange) {
                     timeRecord.date = TimeRecord.getDate()
-                    timeRecord.readTime = App.db.timeRecordDao.getReadTime(App.androidId, timeRecord.bookName, timeRecord.author, timeRecord.date)
+                    timeRecord.readTime = appDb.timeRecordDao.getReadTime(androidId, timeRecord.bookName, timeRecord.author, timeRecord.date)
                             ?: 0
-                    timeRecord.listenTime = App.db.timeRecordDao.getListenTime(App.androidId, timeRecord.bookName, timeRecord.author, timeRecord.date)
+                    timeRecord.listenTime = appDb.timeRecordDao.getListenTime(androidId, timeRecord.bookName, timeRecord.author, timeRecord.date)
                             ?: 0
                 } else if (WebService.isRun) {
-                    val readTime = App.db.timeRecordDao.getReadTime(App.androidId, timeRecord.bookName, timeRecord.author, timeRecord.date)
+                    val readTime = appDb.timeRecordDao.getReadTime(androidId, timeRecord.bookName, timeRecord.author, timeRecord.date)
                     if (readTime != null) {
                         if (readTime > timeRecord.readTime) {
                             timeRecord.readTime = readTime
@@ -145,7 +150,7 @@ object ReadBook {
                 else
                     timeRecord.readTime = timeRecord.readTime + dif
 
-                if (dataChange) App.db.timeRecordDao.insert(timeRecord) else App.db.timeRecordDao.update(timeRecord)
+                if (dataChange) appDb.timeRecordDao.insert(timeRecord) else appDb.timeRecordDao.update(timeRecord)
             }
         }
     }
@@ -261,7 +266,7 @@ object ReadBook {
         if (book != null && textChapter != null) {
             val key = IntentDataHelp.putData(textChapter)
             ReadAloud.play(
-                    App.INSTANCE, book.name, textChapter.title, durPageIndex(), key, play
+                appCtx, book.name, textChapter.title, durPageIndex(), key, play
             )
         }
     }
@@ -305,7 +310,7 @@ object ReadBook {
         book?.let { book ->
             if (addLoading(index)) {
                 Coroutine.async {
-                    App.db.bookChapterDao.getChapter(book.bookUrl, index)?.let { chapter ->
+                    appDb.bookChapterDao.getChapter(book.bookUrl, index)?.let { chapter ->
                         BookHelp.getContent(book, chapter)?.let {
                             contentLoadFinish(book, chapter, it, upContent, resetPageOffset) {
                                 success?.invoke()
@@ -325,7 +330,7 @@ object ReadBook {
             if (book.isLocalBook()) return
             if (addLoading(index)) {
                 Coroutine.async {
-                    App.db.bookChapterDao.getChapter(book.bookUrl, index)?.let { chapter ->
+                    appDb.bookChapterDao.getChapter(book.bookUrl, index)?.let { chapter ->
                         if (BookHelp.hasContent(book, chapter)) {
                             removeLoading(chapter.index)
                         } else {
@@ -483,7 +488,7 @@ object ReadBook {
             }
         }.onError {
             it.printStackTrace()
-            App.INSTANCE.toast("ChapterProvider ERROR:\n${it.getStackTraceString()}")
+            appCtx.toastOnUi("ChapterProvider ERROR:\n${it.msg}")
         }.onSuccess {
             success?.invoke()
         }
@@ -516,16 +521,16 @@ object ReadBook {
                 book.durChapterTime = System.currentTimeMillis()
                 book.durChapterIndex = durChapterIndex
                 book.durChapterPos = durChapterPos
-                App.db.bookChapterDao.getChapter(book.bookUrl, durChapterIndex)?.let {
+                appDb.bookChapterDao.getChapter(book.bookUrl, durChapterIndex)?.let {
                     book.durChapterTitle = it.title
                 }
-                App.db.bookDao.update(book)
+                appDb.bookDao.update(book)
                 readRecord?.let { readRecord ->
                     readRecord.durChapterTime = book.durChapterTime
                     readRecord.durChapterIndex = book.durChapterIndex
                     readRecord.durChapterPos = book.durChapterPos
                     readRecord.durChapterTitle = book.durChapterTitle.toString()
-                    App.db.readRecordDao.update(readRecord)
+                    appDb.readRecordDao.update(readRecord)
                 }
             }
         }

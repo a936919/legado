@@ -4,7 +4,6 @@ import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
 import android.text.TextPaint
-import io.legado.app.App
 import io.legado.app.constant.AppPattern
 import io.legado.app.constant.EventBus
 import io.legado.app.data.entities.Book
@@ -17,6 +16,7 @@ import io.legado.app.ui.book.read.page.entities.TextChar
 import io.legado.app.ui.book.read.page.entities.TextLine
 import io.legado.app.ui.book.read.page.entities.TextPage
 import io.legado.app.utils.*
+import splitties.init.appCtx
 import java.util.*
 import kotlin.math.min
 
@@ -374,13 +374,13 @@ object ChapterProvider {
         return kotlin.runCatching {
             when {
                 fontPath.isContentScheme() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> {
-                    val fd = App.INSTANCE.contentResolver
+                    val fd = appCtx.contentResolver
                         .openFileDescriptor(Uri.parse(fontPath), "r")!!
                         .fileDescriptor
                     Typeface.Builder(fd).build()
                 }
                 fontPath.isContentScheme() -> {
-                    Typeface.createFromFile(RealPathUtil.getPath(App.INSTANCE, Uri.parse(fontPath)))
+                    Typeface.createFromFile(RealPathUtil.getPath(appCtx, Uri.parse(fontPath)))
                 }
                 fontPath.isNotEmpty() -> Typeface.createFromFile(fontPath)
                 else -> when (AppConfig.systemTypefaces) {

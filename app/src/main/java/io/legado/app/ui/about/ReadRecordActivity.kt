@@ -5,12 +5,13 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.ViewGroup
-import io.legado.app.App
 import io.legado.app.R
 import io.legado.app.base.BaseActivity
 import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.base.adapter.RecyclerAdapter
+import io.legado.app.constant.androidId
 import io.legado.app.data.entities.Book
+import io.legado.app.data.appDb
 import io.legado.app.data.entities.ReadRecordShow
 import io.legado.app.data.entities.TimeRecord
 import io.legado.app.databinding.ActivityReadRecordBinding
@@ -24,8 +25,6 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.jetbrains.anko.sdk27.listeners.onClick
-import org.jetbrains.anko.startActivity
 import java.util.*
 
 class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
@@ -98,23 +97,34 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
         tvBookName.setText(R.string.all_read_time)
         adapter = RecordAdapter(this@ReadRecordActivity)
         recyclerView.adapter = adapter
+/*
+        readRecord.tvRemove.setOnClickListener {
+            alert(R.string.delete, R.string.sure_del) {
+                okButton {
+                    appDb.readRecordDao.clear()
+                    initData()
+                }
+                noButton()
+            }.show()
+        }
+*/
     }
 
     private fun initData() {
         launch(IO) {
-            val allTime = App.db.timeRecordDao.allTime
-            val todayTime = App.db.timeRecordDao.getReadTime(TimeRecord.getDate())?:0
+            val allTime = appDb.timeRecordDao.allTime
+            val todayTime = appDb.timeRecordDao.getReadTime(TimeRecord.getDate())?:0
             withContext(Main) {
                 binding.tvReadTime.text = TimeRecord.formatDuring(allTime)
                 binding.tvReadTime2.text = TimeRecord.formatDuring(todayTime)
             }
-
-            var readRecords = App.db.readRecordDao.allShow
+            var readRecords = appDb.readRecordDao.allShow
             readRecords.forEach{
-                it.readTime = App.db.timeRecordDao.getReadTime(it.bookName,it.author)?:0
+                it.readTime = appDb.timeRecordDao.getReadTime(it.bookName,it.author)?:0
+
             }
 
-            if(status == 5) readRecords = readRecords.filter { App.db.bookmarkDao.haveBook(it.bookUrl)}
+            if(status == 5) readRecords = readRecords.filter { appDb.bookmarkDao.haveBook(it.bookUrl)}
             else if(status>=0) readRecords = readRecords.filter { it.status==status }
             if(sortMode == 1) readRecords = readRecords.sortedBy { -it.readTime }
             withContext(Main) {
@@ -132,16 +142,16 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
         alert("阅读状态设置") {
             val alertBinding = DialogBookStatusBinding.inflate(layoutInflater)
             var change = false
-            val readRecord = App.db.readRecordDao.getBook(App.androidId,readShow.bookName,readShow.author)
+            val readRecord = appDb.readRecordDao.getBook(androidId,readShow.bookName,readShow.author)
             var book: Book? = null
             if (readRecord != null) {
                 alertBinding.rgLayout.checkByIndex(readRecord.status)
-                book = App.db.bookDao.getBook(readRecord.bookUrl)
+                book = appDb.bookDao.getBook(readRecord.bookUrl)
             }
             alertBinding.rgLayout.setOnCheckedChangeListener { _, _ ->
                 change = true
             }
-            customView = alertBinding.root
+            customView { alertBinding.root }
             okButton {
                 alertBinding.apply {
                     if (change) {
@@ -149,10 +159,10 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
                         readRecord?.status = status
                         if (book != null) {
                             book.status =status
-                            App.db.bookDao.update(book)
+                            appDb.bookDao.update(book)
                         }
                         if (readRecord != null) {
-                            App.db.readRecordDao.update(readRecord)
+                            appDb.readRecordDao.update(readRecord)
                         }
                         initData()
                     }
@@ -189,20 +199,20 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
 
         override fun registerListener(holder: ItemViewHolder, binding: ItemReadRecordBinding) {
             binding.apply {
-                ivRemove.onClick {
+                tvRemove.setOnClickListener {
                     getItem(holder.layoutPosition)?.let { item ->
                         sureDelAlert(item)
                     }
                 }
-                root.onClick {
+                root.setOnClickListener {
                     getItem((holder.layoutPosition))?.let {
-                        startActivity<BookInfoActivity>(
-                            Pair("name", it.bookName),
-                            Pair("author", it.author)
-                        )
+                        startActivity<BookInfoActivity> {
+                            putExtra("name", it.bookName)
+                            putExtra("author", it.author)
+                        }
                     }
                 }
-                tvStatus.onClick {
+                tvStatus.setOnClickListener {
                     getItem((holder.layoutPosition))?.let {
                         setBookStatus(it)
                     }
@@ -212,10 +222,10 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
 
         private fun sureDelAlert(item: ReadRecordShow) {
             alert(R.string.delete) {
-                message = getString(R.string.sure_del_any, item.bookName)
+                setMessage(getString(R.string.sure_del_any, item.bookName))
                 okButton {
-                    App.db.readRecordDao.deleteBook(item.bookName,item.author)
-                    App.db.timeRecordDao.deleteBook(item.bookName,item.author)
+                    appDb.readRecordDao.deleteBook(item.bookName,item.author)
+                    appDb.timeRecordDao.deleteBook(item.bookName,item.author)
                     initData()
                 }
                 noButton()

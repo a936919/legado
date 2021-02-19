@@ -85,8 +85,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         />
 
-    <ImageView
-        android:id="@+id/iv_remove"
+    <TextView
+        android:id="@+id/tv_remove"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/ic_remove"

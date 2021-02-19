@@ -15,9 +15,11 @@ import androidx.core.view.size
 import com.jaredrummler.android.colorpicker.ColorPickerDialogListener
 import io.legado.app.App
 import io.legado.app.R
+import io.legado.app.constant.AppConst
 import io.legado.app.constant.EventBus
 import io.legado.app.constant.PreferKey
 import io.legado.app.constant.Status
+import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
 import io.legado.app.data.entities.BookProgress
@@ -55,9 +57,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.jetbrains.anko.startActivity
-import org.jetbrains.anko.startActivityForResult
-import org.jetbrains.anko.toast
 
 class ReadBookActivity : ReadBookBaseActivity(),
         View.OnTouchListener,
@@ -276,17 +275,20 @@ class ReadBookActivity : ReadBookBaseActivity(),
                 binding.readView.upPageAnim()
             }
             R.id.menu_book_info -> ReadBook.book?.let {
-                startActivity<BookInfoActivity>(Pair("name", it.name), Pair("author", it.author))
+                startActivity<BookInfoActivity> {
+                    putExtra("name", it.name)
+                    putExtra("author", it.author)
+                }
             }
             R.id.menu_toc_regex -> TocRegexDialog.show(
                     supportFragmentManager,
                     ReadBook.book?.tocUrl
             )
             R.id.menu_login -> ReadBook.webBook?.bookSource?.let {
-                startActivity<SourceLogin>(
-                        Pair("sourceUrl", it.bookSourceUrl),
-                        Pair("loginUrl", it.loginUrl)
-                )
+                startActivity<SourceLogin>{
+                    putExtra("sourceUrl", it.bookSourceUrl)
+                    putExtra("loginUrl", it.loginUrl)
+                }
             }
             R.id.menu_set_charset -> showCharsetConfig()
             R.id.menu_get_progress -> synProgress()
@@ -392,7 +394,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
                     ) {
                         if (BaseReadAloudService.isPlay()) {
                             ReadAloud.pause(this)
-                            toast(R.string.read_aloud_pause)
+                            toastOnUi(R.string.read_aloud_pause)
                             return true
                         }
                         if (isAutoPage) {
@@ -498,7 +500,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
             R.id.menu_bookmark -> binding.readView.curPage.let {
                 val bookmark = it.createBookmark()
                 if (bookmark == null) {
-                    toast(R.string.create_bookmark_error)
+                    toastOnUi(R.string.create_bookmark_error)
                 } else {
                     showBookMark(bookmark)
                 }
@@ -581,7 +583,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
     override fun synProgress() {
         ReadBook.book?.let {
             viewModel.getWebDavProgress(it) { progress ->
-                App.db.bookDao.getBook(it.bookUrl)?.let { newBook ->
+                appDb.bookDao.getBook(it.bookUrl)?.let { newBook ->
                     processBookProgress(newBook, progress)
                 }
             }
@@ -748,9 +750,10 @@ class ReadBookActivity : ReadBookBaseActivity(),
     override fun openSourceEditActivity() {
         ReadBook.webBook?.let {
             startActivityForResult<BookSourceEditActivity>(
-                    requestCodeEditSource,
-                    Pair("data", it.bookSource.bookSourceUrl)
-            )
+                requestCodeEditSource
+            ) {
+                putExtra("data", it.bookSource.bookSourceUrl)
+            }
         }
     }
 
@@ -767,9 +770,10 @@ class ReadBookActivity : ReadBookBaseActivity(),
     override fun openChapterList() {
         ReadBook.book?.let {
             startActivityForResult<ChapterListActivity>(
-                    requestCodeChapterList,
-                    Pair("bookUrl", it.bookUrl)
-            )
+                requestCodeChapterList
+            ) {
+                putExtra("bookUrl", it.bookUrl)
+            }
         }
     }
 
@@ -779,10 +783,11 @@ class ReadBookActivity : ReadBookBaseActivity(),
     override fun openSearchActivity(searchWord: String?) {
         ReadBook.book?.let {
             startActivityForResult<SearchContentActivity>(
-                    requestCodeSearchResult,
-                    Pair("bookUrl", it.bookUrl),
-                    Pair("searchWord", searchWord ?: viewModel.searchContentQuery)
-            )
+                requestCodeSearchResult
+            ) {
+                putExtra("bookUrl", it.bookUrl)
+                putExtra("searchWord", searchWord ?: viewModel.searchContentQuery)
+            }
         }
     }
 
@@ -814,10 +819,11 @@ class ReadBookActivity : ReadBookBaseActivity(),
 
     override fun showLogin() {
         ReadBook.webBook?.bookSource?.let {
-            startActivity<SourceLogin>(
-                    Pair("sourceUrl", it.bookSourceUrl),
-                    Pair("loginUrl", it.loginUrl)
-            )
+            startActivity<SourceLogin> {
+                putExtra("sourceUrl", it.bookSourceUrl)
+                putExtra("loginUrl", it.loginUrl)
+                putExtra("userAgent", it.getHeaderMap()[AppConst.UA_NAME])
+            }
         }
     }
 
@@ -865,6 +871,16 @@ class ReadBookActivity : ReadBookBaseActivity(),
             it.tocUrl = tocRegex
             viewModel.loadChapterList(it)
         }
+    }
+
+    private fun sureSyncProgress(progress: BookProgress) {
+        alert(R.string.get_book_progress) {
+            setMessage(R.string.current_progress_exceeds_cloud)
+            okButton {
+                ReadBook.setProgress(progress)
+            }
+            noButton()
+        }.show()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -930,7 +946,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
         ReadBook.book?.let {
             if (!ReadBook.inBookshelf) {
                 alert(title = getString(R.string.add_to_shelf)) {
-                    message = getString(R.string.check_add_bookshelf, it.name)
+                    setMessage(getString(R.string.check_add_bookshelf, it.name))
                     okButton {
                         ReadBook.inBookshelf = true
                         setResult(Activity.RESULT_OK)
@@ -1046,10 +1062,10 @@ class ReadBookActivity : ReadBookBaseActivity(),
         IntentDataHelp.getData<Book>(intent.getStringExtra("key"))?.let {
             intentBook = it
         } ?: intent.getStringExtra("bookUrl")?.let {
-            App.db.bookDao.getBook(it)?.let { book ->
+            appDb.bookDao.getBook(it)?.let { book ->
                 intentBook = book
             }
-        } ?: App.db.bookDao.lastReadBook?.let {
+        } ?: appDb.bookDao.lastReadBook?.let {
             intentBook = it
         }
         return intentBook

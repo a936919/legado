@@ -31,10 +31,15 @@ jobs:
       UPLOAD_ARTIFACT: 'true'
     steps:
       - uses: actions/checkout@v2
-      - name: Set Up JDK
-        uses: actions/setup-java@v1
+      - uses: actions/cache@v2
         with:
-          java-version: 14
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-legado-${{ hashFiles('**/updateLog.md') }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-legado-${{ hashFiles('**/updateLog.md') }}-
+            
       - name: Clear 18PlusList.txt
         run: |
           echo "清空18PlusList.txt"
@@ -56,7 +61,7 @@ jobs:
         run: |
           echo "开始进行release构建"
           chmod +x gradlew
-          ./gradlew assembleAppRelease
+          ./gradlew assembleAppRelease --build-cache --parallel
       - name: Upload App To Artifact
         if: ${{ env.UPLOAD_ARTIFACT != 'false' }}
         uses: actions/upload-artifact@v2

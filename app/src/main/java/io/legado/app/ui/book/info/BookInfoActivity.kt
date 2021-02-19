@@ -9,6 +9,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.CheckBox
 import android.widget.LinearLayout
+import androidx.activity.viewModels
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestOptions.bitmapTransform
@@ -17,6 +18,7 @@ import io.legado.app.R
 import io.legado.app.base.VMBaseActivity
 import io.legado.app.constant.BookType
 import io.legado.app.constant.Theme
+import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
 import io.legado.app.data.entities.TimeRecord
@@ -40,10 +42,6 @@ import io.legado.app.ui.book.source.edit.BookSourceEditActivity
 import io.legado.app.ui.book.toc.ChapterListActivity
 import io.legado.app.ui.widget.image.CoverImageView
 import io.legado.app.utils.*
-import org.jetbrains.anko.sdk27.listeners.onClick
-import org.jetbrains.anko.startActivity
-import org.jetbrains.anko.startActivityForResult
-import org.jetbrains.anko.toast
 
 
 class BookInfoActivity :
@@ -57,8 +55,7 @@ class BookInfoActivity :
     private val requestCodeInfoEdit = 562
     private val requestCodeRead = 432
 
-    override val viewModel: BookInfoViewModel
-        get() = getViewModel(BookInfoViewModel::class.java)
+    override val viewModel: BookInfoViewModel by viewModels()
 
     override fun getViewBinding(): ActivityBookInfoBinding {
         return ActivityBookInfoBinding.inflate(layoutInflater)
@@ -85,8 +82,8 @@ class BookInfoActivity :
     }
 
     private fun showReadTime(book: Book){
-        val time =  App.db.timeRecordDao.getReadTime(book.name,book.author)?:0
-        val timeRecord = App.db.timeRecordDao.getRecord(book.name,book.author)
+        val time =  appDb.timeRecordDao.getReadTime(book.name,book.author)?:0
+        val timeRecord = appDb.timeRecordDao.getRecord(book.name,book.author)
         var string = "本书已读  ${TimeRecord.formatDuring(time)}"
         timeRecord?.forEach{
             string = "${string}\n${StringUtils.dateConvert(it.date,"yyyy年MM月dd日")} ${TimeRecord.formatDuring(it.readTime)}"
@@ -105,19 +102,20 @@ class BookInfoActivity :
                 if (viewModel.inBookshelf) {
                     viewModel.bookData.value?.let {
                         startActivityForResult<BookInfoEditActivity>(
-                            requestCodeInfoEdit,
-                            Pair("bookUrl", it.bookUrl)
-                        )
+                            requestCodeInfoEdit
+                        ) {
+                            putExtra("bookUrl", it.bookUrl)
+                        }
                     }
                 } else {
-                    toast(R.string.after_add_bookshelf)
+                    toastOnUi(R.string.after_add_bookshelf)
                 }
             }
             R.id.menu_share_it -> {
                 viewModel.bookData.value?.let {
                     val bookJson = GSON.toJson(it)
                     val shareStr = "${it.bookUrl}#$bookJson"
-                    shareWithQr(it.name, shareStr)
+                    shareWithQr(shareStr, it.name)
                 }
             }
             R.id.menu_refresh -> {
@@ -131,7 +129,7 @@ class BookInfoActivity :
             }
             R.id.menu_copy_url -> viewModel.bookData.value?.bookUrl?.let {
                 sendToClip(it)
-            } ?: toast(R.string.no_book)
+            } ?: toastOnUi(R.string.no_book)
             R.id.menu_can_update -> {
                 if (viewModel.inBookshelf) {
                     viewModel.bookData.value?.let {
@@ -139,7 +137,7 @@ class BookInfoActivity :
                         viewModel.saveBook()
                     }
                 } else {
-                    toast(R.string.after_add_bookshelf)
+                    toastOnUi(R.string.after_add_bookshelf)
                 }
             }
             R.id.menu_clear_cache -> viewModel.clearCache()
@@ -225,22 +223,22 @@ class BookInfoActivity :
     }
 
     private fun initOnClick() = with(binding) {
-        ivCover.onClick {
+        ivCover.setOnClickListener {
             viewModel.bookData.value?.let {
                 ChangeCoverDialog.show(supportFragmentManager, it.name, it.author)
             }
         }
-        tvBookStatus?.onClick {
+        tvBookStatus?.setOnClickListener {
             viewModel.bookData.value?.let {
                 setBookStatus(it)
             }
         }
-        tvRead.onClick {
+        tvRead.setOnClickListener {
             viewModel.bookData.value?.let {
                 readBook(it)
             }
         }
-        tvShelf.onClick {
+        tvShelf.setOnClickListener {
             if (viewModel.inBookshelf) {
                 deleteBook()
             } else {
@@ -249,18 +247,20 @@ class BookInfoActivity :
                 }
             }
         }
-        tvOrigin.onClick {
+        tvOrigin.setOnClickListener {
             viewModel.bookData.value?.let {
-                startActivity<BookSourceEditActivity>(Pair("data", it.origin))
+                startActivity<BookSourceEditActivity> {
+                    putExtra("data", it.origin)
+                }
             }
         }
-        tvChangeSource.onClick {
+        tvChangeSource.setOnClickListener {
             viewModel.bookData.value?.let {
                 ChangeSourceDialog.show(supportFragmentManager, it.name, it.author)
 
             }
         }
-        tvTocView.onClick {
+        tvTocView.setOnClickListener {
             if (!viewModel.inBookshelf) {
                 viewModel.saveBook {
                     viewModel.saveChapterList {
@@ -271,16 +271,20 @@ class BookInfoActivity :
                 openChapterList()
             }
         }
-        tvChangeGroup.onClick {
+        tvChangeGroup.setOnClickListener {
             viewModel.bookData.value?.let {
                 GroupSelectDialog.show(supportFragmentManager, it.group)
             }
         }
-        tvAuthor.onClick {
-            startActivity<SearchActivity>(Pair("key", viewModel.bookData.value?.author))
+        tvAuthor.setOnClickListener {
+            startActivity<SearchActivity> {
+                putExtra("key", viewModel.bookData.value?.author)
+            }
         }
-        tvName.onClick {
-            startActivity<SearchActivity>(Pair("key", viewModel.bookData.value?.name))
+        tvName.setOnClickListener {
+            startActivity<SearchActivity> {
+                putExtra("key", viewModel.bookData.value?.name)
+            }
         }
     }
 
@@ -293,16 +297,16 @@ class BookInfoActivity :
             alertBinding.rgLayout.setOnCheckedChangeListener { _, _ ->
                 change = true
             }
-            customView = alertBinding.root
+            customView  {alertBinding.root}
             okButton {
                 alertBinding.apply {
                     if (change) {
                         val status = rgLayout.getCheckedIndex()
                         book.status = status
                         if(viewModel.inBookshelf){
-                            App.db.bookDao.update(book)
+                            appDb.bookDao.update(book)
                         }
-                        App.db.readRecordDao.insert(book.toReadRecord())
+                        appDb.readRecordDao.insert(book.toReadRecord())
                     }
                 }
             }
@@ -325,7 +329,7 @@ class BookInfoActivity :
                         setPadding(16.dp, 0, 16.dp, 0)
                         addView(checkBox)
                     }
-                    customView = view
+                    customView { view }
                     positiveButton(R.string.yes) {
                         viewModel.delBook(checkBox.isChecked) {
                             finish()
@@ -343,14 +347,15 @@ class BookInfoActivity :
 
     private fun openChapterList() {
         if (viewModel.chapterListData.value.isNullOrEmpty()) {
-            toast(R.string.chapter_list_empty)
+            toastOnUi(R.string.chapter_list_empty)
             return
         }
         viewModel.bookData.value?.let {
             startActivityForResult<ChapterListActivity>(
-                requestCodeChapterList,
-                Pair("bookUrl", it.bookUrl)
-            )
+                requestCodeChapterList
+            ) {
+                putExtra("bookUrl", it.bookUrl)
+            }
         }
     }
 
@@ -373,16 +378,18 @@ class BookInfoActivity :
     private fun startReadActivity(book: Book) {
         when (book.type) {
             BookType.audio -> startActivityForResult<AudioPlayActivity>(
-                requestCodeRead,
-                Pair("bookUrl", book.bookUrl),
-                Pair("inBookshelf", viewModel.inBookshelf)
-            )
+                requestCodeRead
+            ) {
+                putExtra("bookUrl", book.bookUrl)
+                putExtra("inBookshelf", viewModel.inBookshelf)
+            }
             else -> startActivityForResult<ReadBookActivity>(
-                requestCodeRead,
-                Pair("bookUrl", book.bookUrl),
-                Pair("inBookshelf", viewModel.inBookshelf),
-                Pair("key", IntentDataHelp.putData(book))
-            )
+                requestCodeRead
+            ) {
+                putExtra("bookUrl", book.bookUrl)
+                putExtra("inBookshelf", viewModel.inBookshelf)
+                putExtra("key", IntentDataHelp.putData(book))
+            }
         }
     }
 

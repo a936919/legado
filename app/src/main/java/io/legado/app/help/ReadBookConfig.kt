@@ -5,12 +5,13 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import androidx.annotation.Keep
-import io.legado.app.App
 import io.legado.app.R
 import io.legado.app.constant.PreferKey
+import io.legado.app.data.appDb
 import io.legado.app.help.coroutine.Coroutine
 import io.legado.app.ui.book.read.page.provider.ChapterProvider
 import io.legado.app.utils.*
+import splitties.init.appCtx
 import java.io.File
 
 /**
@@ -21,7 +22,7 @@ object ReadBookConfig {
     const val configFileName = "readConfig.json"
     const val shareConfigFileName = "shareReadConfig.json"
     const val comicConfigFileName = "comicConfig.json"
-    val context get() = App.INSTANCE
+    val context get() = appCtx
     val configFilePath = FileUtils.getPath(context.filesDir, configFileName)
     val shareConfigFilePath = FileUtils.getPath(context.filesDir, shareConfigFileName)
     val comicConfigFilePath = FileUtils.getPath(context.filesDir, comicConfigFileName)
@@ -395,7 +396,7 @@ object ReadBookConfig {
     }
 
     fun isComic(bookSourceUrl:String):Boolean{
-        val bookSource = App.db.bookSourceDao.getBookSource(bookSourceUrl)
+        val bookSource = appDb.bookSourceDao.getBookSource(bookSourceUrl)
         return bookSource?.bookSourceComment?.contains("comic",true) == true || bookSource?.bookSourceGroup?.contains("漫画") == true
     }
 

@@ -66,6 +66,9 @@ object PreferKey {
     const val screenOrientation = "screenOrientation"
     const val syncBookProgress = "syncBookProgress"
     const val preDownload = "preDownload"
+    const val autoRefresh = "auto_refresh"
+    const val defaultToRead = "defaultToRead"
+    const val exportCharset = "exportCharset"
 
     const val cPrimary = "colorPrimary"
     const val cAccent = "colorAccent"

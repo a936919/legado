@@ -4,7 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.text.TextUtils
-import io.legado.app.App
+import io.legado.app.data.appDb
 import io.legado.app.data.entities.EpubChapter
 import io.legado.app.data.entities.BookChapter
 import io.legado.app.utils.*
@@ -12,6 +12,7 @@ import nl.siegmann.epublib.domain.Book
 import nl.siegmann.epublib.domain.TOCReference
 import nl.siegmann.epublib.epub.EpubReader
 import org.jsoup.Jsoup
+import splitties.init.appCtx
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -67,7 +68,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
             val epubReader = EpubReader()
             val inputStream = if (book.bookUrl.isContentScheme()) {
                 val uri = Uri.parse(book.bookUrl)
-                App.INSTANCE.contentResolver.openInputStream(uri)
+                appCtx.contentResolver.openInputStream(uri)
             } else {
                 File(book.bookUrl).inputStream()
             }
@@ -75,7 +76,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
 
             if (book.coverUrl.isNullOrEmpty()) {
                 book.coverUrl = FileUtils.getPath(
-                    App.INSTANCE.externalFilesDir,
+                    appCtx.externalFilesDir,
                     "covers",
                     "${MD5Utils.md5Encode16(book.bookUrl)}.jpg"
                 )
@@ -96,7 +97,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
 
     private fun getContent(chapter: BookChapter): String? {
         var string = getChildChapter(chapter, chapter.url)
-        val childContends = App.db.epubChapter.get(book.bookUrl, chapter.url)
+        val childContends = appDb.epubChapter.get(book.bookUrl, chapter.url)
         if (childContends != null) {
             for (child in childContends) {
                 string += "\n" + getChildChapter(chapter, child.href)
@@ -247,8 +248,8 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
                     i++
                 }
             }
-            App.db.epubChapter.deleteByName(book.bookUrl)
-            if (chapters.size > 0) App.db.epubChapter.insert(*chapters.toTypedArray())
+            appDb.epubChapter.deleteByName(book.bookUrl)
+            if (chapters.size > 0) appDb.epubChapter.insert(*chapters.toTypedArray())
         }
     }
 
