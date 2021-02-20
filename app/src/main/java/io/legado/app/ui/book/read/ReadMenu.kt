@@ -250,6 +250,11 @@ class ReadMenu @JvmOverloads constructor(
         llReadAloud.onLongClick {
             runMenuOut { callBack.showReadAloudDialog() }
         }*/
+        llReadAloud.setOnClickListener {
+            runMenuOut {
+                callBack.showBookOtherInfo()
+            }
+        }
         //界面
         llFont.setOnClickListener {
             runMenuOut {
