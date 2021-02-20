@@ -19,6 +19,7 @@ import io.legado.app.databinding.DialogBookStatusBinding
 import io.legado.app.databinding.ItemReadRecordBinding
 import io.legado.app.lib.dialogs.alert
 import io.legado.app.lib.theme.accentColor
+import io.legado.app.lib.theme.backgroundColor
 import io.legado.app.ui.book.info.BookInfoActivity
 import io.legado.app.utils.*
 import kotlinx.coroutines.Dispatchers.IO
@@ -186,6 +187,7 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
             payloads: MutableList<Any>
         ) {
             binding.apply {
+                root.setBackgroundColor(ColorUtils.withAlpha(context.backgroundColor, 0.7f))
                 tvBookName.text = item.bookName
                 tvAuthor.text = item.author
                 ivCover.load(item.coverUrl,item.bookName,item.author)
