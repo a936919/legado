@@ -134,8 +134,7 @@ object BookshelfController {
         val book = appDb.bookDao.getBook(bookUrl) ?: return returnData.setData("获取失败")
         val chapterName = appDb.bookChapterDao.getChapter(book.bookUrl, chapterIndex)?.title ?: ""
         val bookmark = Bookmark(
-                System.currentTimeMillis(), bookUrl
-                ?: "", book.name, book.author, chapterIndex, pos, chapterName, bookText ?: "", ""
+                System.currentTimeMillis(), bookUrl, book.name, book.author, chapterIndex, pos, chapterName, bookText, ""
         )
         appDb.bookmarkDao.insert(bookmark)
         synRecord(book, chapterIndex, pos)
