@@ -24,6 +24,7 @@ import io.legado.app.databinding.DialogRecyclerViewBinding
 import io.legado.app.databinding.ItemSourceImportBinding
 import io.legado.app.help.AppConfig
 import io.legado.app.lib.dialogs.alert
+import io.legado.app.ui.widget.dialog.WaitDialog
 import io.legado.app.utils.dp
 import io.legado.app.utils.putPrefBoolean
 import io.legado.app.utils.splitNotBlank
@@ -34,7 +35,7 @@ import io.legado.app.utils.visible
 /**
  * 导入书源弹出窗口
  */
-class ImportBookSourceDialog(val groupName:String) : BaseDialogFragment(), Toolbar.OnMenuItemClickListener {
+class ImportBookSourceDialog(val groupName: String) : BaseDialogFragment(), Toolbar.OnMenuItemClickListener {
 
     private val binding by viewBinding(DialogRecyclerViewBinding::bind)
 
@@ -44,15 +45,15 @@ class ImportBookSourceDialog(val groupName:String) : BaseDialogFragment(), Toolb
     override fun onStart() {
         super.onStart()
         dialog?.window?.setLayout(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
         )
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
     ): View? {
         return inflater.inflate(R.layout.dialog_recycler_view, container)
     }
@@ -70,8 +71,11 @@ class ImportBookSourceDialog(val groupName:String) : BaseDialogFragment(), Toolb
         }
         binding.tvOk.visible()
         binding.tvOk.setOnClickListener {
+            val waitDialog = WaitDialog(requireContext())
+            waitDialog.show()
             viewModel.groupName = groupName
             viewModel.importSelect {
+                waitDialog.dismiss()
                 dismissAllowingStateLoss()
             }
         }
@@ -92,15 +96,15 @@ class ImportBookSourceDialog(val groupName:String) : BaseDialogFragment(), Toolb
     private fun upSelectText() {
         if (viewModel.isSelectAll()) {
             binding.tvFooterLeft.text = getString(
-                R.string.select_cancel_count,
-                viewModel.selectCount(),
-                viewModel.allSources.size
+                    R.string.select_cancel_count,
+                    viewModel.selectCount(),
+                    viewModel.allSources.size
             )
         } else {
             binding.tvFooterLeft.text = getString(
-                R.string.select_all_count,
-                viewModel.selectCount(),
-                viewModel.allSources.size
+                    R.string.select_all_count,
+                    viewModel.selectCount(),
+                    viewModel.allSources.size
             )
         }
     }
@@ -109,7 +113,7 @@ class ImportBookSourceDialog(val groupName:String) : BaseDialogFragment(), Toolb
         binding.toolBar.setOnMenuItemClickListener(this)
         binding.toolBar.inflateMenu(R.menu.import_source)
         binding.toolBar.menu.findItem(R.id.menu_Keep_original_name)
-            ?.isChecked = AppConfig.importKeepName
+                ?.isChecked = AppConfig.importKeepName
     }
 
     @SuppressLint("InflateParams")
@@ -151,17 +155,17 @@ class ImportBookSourceDialog(val groupName:String) : BaseDialogFragment(), Toolb
     }
 
     inner class SourcesAdapter(context: Context) :
-        RecyclerAdapter<BookSource, ItemSourceImportBinding>(context) {
+            RecyclerAdapter<BookSource, ItemSourceImportBinding>(context) {
 
         override fun getViewBinding(parent: ViewGroup): ItemSourceImportBinding {
             return ItemSourceImportBinding.inflate(inflater, parent, false)
         }
 
         override fun convert(
-            holder: ItemViewHolder,
-            binding: ItemSourceImportBinding,
-            item: BookSource,
-            payloads: MutableList<Any>
+                holder: ItemViewHolder,
+                binding: ItemSourceImportBinding,
+                item: BookSource,
+                payloads: MutableList<Any>
         ) {
             binding.apply {
                 cbSourceName.isChecked = viewModel.selectStatus[holder.layoutPosition]
