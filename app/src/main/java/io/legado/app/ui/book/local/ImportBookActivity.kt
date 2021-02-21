@@ -36,10 +36,10 @@ import java.util.*
  * 导入本地书籍界面
  */
 class ImportBookActivity : VMBaseActivity<ActivityImportBookBinding, ImportBookViewModel>(),
-    FilePickerDialog.CallBack,
-    PopupMenu.OnMenuItemClickListener,
-    SelectActionBar.CallBack,
-    ImportBookAdapter.CallBack {
+        FilePickerDialog.CallBack,
+        PopupMenu.OnMenuItemClickListener,
+        SelectActionBar.CallBack,
+        ImportBookAdapter.CallBack {
     private val requestCodeSelectFolder = 342
     private var rootDoc: DocumentFile? = null
     private val subDocs = arrayListOf<DocumentFile>()
@@ -149,15 +149,15 @@ class ImportBookActivity : VMBaseActivity<ActivityImportBookBinding, ImportBookV
             else -> {
                 binding.tvEmptyMsg.visible()
                 PermissionsCompat.Builder(this)
-                    .addPermissions(*Permissions.Group.STORAGE)
-                    .rationale(R.string.tip_perm_request_storage)
-                    .onGranted {
-                        rootDoc = null
-                        subDocs.clear()
-                        path = lastPath
-                        upPath()
-                    }
-                    .request()
+                        .addPermissions(*Permissions.Group.STORAGE)
+                        .rationale(R.string.tip_perm_request_storage)
+                        .onGranted {
+                            rootDoc = null
+                            subDocs.clear()
+                            path = lastPath
+                            upPath()
+                        }
+                        .request()
             }
         }
     }
@@ -187,8 +187,8 @@ class ImportBookActivity : VMBaseActivity<ActivityImportBookBinding, ImportBookV
                 if (item.name.startsWith(".")) {
                     docList.removeAt(i)
                 } else if (!item.isDir
-                    && !item.name.endsWith(".txt", true)
-                    && !item.name.endsWith(".epub", true)
+                        && !item.name.endsWith(".txt", true)
+                        && !item.name.endsWith(".epub", true)
                 ) {
                     docList.removeAt(i)
                 }
@@ -208,29 +208,29 @@ class ImportBookActivity : VMBaseActivity<ActivityImportBookBinding, ImportBookV
             if (it.isDirectory) {
                 if (!it.name.startsWith("."))
                     docList.add(
-                        DocItem(
-                            it.name,
-                            DocumentsContract.Document.MIME_TYPE_DIR,
-                            it.length(),
-                            Date(it.lastModified()),
-                            Uri.fromFile(it)
-                        )
+                            DocItem(
+                                    it.name,
+                                    DocumentsContract.Document.MIME_TYPE_DIR,
+                                    it.length(),
+                                    Date(it.lastModified()),
+                                    Uri.fromFile(it)
+                            )
                     )
             } else if (it.name.endsWith(".txt", true)
-                || it.name.endsWith(".epub", true)
+                    || it.name.endsWith(".epub", true)
             ) {
                 docList.add(
-                    DocItem(
-                        it.name,
-                        it.extension,
-                        it.length(),
-                        Date(it.lastModified()),
-                        Uri.fromFile(it)
-                    )
+                        DocItem(
+                                it.name,
+                                it.extension,
+                                it.length(),
+                                Date(it.lastModified()),
+                                Uri.fromFile(it)
+                        )
                 )
             }
         }
-        docList.sortWith(compareBy({ !it.isDir }, { it.name }))
+        docList.sortWith(compareBy({ !it.isDir }, { -it.date.time }))
         adapter.setItems(docList)
     }
 
@@ -281,8 +281,8 @@ class ImportBookActivity : VMBaseActivity<ActivityImportBookBinding, ImportBookV
                 data?.data?.let { uri ->
                     if (uri.isContentScheme()) {
                         contentResolver.takePersistableUriPermission(
-                            uri,
-                            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                uri,
+                                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                         )
                         AppConfig.importBookPath = uri.toString()
                         initRootDoc()
@@ -327,12 +327,12 @@ class ImportBookActivity : VMBaseActivity<ActivityImportBookBinding, ImportBookV
             false
         }
     }
-
+/*
     override fun onBackPressed() {
         if (!goBackDir()) {
             super.onBackPressed()
         }
-    }
+    }*/
 
     override fun upCountView() {
         binding.selectActionBar.upCountView(adapter.selectedUris.size, adapter.checkableCount)
