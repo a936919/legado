@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <View
+        android:id="@+id/vw_bg_fg"
+        android:layout_width="match_parent"
+        android:layout_height="0.8dp"
+        android:background="@color/btn_bg_press_3" />
+    <FrameLayout
+        android:id="@+id/f_fragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+</LinearLayout>

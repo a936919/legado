@@ -1,9 +1,11 @@
 package io.legado.app.ui.book.read.config
 
 import android.content.DialogInterface
+import android.os.Build
 import android.os.Bundle
 import android.view.*
 import android.widget.SeekBar
+import androidx.annotation.RequiresApi
 import io.legado.app.R
 import io.legado.app.base.BaseDialogFragment
 import io.legado.app.constant.EventBus
@@ -27,10 +29,12 @@ class ReadAloudDialog : BaseDialogFragment() {
     private var callBack: CallBack? = null
     private val binding by viewBinding(DialogReadAloudBinding::bind)
 
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
     override fun onStart() {
         super.onStart()
         dialog?.window?.let {
             it.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+            it.setElevation(0.0f)
             it.setBackgroundDrawableResource(R.color.background)
             it.decorView.setPadding(0, 0, 0, 0)
             val attr = it.attributes

@@ -5,15 +5,22 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@color/background_menu"
-    android:paddingLeft="16dp"
-    android:paddingRight="16dp"
-    android:paddingTop="6dp"
+    android:paddingTop="0dp"
     android:paddingBottom="6dp"
     android:orientation="vertical">
+
+    <View
+        android:id="@+id/vw_bg_fg"
+        android:layout_width="match_parent"
+        android:layout_height="0.8dp"
+        android:layout_marginBottom="10dp"
+        android:background="@color/btn_bg_press_3" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
         android:orientation="vertical">
 
         <LinearLayout
@@ -59,6 +66,8 @@
         android:layout_height="50dp"
         android:layout_marginTop="8dp"
         android:baselineAligned="false"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
         android:orientation="horizontal">
 
         <!--目录按钮-->

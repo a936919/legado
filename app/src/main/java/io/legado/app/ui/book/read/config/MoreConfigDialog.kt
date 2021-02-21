@@ -3,9 +3,10 @@ package io.legado.app.ui.book.read.config
 import android.annotation.SuppressLint
 import android.content.DialogInterface
 import android.content.SharedPreferences
+import android.os.Build
 import android.os.Bundle
 import android.view.*
-import android.widget.LinearLayout
+import androidx.annotation.RequiresApi
 import androidx.fragment.app.DialogFragment
 import androidx.preference.Preference
 import io.legado.app.R
@@ -14,7 +15,6 @@ import io.legado.app.constant.EventBus
 import io.legado.app.constant.PreferKey
 import io.legado.app.help.ReadBookConfig
 import io.legado.app.lib.theme.ATH
-import io.legado.app.lib.theme.bottomBackground
 import io.legado.app.lib.theme.readCfgBottomBg
 import io.legado.app.ui.book.read.ReadBookActivity
 import io.legado.app.utils.dp
@@ -24,17 +24,19 @@ import io.legado.app.utils.postEvent
 class MoreConfigDialog : DialogFragment() {
     private val readPreferTag = "readPreferenceFragment"
 
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
     override fun onStart() {
         super.onStart()
         dialog?.window?.let {
             it.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+            it.setElevation(0.0f)
             it.setBackgroundDrawableResource(R.color.background)
             it.decorView.setPadding(0, 0, 0, 0)
             val attr = it.attributes
             attr.dimAmount = 0.0f
             attr.gravity = Gravity.BOTTOM
             it.attributes = attr
-            it.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, 360.dp)
+            it.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, 340.dp)
         }
     }
 
@@ -44,19 +46,16 @@ class MoreConfigDialog : DialogFragment() {
         savedInstanceState: Bundle?
     ): View {
         (activity as ReadBookActivity).bottomDialog++
-        val view = LinearLayout(context)
-        view.setBackgroundColor(requireContext().readCfgBottomBg)
-        view.id = R.id.tag1
-        container?.addView(view)
-        return view
+        return inflater.inflate(R.layout.dialog_more_config, container)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        view.setBackgroundColor(requireContext().readCfgBottomBg)
         var preferenceFragment = childFragmentManager.findFragmentByTag(readPreferTag)
         if (preferenceFragment == null) preferenceFragment = ReadPreferenceFragment()
         childFragmentManager.beginTransaction()
-            .replace(view.id, preferenceFragment, readPreferTag)
+            .replace(R.id.f_fragment, preferenceFragment, readPreferTag)
             .commit()
     }
 

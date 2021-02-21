@@ -1,9 +1,11 @@
 package io.legado.app.ui.book.read.config
 
 import android.content.DialogInterface
+import android.os.Build
 import android.os.Bundle
 import android.view.*
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.fragment.app.viewModels
 import io.legado.app.App
 import io.legado.app.R
@@ -29,10 +31,12 @@ class BookOtherInfoDialog : BaseDialogFragment()  {
             by viewModels()
     val book = ReadBook.book
 
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
     override fun onStart() {
         super.onStart()
         dialog?.window?.let {
             it.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+            it.setElevation(0.0f)
             it.setBackgroundDrawableResource(R.color.background)
             it.decorView.setPadding(0, 0, 0, 0)
             val attr = it.attributes
