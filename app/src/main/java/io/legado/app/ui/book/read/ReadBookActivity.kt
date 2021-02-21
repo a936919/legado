@@ -244,17 +244,17 @@ class ReadBookActivity : ReadBookBaseActivity(),
             R.id.menu_del_h_tag -> ReadBook.book?.let {
                 it.setDelTag(Book.hTag)
                 menu?.findItem(R.id.menu_del_h_tag)?.isChecked = it.getDelTag(Book.hTag)
-                ReadBook.loadContent(resetPageOffset = false)
+                refreshBook()
             }
             R.id.menu_del_img_tag -> ReadBook.book?.let {
                 it.setDelTag(Book.imgTag)
                 menu?.findItem(R.id.menu_del_img_tag)?.isChecked = it.getDelTag(Book.imgTag)
-                ReadBook.loadContent(resetPageOffset = false)
+                refreshBook()
             }
             R.id.menu_del_ruby_tag -> ReadBook.book?.let {
                 it.setDelTag(Book.rubyTag)
                 menu?.findItem(R.id.menu_del_ruby_tag)?.isChecked = it.getDelTag(Book.rubyTag)
-                ReadBook.loadContent(resetPageOffset = false)
+                refreshBook()
             }
             R.id.menu_copy_text ->
                 TextDialog.show(supportFragmentManager, ReadBook.curTextChapter?.getContent())
