@@ -9,6 +9,7 @@ import io.legado.app.data.entities.Bookmark
 import io.legado.app.data.entities.ReplaceRule
 import io.legado.app.data.entities.TimeRecord
 import io.legado.app.help.BookHelp
+import io.legado.app.help.ContentProcessor
 import io.legado.app.help.ReadBookConfig
 import io.legado.app.help.coroutine.Coroutine
 import io.legado.app.model.webBook.WebBook
@@ -41,6 +42,7 @@ object BookshelfController {
             }
         }
 
+    var contentProcessor: ContentProcessor? = null
     private var timeRecord: TimeRecord? = null
     private var readStartTime: Long = System.currentTimeMillis()
     fun getBook(parameters: Map<String, List<String>>): ReturnData {
@@ -50,6 +52,7 @@ object BookshelfController {
             return returnData.setErrorMsg("参数url不能为空，请指定书籍地址")
         }
         val book = appDb.bookDao.getBook(bookUrl) ?: return returnData.setData("获取失败")
+        contentProcessor = ContentProcessor(book.name, book.origin)
         insertReadRecord(book)
         return returnData.setData(book)
     }
@@ -91,10 +94,14 @@ object BookshelfController {
             }
 
             if (content != null) {
-                content = processReplace(book, chapter.title, content!!)
-                synRecord(book, index, 0)
+                runBlocking {
+                    processReplace(book, chapter.title, content!!)
+                }.let {
+                    content = it
+                }
                 if (ReadBookConfig.isComic(book.origin))
                     content = content!!.replace("\\s*\\n+\\s*".toRegex(), "")
+                synRecord(book, index, 0)
                 returnData.setData(content!!)
             } else {
                 returnData.setErrorMsg("未找到")
@@ -127,7 +134,7 @@ object BookshelfController {
         val book = appDb.bookDao.getBook(bookUrl) ?: return returnData.setData("获取失败")
         val chapterName = appDb.bookChapterDao.getChapter(book.bookUrl, chapterIndex)?.title ?: ""
         val bookmark = Bookmark(
-            System.currentTimeMillis(), bookUrl
+                System.currentTimeMillis(), bookUrl
                 ?: "", book.name, book.author, chapterIndex, pos, chapterName, bookText ?: "", ""
         )
         appDb.bookmarkDao.insert(bookmark)
@@ -159,12 +166,12 @@ object BookshelfController {
                     readStartTime = System.currentTimeMillis()
                     it.date = TimeRecord.getDate()
                     it.readTime = appDb.timeRecordDao.getReadTime(
-                        androidId,
-                        it.bookName,
-                        it.author,
-                        it.date
+                            androidId,
+                            it.bookName,
+                            it.author,
+                            it.date
                     )
-                        ?: 0
+                            ?: 0
                     appDb.bookDao.update(book)
                     appDb.readRecordDao.insert(readRecord)
                     appDb.timeRecordDao.insert(it)
@@ -173,39 +180,12 @@ object BookshelfController {
         }
     }
 
-    private fun processReplace(book: Book, title: String, content: String): String {
-        val replaceRules = arrayListOf<ReplaceRule>()
-        replaceRules.clear()
-        replaceRules.addAll(appDb.replaceRuleDao.findEnabledByScope(book.name, book.origin))
-        var content1 = content
-        if (book.getUseReplaceRule()) {
-            replaceRules.forEach { item ->
-                if (item.pattern.isNotEmpty()) {
-                    try {
-                        content1 = if (item.isRegex) {
-                            content1.replace(item.pattern.toRegex(), item.replacement)
-                        } else {
-                            content1.replace(item.pattern, item.replacement)
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }
-            }
+    private suspend fun processReplace(book: Book, title: String, content: String): String {
+        contentProcessor?.let {
+            val contents = it.getContent(book, title, content, true, book.getUseReplaceRule(), false)
+            return contents.joinToString("\n")
         }
-        val contents = arrayListOf<String>()
-        content1.split("\n").forEach {
-            val str = it.replace("^[\\n\\s\\r]+".toRegex(), "")
-            if (contents.isEmpty()) {
-                //contents.add(title)
-                if (str != title && str.isNotEmpty()) {
-                    contents.add("${ReadBookConfig.paragraphIndent}$str")
-                }
-            } else if (str.isNotEmpty()) {
-                contents.add("${ReadBookConfig.paragraphIndent}$str")
-            }
-        }
-        return contents.joinToString("\n")
+        return content
     }
 
     private fun synRecord(book: Book, chapterIndex: Int, pos: Int) {
@@ -231,17 +211,17 @@ object BookshelfController {
                 if (dataChange) {
                     it.date = TimeRecord.getDate()
                     it.readTime = appDb.timeRecordDao.getReadTime(
-                        androidId,
-                        it.bookName,
-                        it.author,
-                        it.date
+                            androidId,
+                            it.bookName,
+                            it.author,
+                            it.date
                     )
-                        ?: 0
+                            ?: 0
                 } else {
                     appDb.timeRecordDao.getReadTime(androidId, it.bookName, it.author, it.date)
-                        ?.let { readTime ->
-                            if (readTime > it.readTime) it.readTime = readTime
-                        }
+                            ?.let { readTime ->
+                                if (readTime > it.readTime) it.readTime = readTime
+                            }
                 }
                 it.readTime = it.readTime + dif
                 if (dataChange) appDb.timeRecordDao.insert(it) else appDb.timeRecordDao.update(it)

@@ -24,11 +24,12 @@ class ContentProcessor(private val bookName: String, private val bookOrigin: Str
     }
 
     suspend fun getContent(
-        book: Book,
-        title: String, //已经经过简繁转换
-        content: String,
-        isRead: Boolean = true,
-        useReplace: Boolean = book.getUseReplaceRule()
+            book: Book,
+            title: String, //已经经过简繁转换
+            content: String,
+            isRead: Boolean = true,
+            useReplace: Boolean = book.getUseReplaceRule(),
+            addTitle: Boolean = true
     ): List<String> {
         var content1 = content
         if (useReplace) {
@@ -67,8 +68,8 @@ class ContentProcessor(private val bookName: String, private val bookOrigin: Str
         content1.split("\n").forEach {
             val str = it.replace("^[\\n\\s\\r]+".toRegex(), "")
             if (contents.isEmpty()) {
-                contents.add(title)
-                if (str != title && str.isNotEmpty()) {
+                if (!title.startsWith(str) && !title.endsWith(str) && str.isNotEmpty()) {
+                    if (addTitle) contents.add(title)
                     contents.add("${ReadBookConfig.paragraphIndent}$str")
                 }
             } else if (str.isNotEmpty()) {
