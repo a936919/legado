@@ -77,7 +77,7 @@ class RuleSubActivity : BaseActivity<ActivityRuleSubBinding>(),
             0 -> {
                 startActivity<ImportBookSourceActivity> {
                     putExtra("source", ruleSub.url)
-                    putExtra("sourceGroup", ruleSub.url)
+                    putExtra("sourceGroup", ruleSub.name)
                 }
             }
             1 -> {

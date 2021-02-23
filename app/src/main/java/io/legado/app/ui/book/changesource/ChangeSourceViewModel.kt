@@ -67,9 +67,6 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
             appDb.searchBookDao.getChangeSourceSearch(name, author, searchGroup).let {
                 searchBooks.addAll(it)
                 searchBooksLiveData.postValue(searchBooks.toList())
-                if (it.isEmpty()) {
-                    startSearch()
-                }
             }
         }
     }
@@ -100,9 +97,6 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
 
     private fun startSearch() {
         execute {
-            appDb.searchBookDao.clear(name, author)
-            searchBooks.clear()
-            upAdapter()
             bookSourceList.clear()
             if (searchGroup.isBlank()) {
                 bookSourceList.addAll(appDb.bookSourceDao.allEnabled)
