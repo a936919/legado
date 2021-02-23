@@ -11,6 +11,7 @@ import androidx.core.view.isVisible
 import io.legado.app.R
 import io.legado.app.base.VMBaseActivity
 import io.legado.app.constant.PreferKey
+import io.legado.app.constant.charsets
 import io.legado.app.data.entities.BookProgress
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Bookmark
@@ -34,7 +35,6 @@ import kotlin.math.max
 import kotlin.math.min
 import io.legado.app.utils.getPrefString
 import io.legado.app.utils.requestInputMethod
-
 
 /**
  * 阅读界面
@@ -112,6 +112,15 @@ abstract class ReadBookBaseActivity :
         }
         upSystemUiVisibilityO(isInMultiWindow, toolBarHide)
         ATH.setLightStatusBar(this, ColorUtils.isColorLight(readCfgTopBg))
+        /*
+        if (toolBarHide) {
+            ATH.setLightStatusBar(this, ReadBookConfig.durConfig.curStatusIconDark())
+        } else {
+            ATH.setLightStatusBarAuto(
+                this,
+                ThemeStore.statusBarColor(this, AppConfig.isTransparentStatusBar)
+            )
+        }*/
     }
 
     @Suppress("DEPRECATION")
@@ -313,8 +322,6 @@ abstract class ReadBookBaseActivity :
     }
 
     fun showCharsetConfig() {
-        val charsets =
-            arrayListOf("UTF-8", "GB2312", "GBK", "Unicode", "UTF-16", "UTF-16LE", "ASCII")
         alert(R.string.set_charset) {
             val alertBinding = DialogEditTextBinding.inflate(layoutInflater).apply {
                 editView.setFilterValues(charsets)
