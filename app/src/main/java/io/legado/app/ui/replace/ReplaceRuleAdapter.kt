@@ -112,11 +112,18 @@ class ReplaceRuleAdapter(context: Context, var callBack: CallBack) :
             val bundle = payloads.getOrNull(0) as? Bundle
             if (bundle == null) {
                 root.setBackgroundColor(ColorUtils.withAlpha(context.backgroundColor, 0.5f))
-                if (item.group.isNullOrEmpty()) {
+                if (!item.scope.isNullOrEmpty()) {
+                    val st =
+                        if (item.name.length > 6) item.name.substring(0, 5) + "…" else item.name
+                    cbName.text =
+                        String.format("%s (%s)", st, item.scope)
+                } else if (item.group.isNullOrEmpty()) {
                     cbName.text = item.name
                 } else {
+                    val st =
+                        if (item.name.length > 6) item.name.substring(0, 5) + "…" else item.name
                     cbName.text =
-                        String.format("%s (%s)", item.name, item.group)
+                        String.format("%s (%s)", st, item.group)
                 }
                 swtEnabled.isChecked = item.isEnabled
                 cbName.isChecked = selected.contains(item)
