@@ -102,6 +102,7 @@ searchBooks暂存搜书数据库,为更新searchBooksLiveData的。searchBooksLi
 >SELECT "栏位名bai" FROM "表格名" [WHERE "条件"] ORDER BY "栏位名" [ASC, DESC] [] 代表 WHERE 是不du一定需要的。zhi不过dao，如果 WHERE 子句存在的话zhuan，它是在 ORDER BY 子句之前。shuASC 代表结果会以由小往大的顺序列出，而DESC 代表结果会以由大往小的顺序列出。如果两者皆没有被写出的话，那我们就会用 ASC。
 
 >RadioButton
+>audio缓存参考HttpReadAloudService.kt
 #### git
 ```gitexclude
 git pull git://github.com/gedoor/legado.git master
