@@ -284,6 +284,9 @@ class ReadBookActivity : ReadBookBaseActivity(),
                 supportFragmentManager,
                 ReadBook.book?.tocUrl
             )
+            R.id.menu_reverse_content -> ReadBook.book?.let {
+                viewModel.reverseContent(it)
+            }
             R.id.menu_login -> ReadBook.webBook?.bookSource?.let {
                 startActivity<SourceLogin> {
                     putExtra("sourceUrl", it.bookSourceUrl)
@@ -297,7 +300,6 @@ class ReadBookActivity : ReadBookBaseActivity(),
         }
         return super.onCompatOptionsItemSelected(item)
     }
-
 
     /**
      * 按键拦截,显示菜单
