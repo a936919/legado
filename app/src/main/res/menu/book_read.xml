@@ -25,7 +25,10 @@
             android:id="@+id/menu_source_edit"
             android:title="编辑书源"
             app:showAsAction="never" />
-
+        <item
+            android:id="@+id/menu_reverse_content"
+            android:title="@string/reverse_content"
+            app:showAsAction="never" />
     </group>
 
     <group android:id="@+id/menu_group_text">
@@ -45,21 +48,21 @@
             app:showAsAction="always" />
         <item
             android:id="@+id/menu_del_h_tag"
-            android:title="删除H标签"
             android:checkable="true"
             android:checked="false"
+            android:title="删除H标签"
             app:showAsAction="never" />
         <item
             android:id="@+id/menu_del_img_tag"
-            android:title="删除img标签"
             android:checkable="true"
             android:checked="false"
+            android:title="删除img标签"
             app:showAsAction="never" />
         <item
             android:id="@+id/menu_del_ruby_tag"
-            android:title="删除ruby标签"
             android:checkable="true"
             android:checked="false"
+            android:title="删除ruby标签"
             app:showAsAction="never" />
     </group>
 
@@ -83,8 +86,8 @@
     <group android:id="@+id/menu_group_login">
         <item
             android:id="@+id/menu_login"
-            android:visible="false"
             android:title="@string/login"
+            android:visible="false"
             app:showAsAction="never" />
     </group>
 
@@ -113,23 +116,19 @@
         android:title="@string/get_book_progress"
         app:showAsAction="never" />
 
-    <item
-        android:id="@+id/menu_reverse_content"
-        android:title="@string/reverse_content"
-        app:showAsAction="never" />
 
     <item
         android:id="@+id/menu_enable_replace"
-        android:title="@string/replace_rule_title"
         android:checkable="true"
         android:checked="true"
+        android:title="@string/replace_rule_title"
         app:showAsAction="never" />
 
     <item
         android:id="@+id/menu_re_segment"
-        android:title="@string/re_segment"
         android:checkable="true"
         android:checked="false"
+        android:title="@string/re_segment"
         app:showAsAction="never" />
 
     <item
