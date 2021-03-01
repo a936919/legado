@@ -9,8 +9,8 @@ import java.io.File
 import java.util.*
 
 val removeHtmlRegex = "</?(?:div|p|br|hr|h\\d|article|dd|dl)[^>]*>".toRegex()
-val imgRegex = "<img[^>]*>".toRegex()
-val notImgHtmlRegex = "</?(?!img)[a-zA-Z]+(?=[ >])[^<>]*>".toRegex()
+val imgRegex = "<img[^>]*>|<image[^>]*></image>".toRegex()
+val notImgHtmlRegex = "</?(?!img|image)[a-zA-Z]+(?=[ >])[^<>]*>".toRegex()
 
 fun String?.safeTrim() = if (this.isNullOrBlank()) null else this.trim()
 

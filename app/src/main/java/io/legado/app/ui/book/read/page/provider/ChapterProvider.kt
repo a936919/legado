@@ -89,7 +89,7 @@ object ChapterProvider {
         var durY = 0f
         textPages.add(TextPage())
         contents.forEachIndexed { index, text ->
-            if(index==0) ignoreImg = 0
+            if (index == 0) ignoreImg = 0
             val matcher = AppPattern.imgPattern.matcher(text)
             if (matcher.find()) {
                 matcher.group(1)?.let {
@@ -97,11 +97,11 @@ object ChapterProvider {
                     durY = setTypeImage(
                         book, bookChapter, src, durY, textPages, imageStyle
                     )
-                    if(index <= book.getDelParagraph()+ignoreImg) ignoreImg++
+                    if (index <= book.getDelParagraph() + ignoreImg) ignoreImg++
                 }
             } else {
                 val isTitle = index == 0
-                val deleteParagraph = index >0 && index <= book.getDelParagraph()+ignoreImg
+                val deleteParagraph = index > 0 && index <= book.getDelParagraph() + ignoreImg
                 val textPaint = if (isTitle) titlePaint else contentPaint
                 if (!(isTitle && ReadBookConfig.titleMode == 2) && !deleteParagraph) {
                     durY = setTypeText(text, durY, textPages, stringBuilder, isTitle, textPaint)
@@ -202,7 +202,7 @@ object ChapterProvider {
         textPaint: TextPaint
     ): Float {
         var durY = if (isTitle) y + titleTopSpacing else y
-        val layout = TextProcess(text,textPaint)
+        val layout = TextProcess(text, textPaint)
         for (lineIndex in 0 until layout.lineCount) {
             val textLine = TextLine(isTitle = isTitle)
             val words =
@@ -212,7 +212,7 @@ object ChapterProvider {
             if (lineIndex == 0 && layout.lineCount > 1 && !isTitle) {
                 //第一行
                 textLine.text = words
-                addCharsToLineFirst(textLine, words.toStringArray(), textPaint, lineIndex,layout)
+                addCharsToLineFirst(textLine, words.toStringArray(), textPaint, lineIndex, layout)
             } else if (lineIndex == layout.lineCount - 1) {
                 //最后一行
                 textLine.text = "$words\n"
@@ -254,8 +254,8 @@ object ChapterProvider {
         textLine: TextLine,
         words: Array<String>,
         textPaint: TextPaint,
-        line:Int,
-        layout:TextProcess
+        line: Int,
+        layout: TextProcess
     ) {
         var x = 0f
         if (!ReadBookConfig.textFullJustify) {
@@ -278,19 +278,19 @@ object ChapterProvider {
      * 无缩进,两端对齐
      */
     private fun addCharsToLineMiddle(
-            textLine: TextLine,
-            words: Array<String>,
-            startX: Float,
-            line: Int,
-            layout: TextProcess
+        textLine: TextLine,
+        words: Array<String>,
+        startX: Float,
+        line: Int,
+        layout: TextProcess
     ) {
         if (!ReadBookConfig.textFullJustify) {
             addCharsToLineLast(textLine, words, startX, line, layout)
             return
         }
-        val interval = layout.getInterval(line,words,visibleWidth)
+        val interval = layout.getInterval(line, words, visibleWidth)
         /*间隔太大左对齐*/
-        if(interval.total > (visibleWidth/6)){
+        if (interval.total > (visibleWidth / 6)) {
             addCharsToLineLast(textLine, words, startX, line, layout)
             return
         }
@@ -307,10 +307,10 @@ object ChapterProvider {
         line: Int,
         layout: TextProcess
     ) {
-        val interval = layout.getInterval(line,words,visibleWidth)
+        val interval = layout.getInterval(line, words, visibleWidth)
         /*目前改的不算严格意义的左对齐。会根据设置行宽做间隔叠加，保证上下行效果和两边间隔一致*/
         /*存在半角字符情况下依靠中文算出的默认间隔会越界*/
-        val d = min((interval.single),(getDefInterval(layout)))
+        val d = min((interval.single), (getDefInterval(layout)))
         wordsProcess(textLine, words, startX, line, layout, d);
     }
 
@@ -321,21 +321,26 @@ object ChapterProvider {
         line: Int,
         layout: TextProcess,
         d: Float
-){
+    ) {
         var locate = TextProcess.Locate()
         locate.start = startX
-        words.forEachIndexed {index, s ->
-            layout.getLocate(line,words.lastIndex-index,s,d,locate)
-            textLine.addTextChar(charData = s, start = paddingLeft + locate.start, end = paddingLeft + locate.end)
+        words.forEachIndexed { index, s ->
+            layout.getLocate(line, words.lastIndex - index, s, d, locate)
+            textLine.addTextChar(
+                charData = s,
+                start = paddingLeft + locate.start,
+                end = paddingLeft + locate.end
+            )
             locate.start = locate.end
         }
     }
 
-    private fun getDefInterval(layout:TextProcess):Float{
+    private fun getDefInterval(layout: TextProcess): Float {
         val defCharWidth = layout.getDefaultWidth()
         val f = (visibleWidth / defCharWidth).toInt().toFloat()
         return (visibleWidth % defCharWidth) / f
     }
+
     /**
      * 超出边界处理
      */
@@ -437,7 +442,7 @@ object ChapterProvider {
     /**
      * 更新View尺寸
      */
-    fun upViewSize(readConfigChage:Boolean,width: Int, height: Int) {
+    fun upViewSize(readConfigChage: Boolean, width: Int, height: Int) {
         if (width > 0 && height > 0 && (readConfigChage || width != viewWidth || height != viewHeight)) {
             val viewChange = width != viewWidth || height != viewHeight
             viewWidth = width

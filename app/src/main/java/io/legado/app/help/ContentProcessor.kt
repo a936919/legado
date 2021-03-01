@@ -24,12 +24,12 @@ class ContentProcessor(private val bookName: String, private val bookOrigin: Str
     }
 
     suspend fun getContent(
-            book: Book,
-            title: String, //已经经过简繁转换
-            content: String,
-            isRead: Boolean = true,
-            useReplace: Boolean = book.getUseReplaceRule(),
-            addTitle: Boolean = true
+        book: Book,
+        title: String, //已经经过简繁转换
+        content: String,
+        isRead: Boolean = true,
+        useReplace: Boolean = book.getUseReplaceRule(),
+        addTitle: Boolean = true
     ): List<String> {
         var content1 = content
         if (useReplace) {
@@ -76,6 +76,7 @@ class ContentProcessor(private val bookName: String, private val bookOrigin: Str
                 contents.add("${ReadBookConfig.paragraphIndent}$str")
             }
         }
+        if (contents.isEmpty() && addTitle) contents.add(title)
         return contents
     }
 
