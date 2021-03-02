@@ -111,10 +111,8 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
                 zipEntry = inZip.nextEntry
                 if ((zipEntry == null) || zipEntry.isDirectory || zipEntry == ZipEntry("<error>")) continue
                 val resource = ResourceUtil.createResource(zipEntry, inZip)
-                if (resource.mediaType == MediatypeService.XHTML) {
-                    resource.inputEncoding = "UTF-8";
-                }
-                if (zipEntry.name.endsWith("opf")) {
+                if (resource.mediaType == MediatypeService.XHTML) resource.inputEncoding = "UTF-8";
+                if (zipEntry.name.endsWith(".opf")) {
                     /*掌上书苑有很多自制书OPF的nameSpace格式不标准，强制修复成正确的格式*/
                     val newS = String(resource.data).replace(
                         "\\smlns=\"http://www.idpf.org/2007/opf\"".toRegex(),
@@ -124,7 +122,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
                 }
                 resources.add(resource)
             } while (zipEntry != null)
-            return EpubReader().readEpub(resources)
+            if (resources.size() > 0) return EpubReader().readEpub(resources)
         } catch (e: Exception) {
             e.printStackTrace()
         }
