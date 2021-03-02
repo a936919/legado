@@ -1,7 +1,6 @@
 package io.legado.app.utils
 
 import android.util.Log
-import io.legado.app.App
 import io.legado.app.constant.androidId
 import io.legado.app.constant.androidIdInfo
 import io.legado.app.data.appDb
