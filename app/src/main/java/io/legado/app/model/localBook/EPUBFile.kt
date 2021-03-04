@@ -86,6 +86,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
                     )
                 }
                 if (!File(book.coverUrl!!).exists()) {
+                    /*部分书籍DRM处理后，封面获取异常，待优化*/
                     epubBook!!.coverImage?.inputStream?.use {
                         val cover = BitmapFactory.decodeStream(it)
                         val out = FileOutputStream(FileUtils.createFileIfNotExist(book.coverUrl!!))
@@ -130,9 +131,11 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
     }
 
     private fun getContent(chapter: BookChapter): String? {
+        /*获取当前章节文本*/
         var string = getChildChapter(chapter, chapter.url)
         val childContends = appDb.epubChapter.get(book.bookUrl, chapter.url)
         if (childContends != null) {
+            /*如果书籍当前章节有多个html文件，追加文本*/
             for (child in childContends) {
                 string += "\n" + getChildChapter(chapter, child.href)
             }
@@ -147,12 +150,15 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
             if (chapter.url == href) {
                 val startFragmentId = chapter.startFragmentId
                 val endFragmentId = chapter.endFragmentId
+                /*一些书籍依靠href索引的resource会包含多个章节，需要依靠fragmentId来截取到当前章节的内容*/
+                /*注:这里较大增加了内容加载的时间，所以首次获取内容后可存储到本地cache，减少重复加载*/
                 if (!startFragmentId.isNullOrBlank())
                     body.getElementById(startFragmentId)?.previousElementSiblings()?.remove()
                 if (!endFragmentId.isNullOrBlank() && endFragmentId != startFragmentId)
                     body.getElementById(endFragmentId)?.nextElementSiblings()?.remove()
             }
 
+            /*选择去除正文中的H标签，部分书籍标题与阅读标题重复待优化*/
             var tag = io.legado.app.data.entities.Book.hTag
             if (book.getDelTag(tag)) {
                 body.getElementsByTag("h1")?.remove()
@@ -164,6 +170,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
                 //body.getElementsMatchingOwnText(chapter.title)?.remove()
             }
 
+            /*选择去除正文中的img标签，目前图片支持效果待优化*/
             tag = io.legado.app.data.entities.Book.imgTag
             if (book.getDelTag(tag)) {
                 body.getElementsByTag("img")?.remove()
@@ -172,6 +179,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
             val elements = body.children()
             elements.select("script").remove()
             elements.select("style").remove()
+            /*选择去除正文中的ruby标签，目前注释支持效果待优化*/
             tag = io.legado.app.data.entities.Book.rubyTag
             var html = elements.outerHtml()
             if (book.getDelTag(tag)) {
@@ -256,6 +264,8 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
         return chapterList
     }
 
+    /*获取当前章节的子章节。部分书籍一个章节包含多个html文件，（一些精排书籍，每一章节正文前的标题、标题封面、引言等都会有独立html）*/
+    /*需在读取常规章节列表后调用，遍历书籍全内容，根据href检索原不包含在章节内的html归属父章节*/
     private fun getChildChapter(chapterList: ArrayList<BookChapter>) {
         epubBook?.let {
             val contents = it.contents
@@ -287,6 +297,8 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
         }
     }
 
+    /*获取书籍起始页内容。部分书籍第一章之前存在封面，引言，扉页等内容*/
+    /*tile获取不同书籍风格杂乱，格式化处理待优化*/
     private var durIndex = 0
     private fun parseFirstPage(
         chapterList: ArrayList<BookChapter>,
@@ -299,6 +311,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
         while (i < contents.size) {
             val content = contents[i]
             if (!content.mediaType.toString().contains("htm")) continue
+            /*检索到第一章href停止*/
             if (refs[0].completeHref == content.href) break
             val chapter = BookChapter()
             var title = content.title
