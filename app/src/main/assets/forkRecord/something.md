@@ -1,3 +1,5 @@
+﻿[待办](/app/src/main/assets/forkRecord/todo.md) | [完成](/app/src/main/assets/forkRecord/finish.md) | [历程](/app/src/main/assets/forkRecord/something.md)
+
 ## 吾爱读书
 
 > 从最初买各个版本的kindle和国产阅读器，到给电子书重新排版，再到遍历市面上的各种阅读APP，总是没有一个让自己完全满意的，终于走到了自己DIY的最后一步。

@@ -1,9 +1,14 @@
+> 在追求完美电子阅读体验的不归路上渐行渐远！
+
+[待办](/app/src/main/assets/forkRecord/todo.md) | [完成](/app/src/main/assets/forkRecord/finish.md) | [历程](/app/src/main/assets/forkRecord/something.md)
+
 <div>
   <img width="192" height="192" align="left" src="https://github.com/gedoor/legado/raw/master/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="legado"/>
   <h1>Legado</h1>
   <br>
   <p>阅读3.0, 阅读是一款可以自定义来源阅读网络内容的工具，为广大网络文学爱好者提供一种方便、快捷舒适的试读体验。</p>
 </div>
+
 
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 [![Build Action](https://github.com/gedoor/legado/workflows/Android%20CI/badge.svg)](https://github.com/gedoor/legado/actions)
