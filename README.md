@@ -38,7 +38,7 @@ cn.wanghaomiao:JsoupXpath
 com.jayway.jsonpath:json-path
 com.github.gedoor:rhino-android
 com.squareup.okhttp3:okhttp
-com.ljx.rxhttp:rxht
+com.ljx.rxhttp:rxhttp
 com.github.bumptech.glide:glide
 org.nanohttpd:nanohttpd
 org.nanohttpd:nanohttpd-websocket
@@ -60,10 +60,3 @@ https://gedoor.github.io/MyBookshelf/disclaimer.html
 ![image](https://github.com/gedoor/gedoor.github.io/blob/master/images/%E9%98%85%E8%AF%BB%E7%AE%80%E4%BB%8B4.jpg)
 ![image](https://github.com/gedoor/gedoor.github.io/blob/master/images/%E9%98%85%E8%AF%BB%E7%AE%80%E4%BB%8B5.jpg)
 ![image](https://github.com/gedoor/gedoor.github.io/blob/master/images/%E9%98%85%E8%AF%BB%E7%AE%80%E4%BB%8B6.jpg)
-
-## Fork记录
-
-> 在追求完美电子阅读体验的不归路上渐行渐远！
-
-[待办](/app/src/main/assets/forkRecord/todo.md) | [完成](/app/src/main/assets/forkRecord/finish.md) | [历程](/app/src/main/assets/forkRecord/something.md)
-
