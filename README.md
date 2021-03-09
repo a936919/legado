@@ -2,8 +2,9 @@
 
 [待办](/app/src/main/assets/forkRecord/todo.md) | [完成](/app/src/main/assets/forkRecord/finish.md) | [历程](/app/src/main/assets/forkRecord/something.md)
 
-forked from [gedoor/legado](https://github.com/gedoor/legado)
+* forked from [gedoor/legado](https://github.com/gedoor/legado)
 
+---
 
 <div>
   <img width="192" height="192" align="left" src="https://github.com/gedoor/legado/raw/master/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="legado"/>
@@ -37,7 +38,7 @@ cn.wanghaomiao:JsoupXpath
 com.jayway.jsonpath:json-path
 com.github.gedoor:rhino-android
 com.squareup.okhttp3:okhttp
-com.ljx.rxhttp:rxhttp
+com.ljx.rxhttp:rxht
 com.github.bumptech.glide:glide
 org.nanohttpd:nanohttpd
 org.nanohttpd:nanohttpd-websocket
