@@ -18,7 +18,7 @@ class ZhLayout(
     textPaint: TextPaint,
     width: Int
 ) : Layout(text, textPaint, width, Alignment.ALIGN_NORMAL, 0f, 0f) {
-    private val defaultCapacity = 10
+    private val defaultCapacity = 100
     var lineStart = IntArray(defaultCapacity)
     var lineWidth = FloatArray(defaultCapacity)
     var lineCompressMod = IntArray(defaultCapacity)
@@ -166,7 +166,7 @@ class ZhLayout(
 
         lineCount = line
 
-        if (true) {
+        if (false) {
             for (i in 0 until line) {
                 val s = lineStart[i]
                 val e = lineStart[i + 1]
@@ -224,56 +224,19 @@ class ZhLayout(
         return cnCharWitch / 2 - d
     }
 
+    override fun getLineCount(): Int = lineCount
+    override fun getLineTop(line: Int): Int = 0
+    override fun getLineDescent(line: Int): Int = 0
+    override fun getLineStart(line: Int): Int = lineStart[line]
+    override fun getParagraphDirection(line: Int): Int = 0
+    override fun getLineContainsTab(line: Int): Boolean = true
+    override fun getLineDirections(line: Int): Directions? = null
+    override fun getTopPadding(): Int = 0
+    override fun getBottomPadding(): Int = 0
+    override fun getLineWidth(line: Int): Float = lineWidth[line]
+    override fun getEllipsisStart(line: Int): Int = 0
+    override fun getEllipsisCount(line: Int): Int = 0
     fun getDesiredWidth(sting: String, paint: TextPaint) = paint.measureText(sting)
-
-    override fun getLineCount(): Int {
-        return lineCount
-    }
-
-    override fun getLineTop(line: Int): Int {
-        return 0
-    }
-
-    override fun getLineDescent(line: Int): Int {
-        return 0
-    }
-
-    override fun getLineStart(line: Int): Int {
-        return lineStart[line]
-    }
-
-    override fun getParagraphDirection(line: Int): Int {
-        return 0
-    }
-
-    override fun getLineContainsTab(line: Int): Boolean {
-        return true
-    }
-
-    override fun getLineDirections(line: Int): Directions? {
-        return null
-    }
-
-    override fun getTopPadding(): Int {
-        return 0
-    }
-
-    override fun getBottomPadding(): Int {
-        return 0
-    }
-
-    override fun getLineWidth(line: Int): Float {
-        return lineWidth[line]
-    }
-
-    override fun getEllipsisStart(line: Int): Int {
-        return 0
-    }
-
-    override fun getEllipsisCount(line: Int): Int {
-        return 0
-    }
-
     fun getDefaultWidth(): Float = cnCharWitch
 
     /*
