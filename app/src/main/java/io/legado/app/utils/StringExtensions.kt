@@ -54,7 +54,6 @@ fun String?.isJsonArray(): Boolean =
 fun String?.htmlFormat(): String {
     this ?: return ""
     return this
-        .replace(imgRegex, "\n$0\n")
         .replace(removeHtmlRegex, "\n")
         .replace(notImgHtmlRegex, "")
         .replace("\\s*\\n+\\s*".toRegex(), "\n　　")

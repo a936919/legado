@@ -71,7 +71,7 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        ChapterProvider.upViewSize(processComicMode() , w, h)
+        ChapterProvider.upViewSize(processComicMode(), w, h)
         upVisibleRect()
         textPage.format()
     }
@@ -143,10 +143,10 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
         } else {
             ChapterProvider.contentPaint
         }
-        textPaint.style=Paint.Style.FILL_AND_STROKE
-        textPaint.strokeWidth=ReadBookConfig.boldSize
+        textPaint.style = Paint.Style.FILL_AND_STROKE
+        textPaint.strokeWidth = ReadBookConfig.boldSize
         textPaint.color =
-            if (isReadAloud||isTitle) context.accentColor else ReadBookConfig.textColor
+            if (isReadAloud || isTitle) context.accentColor else ReadBookConfig.textColor
         textChars.forEach {
             if (it.isImage) {
                 drawImage(canvas, it, lineTop, lineBottom)
@@ -169,9 +169,12 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
         lineBottom: Float,
     ) {
         ReadBook.book?.let { book ->
-            val rectF = RectF(textChar.start, lineTop, textChar.end, lineBottom)
             ImageProvider.getImage(book, textPage.chapterIndex, textChar.charData, true)
                 ?.let {
+                    /*以宽度为基准保持图片的原始比例叠加，当div为负数时，允许高度比字符更高*/
+                    val h = (textChar.end - textChar.start) / it.width * it.height
+                    val div = (lineBottom - lineTop - h) / 2
+                    val rectF = RectF(textChar.start, lineTop + div, textChar.end, lineBottom - div)
                     canvas.drawBitmap(it, null, rectF, null)
                 }
         }
@@ -526,26 +529,26 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
         }
     }
 
-    private fun processComicMode():Boolean{
-        var readConfigChage:Boolean
-        if(callBack.intentIsComic){
+    private fun processComicMode(): Boolean {
+        var readConfigChage: Boolean
+        if (callBack.intentIsComic) {
             selectAble = false
-        } else{
+        } else {
             selectAble = context.getPrefBoolean(PreferKey.textSelectAble, true)
         }
-        if(ReadBookConfig.isComicMod != callBack.intentIsComic){
+        if (ReadBookConfig.isComicMod != callBack.intentIsComic) {
             ReadBookConfig.isComicMod = callBack.intentIsComic
             readConfigChage = true
-        }else{
+        } else {
             readConfigChage = false
         }
 
-        if(readConfigChage){
+        if (readConfigChage) {
             ReadBookConfig.upBg()
             callBack.upPageAnim()
-            postEvent(PreferKey.textSelectAble,selectAble)
+            postEvent(PreferKey.textSelectAble, selectAble)
         }
-        return  readConfigChage
+        return readConfigChage
     }
 
     interface CallBack {
@@ -557,7 +560,7 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
         val pageFactory: TextPageFactory
         val scope: CoroutineScope
         val isScroll: Boolean
-        val intentIsComic : Boolean
+        val intentIsComic: Boolean
 
     }
 }

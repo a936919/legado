@@ -70,7 +70,8 @@ object ChapterProvider {
     @JvmStatic
     lateinit var contentPaint: TextPaint
 
-    private const val srcReplaceChar = "🖼"
+    /*🖼字符长度是2，做自定义排版等一些处理时会异常，用卍取代*/
+    private const val srcReplaceChar = "卍"
 
     init {
         upStyle()
@@ -120,13 +121,12 @@ object ChapterProvider {
                             val matcher = AppPattern.imgPattern.matcher(text)
                             if (matcher.find()) {
                                 matcher.group(1)?.let { it ->
-                                    if (!book.isEpub()) {
-                                        val src = NetworkUtils.getAbsoluteURL(bookChapter.url, it)
-                                        durY = setTypeImage(
-                                            book, bookChapter, src,
-                                            durY, textPages, book.getImageStyle()
-                                        )
-                                    }
+                                    val src = NetworkUtils.getAbsoluteURL(bookChapter.url, it)
+                                    durY = setTypeImage(
+                                        book, bookChapter, src,
+                                        durY, textPages, book.getImageStyle()
+                                    )
+
                                 }
                             } else {
                                 val isTitle = index == 0

@@ -28,7 +28,7 @@ android {
         }
     }
     defaultConfig {
-        applicationId "hoodie13.legado.app"
+        applicationId "hoo.legado.app"
         minSdkVersion 21
         targetSdkVersion 30
         versionCode gitCommits
