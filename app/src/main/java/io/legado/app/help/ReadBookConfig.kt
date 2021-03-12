@@ -29,17 +29,16 @@ object ReadBookConfig {
     var isComicMod = false
     lateinit var shareConfig: Config
     lateinit var comicConfig: Config
-    private val bgColorComic =  Color.parseColor("#000000")
-    private val textColorComic= Color.parseColor("#ADADAD")
+    private val bgColorComic = Color.parseColor("#000000")
+    private val textColorComic = Color.parseColor("#ADADAD")
 
     var durConfig
         get() = getConfig(styleSelect)
         set(value) {
             configList[styleSelect] = value
-            if(isComicMod){
+            if (isComicMod) {
                 comicConfig = value
-            }
-            else if (shareLayout) {
+            } else if (shareLayout) {
                 shareConfig = value
             }
             upBg()
@@ -47,7 +46,7 @@ object ReadBookConfig {
 
     var bg: Drawable? = null
     var bgMeanColor: Int = 0
-    val textColor: Int get() = if(isComicMod) textColorComic else durConfig.curTextColor()
+    val textColor: Int get() = if (isComicMod) textColorComic else durConfig.curTextColor()
 
     init {
         initConfigs()
@@ -114,7 +113,7 @@ object ReadBookConfig {
         val dm = resources.displayMetrics
         val width = dm.widthPixels
         val height = dm.heightPixels
-        bg = if(isComicMod)  ColorDrawable(bgColorComic)
+        bg = if (isComicMod) ColorDrawable(bgColorComic)
         else durConfig.curBgDrawable(width, height).apply {
             if (this is BitmapDrawable) {
                 bgMeanColor = BitmapUtils.getMeanColor(bitmap)
@@ -122,7 +121,7 @@ object ReadBookConfig {
                 bgMeanColor = color
             }
         }
-        if(isComicMod) bgMeanColor = bgColorComic
+        if (isComicMod) bgMeanColor = bgColorComic
     }
 
     fun save() {
@@ -189,7 +188,7 @@ object ReadBookConfig {
     val textBottomJustify get() = appCtx.getPrefBoolean(PreferKey.textBottomJustify, true)
     var hideStatusBar = appCtx.getPrefBoolean(PreferKey.hideStatusBar)
     var hideNavigationBar = appCtx.getPrefBoolean(PreferKey.hideNavigationBar)
-    val config get() = if(isComicMod) comicConfig else if(shareLayout) shareConfig else durConfig
+    val config get() = if (isComicMod) comicConfig else if (shareLayout) shareConfig else durConfig
 
     var pageAnim: Int
         get() = config.curPageAnim()
@@ -209,7 +208,7 @@ object ReadBookConfig {
             config.textBold = value
         }
 
-    var boldSize:Float
+    var boldSize: Float
         get() = config.boldSize
         set(value) {
             config.boldSize = value
@@ -393,9 +392,12 @@ object ReadBookConfig {
         return exportConfig
     }
 
-    fun isComic(bookSourceUrl:String):Boolean{
+    fun isComic(bookSourceUrl: String): Boolean {
         val bookSource = appDb.bookSourceDao.getBookSource(bookSourceUrl)
-        return bookSource?.bookSourceComment?.contains("comic",true) == true || bookSource?.bookSourceGroup?.contains("漫画") == true
+        return bookSource?.bookSourceComment?.contains(
+            "comic",
+            true
+        ) == true || bookSource?.bookSourceGroup?.contains("漫画") == true
     }
 
     @Keep
@@ -450,7 +452,7 @@ object ReadBookConfig {
         var tipColor: Int = 0,
         var headerMode: Int = 0,
         var footerMode: Int = 0,
-        var now:Long = System.currentTimeMillis(),
+        var now: Long = System.currentTimeMillis(),
     ) {
 
         fun setCurTextColor(color: Int) {
@@ -535,7 +537,7 @@ object ReadBookConfig {
 
         fun curBgDrawable(width: Int, height: Int): Drawable {
             var bgDrawable: Drawable? = null
-            val resources = context.resources
+            val resources = appCtx.resources
             try {
                 bgDrawable = when (curBgType()) {
                     0 -> ColorDrawable(Color.parseColor(curBgStr()))
@@ -543,7 +545,7 @@ object ReadBookConfig {
                         BitmapDrawable(
                             resources,
                             BitmapUtils.decodeAssetsBitmap(
-                                context,
+                                appCtx,
                                 "bg" + File.separator + curBgStr(),
                                 width,
                                 height
@@ -558,7 +560,7 @@ object ReadBookConfig {
             } catch (e: Exception) {
                 e.printStackTrace()
             }
-            return bgDrawable ?: ColorDrawable(context.getCompatColor(R.color.background))
+            return bgDrawable ?: ColorDrawable(appCtx.getCompatColor(R.color.background))
         }
     }
 }
