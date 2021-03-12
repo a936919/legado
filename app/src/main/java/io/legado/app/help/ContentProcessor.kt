@@ -66,7 +66,7 @@ class ContentProcessor(private val bookName: String, private val bookOrigin: Str
         }
         val contents = arrayListOf<String>()
         content1.split("\n").forEach {
-            val str = it.replace("^[\\n\\s\\r]+".toRegex(), "")
+            val str = it.replace("^[\\n\\r]+".toRegex(), "").trim()
             if (contents.isEmpty()) {
                 if (!title.startsWith(str) && !title.endsWith(str) && str.isNotEmpty()) {
                     if (addTitle) contents.add(title)

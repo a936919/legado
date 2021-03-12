@@ -423,23 +423,6 @@ object ChapterProvider {
     }
 
     /**
-     * 超出边界处理
-     */
-    private fun exceed(textLine: TextLine, words: Array<String>) {
-        val endX = textLine.textChars.last().end
-        if (endX > visibleRight) {
-            val cc = (endX - visibleRight) / words.size
-            for (i in 0..words.lastIndex) {
-                textLine.getTextCharReverseAt(i).let {
-                    val py = cc * (words.size - i)
-                    it.start = it.start - py
-                    it.end = it.end - py
-                }
-            }
-        }
-    }
-
-    /**
      * 更新样式
      */
     fun upStyle() {

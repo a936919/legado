@@ -4,6 +4,7 @@ import android.graphics.Rect
 import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
+import io.legado.app.utils.mqLog
 import io.legado.app.utils.toStringArray
 import kotlin.math.max
 
@@ -165,6 +166,17 @@ class ZhLayout(
 
         lineCount = line
 
+        if (true) {
+            for (i in 0 until line) {
+                val s = lineStart[i]
+                val e = lineStart[i + 1]
+                val t = text.substring(s, e)
+                mqLog.d("-----------------------line Info---------------------------")
+                mqLog.d("line: $i lineS:${lineStart[i]} lineE:${lineStart[i + 1]} width: ${e - s} lineWidth: ${lineWidth[i]} compresMod: ${lineCompressMod[i]}")
+                mqLog.d("$t")
+                mqLog.d("-----------------------line Info---------------------------")
+            }
+        }
     }
 
     private fun addLineArray(line: Int) {
