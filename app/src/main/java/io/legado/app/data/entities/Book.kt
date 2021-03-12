@@ -4,7 +4,6 @@ import android.os.Parcelable
 import androidx.room.*
 import io.legado.app.constant.AppPattern
 import io.legado.app.constant.BookType
-import io.legado.app.constant.androidIdInfo
 import io.legado.app.data.appDb
 import io.legado.app.help.AppConfig
 import io.legado.app.service.help.ReadBook
@@ -20,41 +19,41 @@ import kotlin.math.min
 @Parcelize
 @TypeConverters(Book.Converters::class)
 @Entity(
-        tableName = "books",
-        indices = [Index(value = ["name", "author"], unique = true)]
+    tableName = "books",
+    indices = [Index(value = ["name", "author"], unique = true)]
 )
 data class Book(
-        @PrimaryKey
-        override var bookUrl: String = "",          // 详情页Url(本地书源存储完整文件路径)
-        var tocUrl: String = "",                    // 目录页Url (toc=table of Contents)
-        var origin: String = BookType.local,        // 书源URL(默认BookType.local)
-        var originName: String = "",                //书源名称 or 本地书籍文件名
-        override var name: String = "",                      // 书籍名称(书源获取)
-        override var author: String = "",                    // 作者名称(书源获取)
-        override var kind: String? = null,          // 分类信息(书源获取)
-        var customTag: String? = null,              // 分类信息(用户修改)
-        var coverUrl: String? = null,               // 封面Url(书源获取)
-        var customCoverUrl: String? = null,         // 封面Url(用户修改)
-        var intro: String? = null,                  // 简介内容(书源获取)
-        var customIntro: String? = null,            // 简介内容(用户修改)
-        var charset: String? = null,                // 自定义字符集名称(仅适用于本地书籍)
-        var type: Int = 0,                          // 0:text 1:audio
-        var group: Long = 0,                         // 自定义分组索引号
-        var latestChapterTitle: String? = null,     // 最新章节标题
-        var latestChapterTime: Long = System.currentTimeMillis(),            // 最新章节标题更新时间
-        var lastCheckTime: Long = System.currentTimeMillis(),                // 最近一次更新书籍信息的时间
-        var lastCheckCount: Int = 0,                // 最近一次发现新章节的数量
-        var totalChapterNum: Int = 0,               // 书籍目录总数
-        var durChapterTitle: String? = null,        // 当前章节名称
-        var durChapterIndex: Int = 0,               // 当前章节索引
-        var durChapterPos: Int = 0,                 // 当前阅读的进度(首行字符的索引位置)
+    @PrimaryKey
+    override var bookUrl: String = "",          // 详情页Url(本地书源存储完整文件路径)
+    var tocUrl: String = "",                    // 目录页Url (toc=table of Contents)
+    var origin: String = BookType.local,        // 书源URL(默认BookType.local)
+    var originName: String = "",                //书源名称 or 本地书籍文件名
+    override var name: String = "",                      // 书籍名称(书源获取)
+    override var author: String = "",                    // 作者名称(书源获取)
+    override var kind: String? = null,          // 分类信息(书源获取)
+    var customTag: String? = null,              // 分类信息(用户修改)
+    var coverUrl: String? = null,               // 封面Url(书源获取)
+    var customCoverUrl: String? = null,         // 封面Url(用户修改)
+    var intro: String? = null,                  // 简介内容(书源获取)
+    var customIntro: String? = null,            // 简介内容(用户修改)
+    var charset: String? = null,                // 自定义字符集名称(仅适用于本地书籍)
+    var type: Int = 0,                          // 0:text 1:audio
+    var group: Long = 0,                         // 自定义分组索引号
+    var latestChapterTitle: String? = null,     // 最新章节标题
+    var latestChapterTime: Long = System.currentTimeMillis(),            // 最新章节标题更新时间
+    var lastCheckTime: Long = System.currentTimeMillis(),                // 最近一次更新书籍信息的时间
+    var lastCheckCount: Int = 0,                // 最近一次发现新章节的数量
+    var totalChapterNum: Int = 0,               // 书籍目录总数
+    var durChapterTitle: String? = null,        // 当前章节名称
+    var durChapterIndex: Int = 0,               // 当前章节索引
+    var durChapterPos: Int = 0,                 // 当前阅读的进度(首行字符的索引位置)
         var durChapterLength: Int = 0,                 // 当前章节总字数
-        var durChapterTime: Long = System.currentTimeMillis(),               // 最近一次阅读书籍的时间(打开正文的时间)
-        override var wordCount: String? = null,
+    var durChapterTime: Long = System.currentTimeMillis(),               // 最近一次阅读书籍的时间(打开正文的时间)
+    override var wordCount: String? = null,
         var canUpdate: Boolean = false,              // 刷新书架时更新书籍信息
-        var order: Int = 0,                         // 手动排序
-        var originOrder: Int = 0,                   //书源排序
-        var variable: String? = null,               // 自定义书籍变量信息(用于书源规则检索书籍信息)
+    var order: Int = 0,                         // 手动排序
+    var originOrder: Int = 0,                   //书源排序
+    var variable: String? = null,               // 自定义书籍变量信息(用于书源规则检索书籍信息)
         var readConfig: ReadConfig? = null,
         var status: Int = 0, //阅读状态  0为在读 1为已读 2为想读
         //web相关的存储记录
@@ -129,7 +128,6 @@ data class Book(
         return readConfig!!
     }
 
-
     fun setUseReplaceRule(useReplaceRule: Boolean) {
         config().useReplaceRule = useReplaceRule
     }
@@ -154,12 +152,29 @@ data class Book(
         config().pageAnim = pageAnim
     }
 
+    fun getImageStyle(): String? {
+        return config().imageStyle
+    }
+
+    fun setImageStyle(imageStyle: String?) {
+        config().imageStyle = imageStyle
+    }
+
     fun getDelParagraph(): Int {
         return config().delParagraph
     }
 
     fun setDelParagraph(num: Int) {
         config().delParagraph = num
+    }
+
+    fun setDelTag(tag: Long) {
+        config().delTag =
+            if ((config().delTag and tag) == tag) config().delTag and tag.inv() else config().delTag or tag
+    }
+
+    fun getDelTag(tag: Long): Boolean {
+        return config().delTag and tag == tag
     }
 
     fun getFolderName(): String {
@@ -169,29 +184,21 @@ data class Book(
         return folderName + MD5Utils.md5Encode16(bookUrl)
     }
 
-    fun setDelTag(tag: Long) {
-        config().delTag = if ((config().delTag and tag) == tag) config().delTag and tag.inv() else config().delTag or tag
-    }
-
-    fun getDelTag(tag: Long): Boolean {
-        return config().delTag and tag == tag
-    }
-
     fun toSearchBook() = SearchBook(
-            name = name,
-            author = author,
-            kind = kind,
-            bookUrl = bookUrl,
-            origin = origin,
-            originName = originName,
-            type = type,
-            wordCount = wordCount,
-            latestChapterTitle = latestChapterTitle,
-            coverUrl = coverUrl,
-            intro = intro,
-            tocUrl = tocUrl,
-            originOrder = originOrder,
-            variable = variable
+        name = name,
+        author = author,
+        kind = kind,
+        bookUrl = bookUrl,
+        origin = origin,
+        originName = originName,
+        type = type,
+        wordCount = wordCount,
+        latestChapterTitle = latestChapterTitle,
+        coverUrl = coverUrl,
+        intro = intro,
+        tocUrl = tocUrl,
+        originOrder = originOrder,
+        variable = variable
     ).apply {
         this.infoHtml = this@Book.infoHtml
         this.tocHtml = this@Book.tocHtml
@@ -258,15 +265,19 @@ data class Book(
         const val hTag = 2L
         const val rubyTag = 4L
         const val imgTag = 8L
+        const val imgStyleDefault = "DEFAULT"
+        const val imgStyleFull = "FULL"
+        const val imgStyleText = "TEXT"
     }
 
     @Parcelize
     data class ReadConfig(
-            var pageAnim: Int = -1,
-            var reSegment: Boolean = false,
-            var useReplaceRule: Boolean = AppConfig.replaceEnableDefault,         // 正文使用净化替换规则
-            var delParagraph: Int = 0,//去除段首
-            var delTag: Long = 0L//去除标签
+        var pageAnim: Int = -1,
+        var reSegment: Boolean = false,
+        var imageStyle: String? = null,
+        var useReplaceRule: Boolean = AppConfig.replaceEnableDefault,// 正文使用净化替换规则
+        var delParagraph: Int = 0,//去除段首
+        var delTag: Long = 0L,//去除标签
     ) : Parcelable
 
     class Converters {

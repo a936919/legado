@@ -59,8 +59,8 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
         }
 
         @Synchronized
-        fun getBookInfo(book: io.legado.app.data.entities.Book) {
-            return getEFile(book).getBookInfo()
+        fun upBookInfo(book: io.legado.app.data.entities.Book) {
+            return getEFile(book).upBookInfo()
         }
     }
 
@@ -112,7 +112,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
                 zipEntry = inZip.nextEntry
                 if ((zipEntry == null) || zipEntry.isDirectory || zipEntry == ZipEntry("<error>")) continue
                 val resource = ResourceUtil.createResource(zipEntry, inZip)
-                if (resource.mediaType == MediatypeService.XHTML) resource.inputEncoding = "UTF-8";
+                if (resource.mediaType == MediatypeService.XHTML) resource.inputEncoding = "UTF-8"
                 if (zipEntry.name.endsWith(".opf")) {
                     /*掌上书苑有很多自制书OPF的nameSpace格式不标准，强制修复成正确的格式*/
                     val newS = String(resource.data).replace(
@@ -134,11 +134,8 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
         /*获取当前章节文本*/
         var string = getChildChapter(chapter, chapter.url)
         val childContends = appDb.epubChapter.get(book.bookUrl, chapter.url)
-        if (childContends != null) {
-            /*如果书籍当前章节有多个html文件，追加文本*/
-            for (child in childContends) {
-                string += "\n" + getChildChapter(chapter, child.href)
-            }
+        childContends?.forEach {
+            string += "\n" + getChildChapter(chapter, it.href)
         }
         return string
     }
@@ -195,7 +192,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
         return epubBook?.resources?.getByHref(abHref)?.inputStream
     }
 
-    private fun getBookInfo() {
+    private fun upBookInfo() {
         if (epubBook == null) {
             eFile = null
             book.intro = "书籍导入异常"
@@ -347,8 +344,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
         refs: List<TOCReference>?,
         level: Int
     ) {
-        if (refs == null) return
-        for (ref in refs) {
+        refs?.forEach { ref ->
             if (ref.resource != null) {
                 val chapter = BookChapter()
                 chapter.bookUrl = book.bookUrl
@@ -358,7 +354,6 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
                 if (durIndex > 0) {
                     val preIndex = durIndex - 1
                     chapterList[preIndex].endFragmentId = chapter.startFragmentId
-                    if (debugBook) mqLog.d("parseMenu $preIndex ${chapterList[preIndex].title} ${chapterList[preIndex].url} ${chapterList[preIndex].startFragmentId} ${chapterList[preIndex].endFragmentId}")
                 }
                 chapterList.add(chapter)
                 durIndex++

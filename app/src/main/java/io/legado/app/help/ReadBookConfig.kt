@@ -22,10 +22,9 @@ object ReadBookConfig {
     const val configFileName = "readConfig.json"
     const val shareConfigFileName = "shareReadConfig.json"
     const val comicConfigFileName = "comicConfig.json"
-    val context get() = appCtx
-    val configFilePath = FileUtils.getPath(context.filesDir, configFileName)
-    val shareConfigFilePath = FileUtils.getPath(context.filesDir, shareConfigFileName)
-    val comicConfigFilePath = FileUtils.getPath(context.filesDir, comicConfigFileName)
+    val configFilePath = FileUtils.getPath(appCtx.filesDir, configFileName)
+    val shareConfigFilePath = FileUtils.getPath(appCtx.filesDir, shareConfigFileName)
+    val comicConfigFilePath = FileUtils.getPath(appCtx.filesDir, comicConfigFileName)
     val configList: ArrayList<Config> = arrayListOf()
     var isComicMod = false
     lateinit var shareConfig: Config
@@ -111,7 +110,7 @@ object ReadBookConfig {
 
 
     fun upBg() {
-        val resources = context.resources
+        val resources = appCtx.resources
         val dm = resources.displayMetrics
         val width = dm.widthPixels
         val height = dm.heightPixels
@@ -166,30 +165,30 @@ object ReadBookConfig {
     }
 
     //配置写入读取
-    var readBodyToLh = context.getPrefBoolean(PreferKey.readBodyToLh, true)
-    var autoReadSpeed = context.getPrefInt(PreferKey.autoReadSpeed, 46)
+    var readBodyToLh = appCtx.getPrefBoolean(PreferKey.readBodyToLh, true)
+    var autoReadSpeed = appCtx.getPrefInt(PreferKey.autoReadSpeed, 46)
         set(value) {
             field = value
-            context.putPrefInt(PreferKey.autoReadSpeed, value)
+            appCtx.putPrefInt(PreferKey.autoReadSpeed, value)
         }
-    var styleSelect = context.getPrefInt(PreferKey.readStyleSelect)
+    var styleSelect = appCtx.getPrefInt(PreferKey.readStyleSelect)
         set(value) {
             field = value
-            if (context.getPrefInt(PreferKey.readStyleSelect) != value) {
-                context.putPrefInt(PreferKey.readStyleSelect, value)
+            if (appCtx.getPrefInt(PreferKey.readStyleSelect) != value) {
+                appCtx.putPrefInt(PreferKey.readStyleSelect, value)
             }
         }
-    var shareLayout = context.getPrefBoolean(PreferKey.shareLayout)
+    var shareLayout = appCtx.getPrefBoolean(PreferKey.shareLayout)
         set(value) {
             field = value
-            if (context.getPrefBoolean(PreferKey.shareLayout) != value) {
-                context.putPrefBoolean(PreferKey.shareLayout, value)
+            if (appCtx.getPrefBoolean(PreferKey.shareLayout) != value) {
+                appCtx.putPrefBoolean(PreferKey.shareLayout, value)
             }
         }
-    val textFullJustify get() = context.getPrefBoolean(PreferKey.textFullJustify, true)
-    val textBottomJustify get() = context.getPrefBoolean(PreferKey.textBottomJustify, true)
-    var hideStatusBar = context.getPrefBoolean(PreferKey.hideStatusBar)
-    var hideNavigationBar = context.getPrefBoolean(PreferKey.hideNavigationBar)
+    val textFullJustify get() = appCtx.getPrefBoolean(PreferKey.textFullJustify, true)
+    val textBottomJustify get() = appCtx.getPrefBoolean(PreferKey.textBottomJustify, true)
+    var hideStatusBar = appCtx.getPrefBoolean(PreferKey.hideStatusBar)
+    var hideNavigationBar = appCtx.getPrefBoolean(PreferKey.hideNavigationBar)
     val config get() = if(isComicMod) comicConfig else if(shareLayout) shareConfig else durConfig
 
     var pageAnim: Int
@@ -352,7 +351,6 @@ object ReadBookConfig {
         set(value) {
             config.showFooterLine = value
         }
-
 
     fun getExportConfig(): Config {
         val exportConfig = GSON.fromJsonObject<Config>(GSON.toJson(durConfig))!!

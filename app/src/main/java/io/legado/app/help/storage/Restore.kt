@@ -145,7 +145,7 @@ object Restore {
             }
 
             fileToListT<TxtTocRule>(path, DefaultData.txtTocRuleFileName)?.let {
-                appDb.txtTocRule.insert(*it.toTypedArray())
+                appDb.txtTocRuleDao.insert(*it.toTypedArray())
             }
             fileToListT<HttpTTS>(path, DefaultData.httpTtsFileName)?.let {
                 appDb.httpTTSDao.insert(*it.toTypedArray())
@@ -251,7 +251,6 @@ object Restore {
                             is Long -> edit.putLong(it.key, value)
                             is Float -> edit.putFloat(it.key, value)
                             is String -> edit.putString(it.key, value)
-                            else -> Unit
                         }
                     }
                 }
@@ -265,8 +264,8 @@ object Restore {
                 autoReadSpeed = appCtx.getPrefInt(PreferKey.autoReadSpeed, 46)
             }
         }
+        appCtx.toastOnUi(R.string.restore_success)
         withContext(Main) {
-            appCtx.toastOnUi(R.string.restore_success)
             delay(100)
             LauncherIconHelp.changeIcon(appCtx.getPrefString(PreferKey.launcherIcon))
             appCtx.packageManager.getLaunchIntentForPackage(appCtx.packageName)?.let { intent ->

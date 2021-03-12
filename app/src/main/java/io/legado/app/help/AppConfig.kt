@@ -175,6 +175,8 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
 
     val ignoreAuthor get() = appCtx.getPrefBoolean(PreferKey.ignoreAuthor)
 
+    val mediaButtonOnExit get() = appCtx.getPrefBoolean("mediaButtonOnExit", true)
+
     private fun getPrefUserAgent(): String {
         val ua = appCtx.getPrefString(PreferKey.userAgent)
         if (ua.isNullOrBlank()) {

@@ -29,6 +29,7 @@ import io.legado.app.help.ReadBookConfig
 import io.legado.app.help.ReadTipConfig
 import io.legado.app.help.storage.Backup
 import io.legado.app.lib.dialogs.alert
+import io.legado.app.lib.dialogs.selector
 import io.legado.app.lib.theme.accentColor
 import io.legado.app.lib.theme.readCfgTopText
 import io.legado.app.receiver.TimeBatteryReceiver
@@ -299,6 +300,16 @@ class ReadBookActivity : ReadBookBaseActivity(),
                 }
             }
             R.id.menu_set_charset -> showCharsetConfig()
+            R.id.menu_image_style -> {
+                val imgStyles =
+                    arrayListOf(Book.imgStyleDefault, Book.imgStyleFull, Book.imgStyleText)
+                selector(
+                    R.string.image_style,
+                    imgStyles
+                ) { _, index ->
+                    ReadBook.book?.setImageStyle(imgStyles[index])
+                }
+            }
             R.id.menu_get_progress -> synProgress()
             R.id.menu_help -> showReadMenuHelp()
             R.id.ReplaceRule -> openReplaceRule()
@@ -977,7 +988,6 @@ class ReadBookActivity : ReadBookBaseActivity(),
         binding.readView.onDestroy()
         ReadBook.msg = null
         Backup.autoBack(this)
-
     }
 
     override fun observeLiveBus() = with(binding) {
