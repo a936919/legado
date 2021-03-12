@@ -171,6 +171,7 @@ class ZhLayout(
         if (lineStart.size <= line + 1) {
             lineStart = lineStart.copyOf(line + defaultCapacity)
             lineWidth = lineWidth.copyOf(line + defaultCapacity)
+            lineCompressMod = lineCompressMod.copyOf(line + defaultCapacity)
         }
     }
 
