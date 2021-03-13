@@ -16,7 +16,9 @@ object mqLog {
     }
 
     fun debug() {
-        d("$androidId $androidIdInfo")
+        val s = "🖼"
+        //"\uD83D\uDDBC"\"
+        d("${s.toStringArray().size} ${s.length}")
     }
 
     private fun logChapter() {
