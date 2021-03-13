@@ -71,7 +71,7 @@ object ChapterProvider {
     lateinit var contentPaint: TextPaint
 
     /*🖼比汉字宽，跟字一起效果的效果不是很好，用卍取代*/
-    private const val srcReplaceChar = "🖼"
+    private const val srcReplaceChar = "卍"
 
     init {
         upStyle()

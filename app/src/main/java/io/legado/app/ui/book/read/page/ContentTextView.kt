@@ -63,7 +63,7 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
     fun upVisibleRect() {
         visibleRect.set(
             0f,
-            ChapterProvider.paddingTop.toFloat(),
+            0f,
             ChapterProvider.viewWidth.toFloat(),
             ChapterProvider.visibleBottom.toFloat()
         )

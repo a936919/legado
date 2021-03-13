@@ -121,19 +121,19 @@ class ZhLayout(
                     }
                     BreakMod.CPS_1 -> {//模式3 两个后置标点压缩
                         offset = 0f
-                        lineStart[line + 1] = length + 1
+                        lineStart[line + 1] = length + s.length
                         breakCharCnt = 0
                         lineCompressMod[line] = 1
                     }
                     BreakMod.CPS_2 -> { //模式4 前置标点压缩+前置标点压缩+字
                         offset = 0f
-                        lineStart[line + 1] = length + 1
+                        lineStart[line + 1] = length + s.length
                         breakCharCnt = 0
                         lineCompressMod[line] = 2
                     }
                     BreakMod.CPS_3 -> {//模式5 前置标点压缩+字+后置标点压缩
                         offset = 0f
-                        lineStart[line + 1] = length + 1
+                        lineStart[line + 1] = length + s.length
                         breakCharCnt = 0
                         lineCompressMod[line] = 3
                     }
