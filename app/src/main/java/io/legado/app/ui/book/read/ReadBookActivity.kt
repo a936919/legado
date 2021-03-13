@@ -308,6 +308,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
                     imgStyles
                 ) { _, index ->
                     ReadBook.book?.setImageStyle(imgStyles[index])
+                    refreshBook()
                 }
             }
             R.id.menu_get_progress -> synProgress()
