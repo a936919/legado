@@ -1,9 +1,10 @@
 package io.legado.app.help
 
-import com.hankcs.hanlp.HanLP
+import com.github.liuyueyi.quick.transfer.ChineseUtils
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.ReplaceRule
+import io.legado.app.utils.mqLog
 import io.legado.app.utils.toastOnUi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -55,8 +56,8 @@ class ContentProcessor(private val bookName: String, private val bookOrigin: Str
             }
             try {
                 when (AppConfig.chineseConverterType) {
-                    1 -> content1 = HanLP.convertToSimplifiedChinese(content1)
-                    2 -> content1 = HanLP.convertToTraditionalChinese(content1)
+                    1 -> content1 = ChineseUtils.t2s(content1)
+                    2 -> content1 = ChineseUtils.s2t(content1)
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
