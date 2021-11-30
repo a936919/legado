@@ -188,6 +188,7 @@ object ReadBookConfig {
     val textBottomJustify get() = appCtx.getPrefBoolean(PreferKey.textBottomJustify, true)
     var hideStatusBar = appCtx.getPrefBoolean(PreferKey.hideStatusBar)
     var hideNavigationBar = appCtx.getPrefBoolean(PreferKey.hideNavigationBar)
+    var useZhLayout = appCtx.getPrefBoolean(PreferKey.useZhLayout)
     val config get() = if (isComicMod) comicConfig else if (shareLayout) shareConfig else durConfig
 
     var pageAnim: Int
