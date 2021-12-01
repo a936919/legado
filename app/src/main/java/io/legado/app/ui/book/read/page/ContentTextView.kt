@@ -167,14 +167,19 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
         textChar: TextChar,
         lineTop: Float,
         lineBottom: Float,
+        isImageLine: Boolean
     ) {
         ReadBook.book?.let { book ->
             ImageProvider.getImage(book, textPage.chapterIndex, textChar.charData, true)
                 ?.let {
-                    /*以宽度为基准保持图片的原始比例叠加，当div为负数时，允许高度比字符更高*/
-                    val h = (textChar.end - textChar.start) / it.width * it.height
-                    val div = (lineBottom - lineTop - h) / 2
-                    val rectF = RectF(textChar.start, lineTop + div, textChar.end, lineBottom - div)
+                    val rectF = if (isImageLine) {
+                        RectF(textChar.start, lineTop, textChar.end, lineBottom)
+                    } else {
+                        /*以宽度为基准保持图片的原始比例叠加，当div为负数时，允许高度比字符更高*/
+                        val h = (textChar.end - textChar.start) / it.width * it.height
+                        val div = (lineBottom - lineTop - h) / 2
+                        RectF(textChar.start, lineTop + div, textChar.end, lineBottom - div)
+                    }
                     canvas.drawBitmap(it, null, rectF, null)
                 }
         }

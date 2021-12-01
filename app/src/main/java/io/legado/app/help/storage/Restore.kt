@@ -9,12 +9,12 @@ import com.jayway.jsonpath.Configuration
 import com.jayway.jsonpath.JsonPath
 import com.jayway.jsonpath.Option
 import com.jayway.jsonpath.ParseContext
+import io.legado.app.BuildConfig
 import io.legado.app.R
 import io.legado.app.constant.PreferKey
 import io.legado.app.constant.androidId
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.*
-import io.legado.app.data.entities.TimeRecord
 import io.legado.app.help.DefaultData
 import io.legado.app.help.LauncherIconHelp
 import io.legado.app.help.ReadBookConfig

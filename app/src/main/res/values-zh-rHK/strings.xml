@@ -810,5 +810,6 @@
     <string name="crash_log">崩溃日志</string>
     <string name="use_zh_layout">点击翻页无动画</string>
     <string name="image_style">图片样式</string>
+    <string name="system_tts">系统TTS</string>
 
 </resources>

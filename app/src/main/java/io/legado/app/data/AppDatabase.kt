@@ -10,7 +10,6 @@ import io.legado.app.constant.AppConst
 import io.legado.app.constant.androidId
 import io.legado.app.data.dao.*
 import io.legado.app.data.entities.*
-import io.legado.app.data.entities.TimeRecord
 import splitties.init.appCtx
 import java.util.*
 
@@ -23,8 +22,8 @@ val appDb by lazy {
         ReplaceRule::class, SearchBook::class, SearchKeyword::class, Cookie::class,
         RssSource::class, Bookmark::class, RssArticle::class, RssReadRecord::class,
         RssStar::class, TxtTocRule::class, ReadRecord::class, HttpTTS::class, Cache::class,
-        RuleSub::class, TopPath::class, TimeRecord::class, EpubChapter::class],
-    version = 30,
+        RuleSub::class, EpubChapter::class],
+    version = 31,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -46,9 +45,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract val httpTTSDao: HttpTTSDao
     abstract val cacheDao: CacheDao
     abstract val ruleSubDao: RuleSubDao
-    abstract val topPathDao: TopPathDao
-    abstract val timeRecordDao: TimeRecordDao
-    abstract val epubChapter: EpubChapterDao
+    abstract val epubChapterDao: EpubChapterDao
 
     companion object {
 
@@ -62,7 +59,7 @@ abstract class AppDatabase : RoomDatabase() {
                     migration_14_15, migration_15_17, migration_17_18, migration_18_19,
                     migration_19_20, migration_20_21, migration_21_22, migration_22_23,
                     migration_23_24, migration_24_25, migration_25_26, migration_26_27,
-                    migration_27_28, migration_28_29
+                    migration_27_28, migration_28_29, migration_29_30, migration_30_31
                 )
                 .allowMainThreadQueries()
                 .addCallback(dbCallback)
@@ -279,6 +276,18 @@ abstract class AppDatabase : RoomDatabase() {
                 )
                 database.execSQL("CREATE INDEX IF NOT EXISTS `index_epubChapters_bookUrl` ON `epubChapters` (`bookUrl`)")
                 database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_epubChapters_bookUrl_href` ON `epubChapters` (`bookUrl`, `href`)")
+            }
+        }
+
+        private val migration_30_31 = object : Migration(30, 31) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE readRecord RENAME TO readRecord1")
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `readRecord` (`deviceId` TEXT NOT NULL, `bookName` TEXT NOT NULL, `readTime` INTEGER NOT NULL, PRIMARY KEY(`deviceId`, `bookName`))
+                """
+                )
+                database.execSQL("insert into readRecord (deviceId, bookName, readTime) select androidId, bookName, readTime from readRecord1")
             }
         }
     }
