@@ -3,8 +3,8 @@ package io.legado.app.utils
 import android.os.Environment
 import android.webkit.MimeTypeMap
 import androidx.annotation.IntDef
-import io.legado.app.ui.filepicker.utils.ConvertUtils
 import splitties.init.appCtx
+import timber.log.Timber
 import java.io.*
 import java.nio.charset.Charset
 import java.text.SimpleDateFormat
@@ -13,10 +13,6 @@ import java.util.regex.Pattern
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
 object FileUtils {
-
-    fun exists(root: File, vararg subDirFiles: String): Boolean {
-        return getFile(root, *subDirFiles).exists()
-    }
 
     fun createFileIfNotExist(root: File, vararg subDirFiles: String): File {
         val filePath = getPath(root, *subDirFiles)
@@ -50,12 +46,12 @@ object FileUtils {
                 file.createNewFile()
             }
         } catch (e: IOException) {
-            e.printStackTrace()
+            Timber.e(e)
         }
         return file
     }
 
-    fun createFileWithReplace(filePath: String) : File{
+    fun createFileWithReplace(filePath: String): File {
         val file = File(filePath)
         if (!file.exists()) {
             //创建父类文件夹
@@ -64,17 +60,24 @@ object FileUtils {
             }
             //创建文件
             file.createNewFile()
-        }
-        else{
+        } else {
             file.delete()
             file.createNewFile()
         }
         return file
     }
 
-    fun getFile(root: File, vararg subDirFiles: String): File {
-        val filePath = getPath(root, *subDirFiles)
-        return File(filePath)
+    fun getPath(rootPath: String, vararg subDirFiles: String): String {
+        val path = StringBuilder(rootPath)
+        subDirFiles.forEach {
+            if (it.isNotEmpty()) {
+                if (!path.endsWith(File.separator)) {
+                    path.append(File.separator)
+                }
+                path.append(it)
+            }
+        }
+        return path.toString()
     }
 
     fun getPath(root: File, vararg subDirFiles: String): String {
@@ -105,8 +108,7 @@ object FileUtils {
     }
 
     fun getCachePath(): String {
-        return appCtx.externalCacheDir?.absolutePath
-            ?: appCtx.cacheDir.absolutePath
+        return appCtx.externalCache.absolutePath
     }
 
     fun getSdCardPath(): String {
@@ -114,8 +116,8 @@ object FileUtils {
         var sdCardDirectory = Environment.getExternalStorageDirectory().absolutePath
         try {
             sdCardDirectory = File(sdCardDirectory).canonicalPath
-        } catch (ioe: IOException) {
-            ioe.printStackTrace()
+        } catch (e: IOException) {
+            Timber.e(e)
         }
         return sdCardDirectory
     }
@@ -164,20 +166,19 @@ object FileUtils {
     fun listDirs(
         startDirPath: String,
         excludeDirs: Array<String>? = null, @SortType sortType: Int = BY_NAME_ASC
-    ): Array<File?> {
+    ): Array<File> {
         var excludeDirs1 = excludeDirs
         val dirList = ArrayList<File>()
         val startDir = File(startDirPath)
         if (!startDir.isDirectory) {
-            return arrayOfNulls(0)
+            return arrayOf()
         }
         val dirs = startDir.listFiles(FileFilter { f ->
             if (f == null) {
                 return@FileFilter false
             }
             f.isDirectory
-        })
-            ?: return arrayOfNulls(0)
+        }) ?: return arrayOf()
         if (excludeDirs1 == null) {
             excludeDirs1 = arrayOf()
         }
@@ -219,22 +220,18 @@ object FileUtils {
     fun listDirsAndFiles(
         startDirPath: String,
         allowExtensions: Array<String>? = null
-    ): Array<File?>? {
-        val dirs: Array<File?>?
-        val files: Array<File?>? = if (allowExtensions == null) {
+    ): Array<File>? {
+        val dirs: Array<File>?
+        val files: Array<File>? = if (allowExtensions == null) {
             listFiles(startDirPath)
         } else {
             listFiles(startDirPath, allowExtensions)
         }
-        val dirsAndFiles: Array<File?>
         dirs = listDirs(startDirPath)
         if (files == null) {
             return null
         }
-        dirsAndFiles = arrayOfNulls(dirs.size + files.size)
-        System.arraycopy(dirs, 0, dirsAndFiles, 0, dirs.size)
-        System.arraycopy(files, 0, dirsAndFiles, dirs.size, files.size)
-        return dirsAndFiles
+        return dirs + files
     }
 
     /**
@@ -244,11 +241,11 @@ object FileUtils {
     fun listFiles(
         startDirPath: String,
         filterPattern: Pattern? = null, @SortType sortType: Int = BY_NAME_ASC
-    ): Array<File?> {
+    ): Array<File> {
         val fileList = ArrayList<File>()
         val f = File(startDirPath)
         if (!f.isDirectory) {
-            return arrayOfNulls(0)
+            return arrayOf()
         }
         val files = f.listFiles(FileFilter { file ->
             if (file == null) {
@@ -260,7 +257,7 @@ object FileUtils {
 
             filterPattern?.matcher(file.name)?.find() ?: true
         })
-            ?: return arrayOfNulls(0)
+            ?: return arrayOf()
         for (file in files) {
             fileList.add(file.absoluteFile)
         }
@@ -292,7 +289,7 @@ object FileUtils {
     /**
      * 列出指定目录下的所有文件
      */
-    fun listFiles(startDirPath: String, allowExtensions: Array<String>?): Array<File?>? {
+    fun listFiles(startDirPath: String, allowExtensions: Array<String>?): Array<File>? {
         val file = File(startDirPath)
         return file.listFiles { _, name ->
             //返回当前目录所有以某些扩展名结尾的文件
@@ -305,7 +302,7 @@ object FileUtils {
     /**
      * 列出指定目录下的所有文件
      */
-    fun listFiles(startDirPath: String, allowExtension: String?): Array<File?>? {
+    fun listFiles(startDirPath: String, allowExtension: String?): Array<File>? {
         return if (allowExtension == null)
             listFiles(startDirPath, allowExtension = null)
         else
@@ -519,6 +516,45 @@ object FileUtils {
     }
 
     /**
+     * 保存文件内容
+     */
+    fun writeInputStream(filepath: String, data: InputStream): Boolean {
+        val file = File(filepath)
+        return writeInputStream(file, data)
+    }
+
+    /**
+     * 保存文件内容
+     */
+    fun writeInputStream(file: File, data: InputStream): Boolean {
+        var fos: FileOutputStream? = null
+        return try {
+            if (!file.exists()) {
+                file.parentFile?.mkdirs()
+                file.createNewFile()
+            }
+            val buffer = ByteArray(1024 * 4)
+            fos = FileOutputStream(file)
+            while (true) {
+                val len = data.read(buffer, 0, buffer.size)
+                if (len == -1) {
+                    break
+                } else {
+                    fos.write(buffer, 0, len)
+                }
+            }
+            data.close()
+            fos.flush()
+
+            true
+        } catch (e: IOException) {
+            false
+        } finally {
+            closeSilently(fos)
+        }
+    }
+
+    /**
      * 追加文本内容
      */
     fun appendText(path: String, content: String): Boolean {
@@ -586,7 +622,7 @@ object FileUtils {
      */
     fun getSize(path: String): String {
         val fileSize = getLength(path)
-        return ConvertUtils.toFileSizeString(fileSize)
+        return ConvertUtils.formatFileSize(fileSize)
     }
 
     /**

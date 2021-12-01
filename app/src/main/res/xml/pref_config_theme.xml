@@ -34,6 +34,22 @@
         app:iconSpaceReserved="false" />
 
     <io.legado.app.ui.widget.prefs.Preference
+        android:defaultValue="true"
+        android:key="fontScale"
+        android:summary="@string/font_scale_summary"
+        android:title="@string/font_scale"
+        app:iconSpaceReserved="false" />
+
+    <io.legado.app.ui.widget.prefs.Preference
+        android:defaultValue="false"
+        android:key="coverConfig"
+        android:title="@string/cover_config"
+        android:summary="@string/cover_config_summary"
+        app:allowDividerAbove="false"
+        app:allowDividerBelow="false"
+        app:iconSpaceReserved="false" />
+
+    <io.legado.app.ui.widget.prefs.Preference
         android:key="themeList"
         android:summary="@string/theme_list_summary"
         android:title="@string/theme_list"
@@ -73,10 +89,6 @@
             app:cpv_dialogType="preset"
             app:iconSpaceReserved="false" />
 
-        <io.legado.app.ui.widget.prefs.Preference
-            android:key="backgroundImage"
-            android:title="@string/background_image" />
-
         <io.legado.app.ui.widget.prefs.ColorPreference
             android:defaultValue="@color/md_grey_200"
             android:key="colorBottomBackground"
@@ -86,6 +98,10 @@
             app:allowDividerBelow="false"
             app:cpv_dialogType="preset"
             app:iconSpaceReserved="false" />
+
+        <io.legado.app.ui.widget.prefs.Preference
+            android:key="backgroundImage"
+            android:title="@string/background_image" />
 
         <io.legado.app.ui.widget.prefs.Preference
             android:key="saveDayTheme"
@@ -129,10 +145,6 @@
             app:cpv_dialogType="preset"
             app:iconSpaceReserved="false" />
 
-        <io.legado.app.ui.widget.prefs.Preference
-            android:key="backgroundImageNight"
-            android:title="@string/background_image" />
-
         <io.legado.app.ui.widget.prefs.ColorPreference
             android:defaultValue="@color/md_grey_800"
             android:key="colorBottomBackgroundNight"
@@ -142,9 +154,15 @@
             app:iconSpaceReserved="false" />
 
         <io.legado.app.ui.widget.prefs.Preference
+            android:key="backgroundImageNight"
+            android:title="@string/background_image" />
+
+        <io.legado.app.ui.widget.prefs.Preference
             android:key="saveNightTheme"
             android:summary="@string/save_night_theme_summary"
             android:title="@string/save_theme_config"
+            app:allowDividerAbove="false"
+            app:allowDividerBelow="false"
             app:iconSpaceReserved="false" />
 
     </io.legado.app.ui.widget.prefs.PreferenceCategory>

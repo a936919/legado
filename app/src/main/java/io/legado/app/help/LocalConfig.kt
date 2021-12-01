@@ -10,6 +10,30 @@ object LocalConfig {
     private val localConfig =
         appCtx.getSharedPreferences("local", Context.MODE_PRIVATE)
 
+    val readHelpVersionIsLast: Boolean
+        get() = isLastVersion(1, "readHelpVersion", "firstRead")
+
+    val backupHelpVersionIsLast: Boolean
+        get() = isLastVersion(1, "backupHelpVersion", "firstBackup")
+
+    val readMenuHelpVersionIsLast: Boolean
+        get() = isLastVersion(1, "readMenuHelpVersion", "firstReadMenu")
+
+    val bookSourcesHelpVersionIsLast: Boolean
+        get() = isLastVersion(1, "bookSourceHelpVersion", "firstOpenBookSources")
+
+    val ruleHelpVersionIsLast: Boolean
+        get() = isLastVersion(1, "ruleHelpVersion")
+
+    val needUpHttpTTS: Boolean
+        get() = !isLastVersion(5, "httpTtsVersion")
+
+    val needUpTxtTocRule: Boolean
+        get() = !isLastVersion(1, "txtTocRuleVersion")
+
+    val needUpRssSources: Boolean
+        get() = !isLastVersion(4, "rssSourceVersion")
+
     var versionCode
         get() = localConfig.getLong(versionCodeKey, 0)
         set(value) {
@@ -46,30 +70,4 @@ object LocalConfig {
         return true
     }
 
-    val readHelpVersionIsLast: Boolean
-        get() = isLastVersion(1, "readHelpVersion", "firstRead")
-
-    val backupHelpVersionIsLast: Boolean
-        get() = isLastVersion(1, "backupHelpVersion", "firstBackup")
-
-    val readMenuHelpVersionIsLast: Boolean
-        get() = isLastVersion(1, "readMenuHelpVersion", "firstReadMenu")
-
-    val bookSourcesHelpVersionIsLast: Boolean
-        get() = isLastVersion(1, "bookSourceHelpVersion", "firstOpenBookSources")
-
-    val debugHelpVersionIsLast: Boolean
-        get() = isLastVersion(1, "debugHelpVersion")
-
-    val ruleHelpVersionIsLast: Boolean
-        get() = isLastVersion(1, "ruleHelpVersion")
-
-    val hasUpHttpTTS: Boolean
-        get() = !isLastVersion(2, "httpTtsVersion")
-
-    val hasUpTxtTocRule: Boolean
-        get() = !isLastVersion(1, "txtTocRuleVersion")
-
-    val hasUpRssSources: Boolean
-        get() = !isLastVersion(2, "rssSourceVersion")
 }

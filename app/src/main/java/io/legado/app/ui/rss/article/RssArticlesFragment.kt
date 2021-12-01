@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.LiveData
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -15,73 +15,69 @@ import io.legado.app.data.appDb
 import io.legado.app.data.entities.RssArticle
 import io.legado.app.databinding.FragmentRssArticlesBinding
 import io.legado.app.databinding.ViewLoadMoreBinding
-import io.legado.app.lib.theme.ATH
+import io.legado.app.lib.theme.accentColor
+import io.legado.app.lib.theme.primaryColor
 import io.legado.app.ui.rss.read.ReadRssActivity
 import io.legado.app.ui.widget.recycler.LoadMoreView
 import io.legado.app.ui.widget.recycler.VerticalDivider
+import io.legado.app.utils.setEdgeEffectColor
 import io.legado.app.utils.startActivity
 import io.legado.app.utils.viewbindingdelegate.viewBinding
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
-class RssArticlesFragment : VMBaseFragment<RssArticlesViewModel>(R.layout.fragment_rss_articles),
+class RssArticlesFragment() : VMBaseFragment<RssArticlesViewModel>(R.layout.fragment_rss_articles),
     BaseRssArticlesAdapter.CallBack {
 
-    companion object {
-        fun create(sortName: String, sortUrl: String): RssArticlesFragment {
-            return RssArticlesFragment().apply {
-                val bundle = Bundle()
-                bundle.putString("sortName", sortName)
-                bundle.putString("sortUrl", sortUrl)
-                arguments = bundle
-            }
+    constructor(sortName: String, sortUrl: String) : this() {
+        arguments = Bundle().apply {
+            putString("sortName", sortName)
+            putString("sortUrl", sortUrl)
         }
     }
 
     private val binding by viewBinding(FragmentRssArticlesBinding::bind)
-    private val activityViewModel: RssSortViewModel
-            by activityViewModels()
-    override val viewModel: RssArticlesViewModel
-            by viewModels()
-    lateinit var adapter: BaseRssArticlesAdapter<*>
-    private lateinit var loadMoreView: LoadMoreView
-    private var rssArticlesData: LiveData<List<RssArticle>>? = null
+    private val activityViewModel by activityViewModels<RssSortViewModel>()
+    override val viewModel by viewModels<RssArticlesViewModel>()
+    private val adapter: BaseRssArticlesAdapter<*> by lazy {
+        when (activityViewModel.rssSource?.articleStyle) {
+            1 -> RssArticlesAdapter1(requireContext(), this@RssArticlesFragment)
+            2 -> RssArticlesAdapter2(requireContext(), this@RssArticlesFragment)
+            else -> RssArticlesAdapter(requireContext(), this@RssArticlesFragment)
+        }
+    }
+    private val loadMoreView: LoadMoreView by lazy {
+        LoadMoreView(requireContext())
+    }
+    private var articlesFlowJob: Job? = null
     override val isGridLayout: Boolean
         get() = activityViewModel.isGridLayout
 
     override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) {
         viewModel.init(arguments)
         initView()
-        binding.refreshRecyclerView.startLoading()
-        initView()
         initData()
     }
 
-    private fun initView() = with(binding) {
-        ATH.applyEdgeEffectColor(refreshRecyclerView.recyclerView)
-        refreshRecyclerView.recyclerView.layoutManager = if (activityViewModel.isGridLayout) {
-            refreshRecyclerView.recyclerView.setPadding(8, 0, 8, 0)
+    private fun initView() = binding.run {
+        refreshLayout.setColorSchemeColors(accentColor)
+        recyclerView.setEdgeEffectColor(primaryColor)
+        recyclerView.layoutManager = if (activityViewModel.isGridLayout) {
+            recyclerView.setPadding(8, 0, 8, 0)
             GridLayoutManager(requireContext(), 2)
         } else {
-            refreshRecyclerView.recyclerView.addItemDecoration(VerticalDivider(requireContext()))
+            recyclerView.addItemDecoration(VerticalDivider(requireContext()))
             LinearLayoutManager(requireContext())
-
         }
-        adapter = when (activityViewModel.rssSource?.articleStyle) {
-            1 -> RssArticlesAdapter1(requireContext(), this@RssArticlesFragment)
-            2 -> RssArticlesAdapter2(requireContext(), this@RssArticlesFragment)
-            else -> RssArticlesAdapter(requireContext(), this@RssArticlesFragment)
-        }
-        refreshRecyclerView.recyclerView.adapter = adapter
-        loadMoreView = LoadMoreView(requireContext())
+        recyclerView.adapter = adapter
         adapter.addFooterView {
             ViewLoadMoreBinding.bind(loadMoreView)
         }
-        refreshRecyclerView.onRefreshStart = {
-            activityViewModel.rssSource?.let {
-                viewModel.loadContent(it)
-            }
+        refreshLayout.setOnRefreshListener {
+            loadArticles()
         }
-        refreshRecyclerView.recyclerView.addOnScrollListener(object :
-            RecyclerView.OnScrollListener() {
+        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
                 if (!recyclerView.canScrollVertically(1)) {
@@ -89,15 +85,25 @@ class RssArticlesFragment : VMBaseFragment<RssArticlesViewModel>(R.layout.fragme
                 }
             }
         })
+        refreshLayout.post {
+            refreshLayout.isRefreshing = true
+            loadArticles()
+        }
     }
 
     private fun initData() {
-        activityViewModel.url?.let {
-            rssArticlesData?.removeObservers(this)
-            rssArticlesData = appDb.rssArticleDao.liveByOriginSort(it, viewModel.sortName)
-            rssArticlesData?.observe(viewLifecycleOwner, { list ->
-                adapter.setItems(list)
-            })
+        val rssUrl = activityViewModel.url ?: return
+        articlesFlowJob?.cancel()
+        articlesFlowJob = lifecycleScope.launch {
+            appDb.rssArticleDao.flowByOriginSort(rssUrl, viewModel.sortName).collect {
+                adapter.setItems(it)
+            }
+        }
+    }
+
+    private fun loadArticles() {
+        activityViewModel.rssSource?.let {
+            viewModel.loadContent(it)
         }
     }
 
@@ -113,7 +119,7 @@ class RssArticlesFragment : VMBaseFragment<RssArticlesViewModel>(R.layout.fragme
 
     override fun observeLiveBus() {
         viewModel.loadFinally.observe(viewLifecycleOwner) {
-            binding.refreshRecyclerView.stopLoading()
+            binding.refreshLayout.isRefreshing = false
             if (it) {
                 loadMoreView.startLoad()
             } else {

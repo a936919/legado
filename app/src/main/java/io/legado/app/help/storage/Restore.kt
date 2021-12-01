@@ -1,18 +1,13 @@
 package io.legado.app.help.storage
 
-import android.app.AlarmManager
-import android.app.PendingIntent
 import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
-import com.jayway.jsonpath.Configuration
-import com.jayway.jsonpath.JsonPath
-import com.jayway.jsonpath.Option
-import com.jayway.jsonpath.ParseContext
 import io.legado.app.BuildConfig
 import io.legado.app.R
+import io.legado.app.constant.AppConst.androidId
+import io.legado.app.constant.EventBus
 import io.legado.app.constant.PreferKey
-import io.legado.app.constant.androidId
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.*
 import io.legado.app.help.DefaultData
@@ -25,9 +20,8 @@ import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import splitties.init.appCtx
-import splitties.systemservices.alarmManager
+import timber.log.Timber
 import java.io.File
-import kotlin.system.exitProcess
 
 
 object Restore {
@@ -58,8 +52,12 @@ object Restore {
 
     //默认忽略keys
     private val ignorePrefKeys = arrayOf(
-        PreferKey.defaultCover
+        PreferKey.themeMode,
+        PreferKey.defaultCover,
+        PreferKey.defaultCoverDark
     )
+
+    //阅读配置
     private val readPrefKeys = arrayOf(
         PreferKey.readStyleSelect,
         PreferKey.shareLayout,
@@ -68,21 +66,13 @@ object Restore {
         PreferKey.autoReadSpeed
     )
 
-    val jsonPath: ParseContext by lazy {
-        JsonPath.using(
-            Configuration.builder()
-                .options(Option.SUPPRESS_EXCEPTIONS)
-                .build()
-        )
-    }
-
     suspend fun restore(context: Context, path: String) {
         withContext(IO) {
             if (path.isContentScheme()) {
                 DocumentFile.fromTreeUri(context, Uri.parse(path))?.listFiles()?.forEach { doc ->
                     for (fileName in Backup.backupFileNames) {
                         if (doc.name == fileName) {
-                            DocumentUtils.readText(context, doc.uri)?.let {
+                            DocumentUtils.readText(context, doc.uri).let {
                                 FileUtils.createFileIfNotExist("${Backup.backupPath}${File.separator}$fileName")
                                     .writeText(it)
                             }
@@ -93,7 +83,7 @@ object Restore {
                 try {
                     val file = File(path)
                     for (fileName in Backup.backupFileNames) {
-                        FileUtils.getFile(file, fileName).let {
+                        file.getFile(fileName).let {
                             if (it.exists()) {
                                 it.copyTo(
                                     FileUtils.createFileIfNotExist("${Backup.backupPath}${File.separator}$fileName"),
@@ -103,7 +93,7 @@ object Restore {
                         }
                     }
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    Timber.e(e)
                 }
             }
         }
@@ -124,6 +114,11 @@ object Restore {
             }
             fileToListT<BookSource>(path, "bookSource.json")?.let {
                 appDb.bookSourceDao.insert(*it.toTypedArray())
+            } ?: run {
+                val bookSourceFile =
+                    FileUtils.createFileIfNotExist(path + File.separator + "bookSource.json")
+                val json = bookSourceFile.readText()
+                ImportOldData.importOldSource(json)
             }
             fileToListT<RssSource>(path, "rssSources.json")?.let {
                 appDb.rssSourceDao.insert(*it.toTypedArray())
@@ -174,9 +169,10 @@ object Restore {
                     ThemeConfig.upConfig()
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Timber.e(e)
             }
             if (!ignoreReadConfig) {
+                //恢复阅读界面配置
                 try {
                     val file =
                         FileUtils.createFileIfNotExist("$path${File.separator}${ReadBookConfig.configFileName}")
@@ -186,7 +182,7 @@ object Restore {
                         ReadBookConfig.initConfigs()
                     }
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    Timber.e(e)
                 }
                 try {
                     val file =
@@ -197,19 +193,19 @@ object Restore {
                         ReadBookConfig.initShareConfig()
                     }
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    Timber.e(e)
                 }
             }
             Preferences.getSharedPreferences(appCtx, path, "config")?.all?.let { map ->
                 val edit = appCtx.defaultSharedPreferences.edit()
-                map.forEach {
-                    if (keyIsNotIgnore(it.key)) {
-                        when (val value = it.value) {
-                            is Int -> edit.putInt(it.key, value)
-                            is Boolean -> edit.putBoolean(it.key, value)
-                            is Long -> edit.putLong(it.key, value)
-                            is Float -> edit.putFloat(it.key, value)
-                            is String -> edit.putString(it.key, value)
+                map.forEach { (key, value) ->
+                    if (keyIsNotIgnore(key)) {
+                        when (value) {
+                            is Int -> edit.putInt(key, value)
+                            is Boolean -> edit.putBoolean(key, value)
+                            is Long -> edit.putLong(key, value)
+                            is Float -> edit.putFloat(key, value)
+                            is String -> edit.putString(key, value)
                         }
                     }
                 }
@@ -229,12 +225,7 @@ object Restore {
             if (!BuildConfig.DEBUG) {
                 LauncherIconHelp.changeIcon(appCtx.getPrefString(PreferKey.launcherIcon))
             }
-            appCtx.packageManager.getLaunchIntentForPackage(appCtx.packageName)?.let { intent ->
-                val restartIntent =
-                    PendingIntent.getActivity(appCtx, 0, intent, PendingIntent.FLAG_ONE_SHOT)
-                alarmManager[AlarmManager.RTC, System.currentTimeMillis() + 300] = restartIntent
-                exitProcess(0)
-            }
+            postEvent(EventBus.RECREATE, "")
         }
     }
 
@@ -272,7 +263,7 @@ object Restore {
             val json = file.readText()
             return GSON.fromJsonArray(json)
         } catch (e: Exception) {
-            e.printStackTrace()
+            Timber.e(e)
         }
         return null
     }

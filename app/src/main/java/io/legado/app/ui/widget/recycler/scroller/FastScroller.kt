@@ -21,6 +21,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
@@ -91,7 +92,11 @@ class FastScroller : LinearLayout {
     }
 
     @JvmOverloads
-    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int = 0) : super(context, attrs, defStyleAttr) {
+    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int = 0) : super(
+        context,
+        attrs,
+        defStyleAttr
+    ) {
         layout(context, attrs)
         layoutParams = generateLayoutParams(attrs)
     }
@@ -104,16 +109,32 @@ class FastScroller : LinearLayout {
     fun setLayoutParams(viewGroup: ViewGroup) {
         @IdRes val recyclerViewId = mRecyclerView?.id ?: View.NO_ID
         val marginTop = resources.getDimensionPixelSize(R.dimen.fastscroll_scrollbar_margin_top)
-        val marginBottom = resources.getDimensionPixelSize(R.dimen.fastscroll_scrollbar_margin_bottom)
+        val marginBottom =
+            resources.getDimensionPixelSize(R.dimen.fastscroll_scrollbar_margin_bottom)
         require(recyclerViewId != View.NO_ID) { "RecyclerView must have a view ID" }
         when (viewGroup) {
             is ConstraintLayout -> {
                 val constraintSet = ConstraintSet()
                 @IdRes val layoutId = id
                 constraintSet.clone(viewGroup)
-                constraintSet.connect(layoutId, ConstraintSet.TOP, recyclerViewId, ConstraintSet.TOP)
-                constraintSet.connect(layoutId, ConstraintSet.BOTTOM, recyclerViewId, ConstraintSet.BOTTOM)
-                constraintSet.connect(layoutId, ConstraintSet.END, recyclerViewId, ConstraintSet.END)
+                constraintSet.connect(
+                    layoutId,
+                    ConstraintSet.TOP,
+                    recyclerViewId,
+                    ConstraintSet.TOP
+                )
+                constraintSet.connect(
+                    layoutId,
+                    ConstraintSet.BOTTOM,
+                    recyclerViewId,
+                    ConstraintSet.BOTTOM
+                )
+                constraintSet.connect(
+                    layoutId,
+                    ConstraintSet.END,
+                    recyclerViewId,
+                    ConstraintSet.END
+                )
                 constraintSet.applyTo(viewGroup)
                 val layoutParams = layoutParams as ConstraintLayout.LayoutParams
                 layoutParams.setMargins(0, marginTop, 0, marginBottom)
@@ -152,12 +173,10 @@ class FastScroller : LinearLayout {
 
     fun attachRecyclerView(recyclerView: RecyclerView) {
         mRecyclerView = recyclerView
-        if (mRecyclerView != null) {
-            mRecyclerView!!.addOnScrollListener(mScrollListener)
-            post {
-                // set initial positions for bubble and handle
-                setViewPositions(getScrollProportion(mRecyclerView))
-            }
+        mRecyclerView!!.addOnScrollListener(mScrollListener)
+        post {
+            // set initial positions for bubble and handle
+            setViewPositions(getScrollProportion(mRecyclerView))
         }
     }
 
@@ -276,14 +295,14 @@ class FastScroller : LinearLayout {
                 if (event.x < mHandleView.x - ViewCompat.getPaddingStart(mHandleView)) {
                     return false
                 }
+                if (!mScrollbar.isVisible) {
+                    return false
+                }
                 requestDisallowInterceptTouchEvent(true)
                 setHandleSelected(true)
                 handler.removeCallbacks(mScrollbarHider)
                 cancelAnimation(mScrollbarAnimator)
                 cancelAnimation(mBubbleAnimator)
-                if (!isViewVisible(mScrollbar)) {
-                    showScrollbar()
-                }
                 if (mShowBubble && mSectionIndexer != null) {
                     showBubble()
                 }
@@ -323,29 +342,29 @@ class FastScroller : LinearLayout {
     }
 
     private fun setRecyclerViewPosition(y: Float) {
-        if (mRecyclerView != null && mRecyclerView!!.adapter != null) {
-            val itemCount = mRecyclerView!!.adapter!!.itemCount
+        mRecyclerView?.adapter?.let { adapter ->
+            val itemCount = adapter.itemCount
             val proportion: Float = when {
                 mHandleView.y == 0f -> 0f
                 mHandleView.y + mHandleHeight >= mViewHeight - sTrackSnapRange -> 1f
                 else -> y / mViewHeight.toFloat()
             }
             var scrolledItemCount = (proportion * itemCount).roundToInt()
-            if (isLayoutReversed(mRecyclerView!!.layoutManager!!)) {
+            if (isLayoutReversed(mRecyclerView?.layoutManager)) {
                 scrolledItemCount = itemCount - scrolledItemCount
             }
             val targetPos = getValueInRange(0, itemCount - 1, scrolledItemCount)
-            mRecyclerView!!.layoutManager!!.scrollToPosition(targetPos)
-            if (mShowBubble && mSectionIndexer != null) {
-                mBubbleView.text = mSectionIndexer!!.getSectionText(targetPos)
+            mRecyclerView?.layoutManager?.scrollToPosition(targetPos)
+            mSectionIndexer?.let { sectionIndexer ->
+                if (mShowBubble) {
+                    mBubbleView.text = sectionIndexer.getSectionText(targetPos)
+                }
             }
         }
     }
 
     private fun getScrollProportion(recyclerView: RecyclerView?): Float {
-        if (recyclerView == null) {
-            return 0f
-        }
+        recyclerView ?: return 0f
         val verticalScrollOffset = recyclerView.computeVerticalScrollOffset()
         val verticalScrollRange = recyclerView.computeVerticalScrollRange()
         val rangeDiff = (verticalScrollRange - mViewHeight).toFloat()
@@ -361,8 +380,13 @@ class FastScroller : LinearLayout {
     private fun setViewPositions(y: Float) {
         mBubbleHeight = mBubbleView.height
         mHandleHeight = mHandleView.height
-        val bubbleY = getValueInRange(0, mViewHeight - mBubbleHeight - mHandleHeight / 2, (y - mBubbleHeight).toInt())
-        val handleY = getValueInRange(0, mViewHeight - mHandleHeight, (y - mHandleHeight / 2).toInt())
+        val bubbleY = getValueInRange(
+            0,
+            mViewHeight - mBubbleHeight - mHandleHeight / 2,
+            (y - mBubbleHeight).toInt()
+        )
+        val handleY =
+            getValueInRange(0, mViewHeight - mHandleHeight, (y - mHandleHeight / 2).toInt())
         if (mShowBubble) {
             mBubbleView.y = bubbleY.toFloat()
         }
@@ -370,14 +394,15 @@ class FastScroller : LinearLayout {
     }
 
     private fun updateViewHeights() {
-        val measureSpec = MeasureSpec.makeMeasureSpec(MeasureSpec.UNSPECIFIED, MeasureSpec.UNSPECIFIED)
+        val measureSpec =
+            MeasureSpec.makeMeasureSpec(MeasureSpec.UNSPECIFIED, MeasureSpec.UNSPECIFIED)
         mBubbleView.measure(measureSpec, measureSpec)
         mBubbleHeight = mBubbleView.measuredHeight
         mHandleView.measure(measureSpec, measureSpec)
         mHandleHeight = mHandleView.measuredHeight
     }
 
-    private fun isLayoutReversed(layoutManager: RecyclerView.LayoutManager): Boolean {
+    private fun isLayoutReversed(layoutManager: RecyclerView.LayoutManager?): Boolean {
         if (layoutManager is LinearLayoutManager) {
             return layoutManager.reverseLayout
         } else if (layoutManager is StaggeredGridLayoutManager) {
@@ -429,7 +454,9 @@ class FastScroller : LinearLayout {
     private fun showScrollbar() {
         mRecyclerView?.let { mRecyclerView ->
             if (mRecyclerView.computeVerticalScrollRange() - mViewHeight > 0) {
-                val transX = resources.getDimensionPixelSize(R.dimen.fastscroll_scrollbar_padding_end).toFloat()
+                val transX =
+                    resources.getDimensionPixelSize(R.dimen.fastscroll_scrollbar_padding_end)
+                        .toFloat()
                 mScrollbar.translationX = transX
                 mScrollbar.visibility = View.VISIBLE
                 mScrollbarAnimator = mScrollbar.animate().translationX(0f).alpha(1f)
@@ -443,7 +470,8 @@ class FastScroller : LinearLayout {
     }
 
     private fun hideScrollbar() {
-        val transX = resources.getDimensionPixelSize(R.dimen.fastscroll_scrollbar_padding_end).toFloat()
+        val transX =
+            resources.getDimensionPixelSize(R.dimen.fastscroll_scrollbar_padding_end).toFloat()
         mScrollbarAnimator = mScrollbar.animate().translationX(transX).alpha(0f)
             .setDuration(sScrollbarAnimDuration.toLong())
             .setListener(object : AnimatorListenerAdapter() {

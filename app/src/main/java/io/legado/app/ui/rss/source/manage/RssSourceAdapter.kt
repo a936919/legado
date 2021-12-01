@@ -25,18 +25,28 @@ class RssSourceAdapter(context: Context, val callBack: CallBack) :
 
     private val selected = linkedSetOf<RssSource>()
 
-    val diffItemCallback: DiffUtil.ItemCallback<RssSource>
-        get() = object : DiffUtil.ItemCallback<RssSource>() {
-
-            override fun areItemsTheSame(oldItem: RssSource, newItem: RssSource): Boolean {
-                return oldItem.sourceUrl == newItem.sourceUrl
+    val selection: List<RssSource>
+        get() {
+            val selection = arrayListOf<RssSource>()
+            getItems().forEach {
+                if (selected.contains(it)) {
+                    selection.add(it)
+                }
             }
+            return selection.sortedBy { it.customOrder }
+        }
 
-            override fun areContentsTheSame(oldItem: RssSource, newItem: RssSource): Boolean {
-                return oldItem.sourceName == newItem.sourceName
-                        && oldItem.sourceGroup == newItem.sourceGroup
-                        && oldItem.enabled == newItem.enabled
-            }
+    val diffItemCallback = object : DiffUtil.ItemCallback<RssSource>() {
+
+        override fun areItemsTheSame(oldItem: RssSource, newItem: RssSource): Boolean {
+            return oldItem.sourceUrl == newItem.sourceUrl
+        }
+
+        override fun areContentsTheSame(oldItem: RssSource, newItem: RssSource): Boolean {
+            return oldItem.sourceName == newItem.sourceName
+                    && oldItem.sourceGroup == newItem.sourceGroup
+                    && oldItem.enabled == newItem.enabled
+        }
 
             override fun getChangePayload(oldItem: RssSource, newItem: RssSource): Any? {
                 val payload = Bundle()
@@ -66,7 +76,7 @@ class RssSourceAdapter(context: Context, val callBack: CallBack) :
         item: RssSource,
         payloads: MutableList<Any>
     ) {
-        with(binding) {
+        binding.run {
             val bundle = payloads.getOrNull(0) as? Bundle
             if (bundle == null) {
                 root.setBackgroundColor(ColorUtils.withAlpha(context.backgroundColor, 0.5f))
@@ -147,16 +157,6 @@ class RssSourceAdapter(context: Context, val callBack: CallBack) :
         }
         notifyItemRangeChanged(0, itemCount, bundleOf(Pair("selected", null)))
         callBack.upCountView()
-    }
-
-    fun getSelection(): List<RssSource> {
-        val selection = arrayListOf<RssSource>()
-        getItems().forEach {
-            if (selected.contains(it)) {
-                selection.add(it)
-            }
-        }
-        return selection.sortedBy { it.customOrder }
     }
 
     private fun showMenu(view: View, position: Int) {

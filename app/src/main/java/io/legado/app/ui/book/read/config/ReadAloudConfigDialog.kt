@@ -14,21 +14,20 @@ import io.legado.app.base.BasePreferenceFragment
 import io.legado.app.constant.EventBus
 import io.legado.app.constant.PreferKey
 import io.legado.app.data.appDb
-import io.legado.app.lib.theme.ATH
+import io.legado.app.help.AppConfig
+import io.legado.app.lib.dialogs.SelectItem
 import io.legado.app.lib.theme.backgroundColor
+import io.legado.app.lib.theme.primaryColor
+import io.legado.app.model.ReadAloud
 import io.legado.app.service.BaseReadAloudService
-import io.legado.app.service.help.ReadAloud
-import io.legado.app.utils.getPrefLong
-import io.legado.app.utils.getSize
-import io.legado.app.utils.postEvent
-import splitties.init.appCtx
+import io.legado.app.utils.*
 
 class ReadAloudConfigDialog : DialogFragment() {
     private val readAloudPreferTag = "readAloudPreferTag"
 
     override fun onStart() {
         super.onStart()
-        val dm = requireActivity().getSize()
+        val dm = requireActivity().windowSize
         dialog?.window?.let {
             it.setBackgroundDrawableResource(R.color.transparent)
             it.setLayout((dm.widthPixels * 0.9).toInt(), ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -39,7 +38,7 @@ class ReadAloudConfigDialog : DialogFragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         val view = LinearLayout(requireContext())
         view.setBackgroundColor(requireContext().backgroundColor)
         view.id = R.id.tag1
@@ -61,22 +60,27 @@ class ReadAloudConfigDialog : DialogFragment() {
 
         private val speakEngineSummary: String
             get() {
-                val eid = appCtx.getPrefLong(PreferKey.speakEngine)
-                val ht = appDb.httpTTSDao.get(eid)
-                return ht?.name ?: getString(R.string.system_tts)
+                val ttsEngine = AppConfig.ttsEngine
+                    ?: return getString(R.string.system_tts)
+                if (StringUtils.isNumeric(ttsEngine)) {
+                    return appDb.httpTTSDao.getName(ttsEngine.toLong())
+                        ?: getString(R.string.system_tts)
+                }
+                return GSON.fromJsonObject<SelectItem<String>>(ttsEngine)?.title
+                    ?: getString(R.string.system_tts)
             }
 
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             addPreferencesFromResource(R.xml.pref_config_aloud)
             upPreferenceSummary(
-                findPreference(PreferKey.speakEngine),
+                findPreference(PreferKey.ttsEngine),
                 speakEngineSummary
             )
         }
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
-            ATH.applyEdgeEffectColor(listView)
+            listView.setEdgeEffectColor(primaryColor)
         }
 
         override fun onResume() {
@@ -91,8 +95,7 @@ class ReadAloudConfigDialog : DialogFragment() {
 
         override fun onPreferenceTreeClick(preference: Preference?): Boolean {
             when (preference?.key) {
-                PreferKey.speakEngine ->
-                    SpeakEngineDialog().show(childFragmentManager, "speakEngine")
+                PreferKey.ttsEngine -> showDialogFragment(SpeakEngineDialog())
             }
             return super.onPreferenceTreeClick(preference)
         }
@@ -107,7 +110,7 @@ class ReadAloudConfigDialog : DialogFragment() {
                         postEvent(EventBus.MEDIA_BUTTON, false)
                     }
                 }
-                PreferKey.speakEngine -> {
+                PreferKey.ttsEngine -> {
                     upPreferenceSummary(findPreference(key), speakEngineSummary)
                     ReadAloud.upReadAloudClass()
                 }

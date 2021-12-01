@@ -1,66 +1,72 @@
 package io.legado.app.service
 
 import android.app.PendingIntent
-import android.content.Intent
 import android.media.MediaPlayer
-
+import io.legado.app.R
+import io.legado.app.constant.AppLog
+import io.legado.app.constant.AppPattern
 import io.legado.app.constant.EventBus
 import io.legado.app.help.AppConfig
-import io.legado.app.help.IntentHelp
 import io.legado.app.help.coroutine.Coroutine
+import io.legado.app.model.ConcurrentException
+import io.legado.app.model.NoStackTraceException
+import io.legado.app.model.ReadAloud
+import io.legado.app.model.ReadBook
 import io.legado.app.model.analyzeRule.AnalyzeUrl
-import io.legado.app.service.help.ReadAloud
-import io.legado.app.service.help.ReadBook
 import io.legado.app.utils.*
-import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.isActive
+import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import okhttp3.Response
+import org.mozilla.javascript.WrappedException
+import timber.log.Timber
 import java.io.File
 import java.io.FileDescriptor
 import java.io.FileInputStream
-import java.io.IOException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.util.*
+import javax.script.ScriptException
 
 class HttpReadAloudService : BaseReadAloudService(),
-        MediaPlayer.OnPreparedListener,
-        MediaPlayer.OnErrorListener,
-        MediaPlayer.OnCompletionListener {
+    MediaPlayer.OnPreparedListener,
+    MediaPlayer.OnErrorListener,
+    MediaPlayer.OnCompletionListener {
 
-    private val player by lazy { MediaPlayer() }
-    private lateinit var ttsFolder: String
+    private val mediaPlayer = MediaPlayer()
+    private val ttsFolderPath: String by lazy {
+        externalCacheDir!!.absolutePath + File.separator + "httpTTS" + File.separator
+    }
+    private val cacheFiles = hashSetOf<String>()
     private var task: Coroutine<*>? = null
     private var playingIndex = -1
+    private var playIndexJob: Job? = null
+    private val mutex = Mutex()
 
     override fun onCreate() {
         super.onCreate()
-        ttsFolder = externalCacheDir!!.absolutePath + File.separator + "httpTTS"
-        player.setOnErrorListener(this)
-        player.setOnPreparedListener(this)
-        player.setOnCompletionListener(this)
-    }
-
-    override fun onTaskRemoved(rootIntent: Intent?) {
-        super.onTaskRemoved(rootIntent)
-        stopSelf()
+        mediaPlayer.setOnErrorListener(this)
+        mediaPlayer.setOnPreparedListener(this)
+        mediaPlayer.setOnCompletionListener(this)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         task?.cancel()
-        player.release()
+        mediaPlayer.release()
     }
 
-    override fun newReadAloud(dataKey: String?, play: Boolean) {
-        player.reset()
+    override fun newReadAloud(play: Boolean) {
+        mediaPlayer.reset()
         playingIndex = -1
-        super.newReadAloud(dataKey, play)
+        super.newReadAloud(play)
     }
 
     override fun play() {
         if (contentList.isEmpty()) return
         ReadAloud.httpTTS?.let {
-            val fileName = md5SpeakFileName(it.url, AppConfig.ttsSpeechRate.toString(), contentList[nowSpeak])
+            val fileName =
+                md5SpeakFileName(it.url, AppConfig.ttsSpeechRate.toString(), contentList[nowSpeak])
             if (nowSpeak == 0) {
                 downloadAudio()
             } else {
@@ -74,63 +80,122 @@ class HttpReadAloudService : BaseReadAloudService(),
         }
     }
 
+    override fun playStop() {
+        mediaPlayer.stop()
+    }
+
+    private fun playNext() {
+        readAloudNumber += contentList[nowSpeak].length + 1
+        if (nowSpeak < contentList.lastIndex) {
+            nowSpeak++
+            play()
+        } else {
+            nextChapter()
+        }
+    }
+
+    private var downloadErrorNo: Int = 0
+
     private fun downloadAudio() {
         task?.cancel()
         task = execute {
+            clearSpeakCache()
             removeCacheFile()
-            ReadAloud.httpTTS?.let {
-                contentList.forEachIndexed { index, item ->
-                    if (isActive) {
-                        val fileName =
-                            md5SpeakFileName(it.url, AppConfig.ttsSpeechRate.toString(), item)
-
-                        if (hasSpeakFile(fileName)) { //已经下载好的语音缓存
+            val httpTts = ReadAloud.httpTTS ?: return@execute
+            contentList.forEachIndexed { index, item ->
+                ensureActive()
+                val speakText = item.replace(AppPattern.notReadAloudRegex, "")
+                val fileName =
+                    md5SpeakFileName(
+                        httpTts.url,
+                        AppConfig.ttsSpeechRate.toString(),
+                        speakText
+                    )
+                if (hasSpeakFile(fileName)) { //已经下载好的语音缓存
+                    if (index == nowSpeak) {
+                        val file = getSpeakFileAsMd5(fileName)
+                        val fis = FileInputStream(file)
+                        playAudio(fis.fd)
+                    }
+                } else if (hasSpeakCache(fileName)) { //缓存文件还在，可能还没下载完
+                    return@forEachIndexed
+                } else if (speakText.isEmpty()) {
+                    createSilentSound(fileName)
+                    return@forEachIndexed
+                } else {
+                    runCatching {
+                        createSpeakCache(fileName)
+                        val analyzeUrl = AnalyzeUrl(
+                            httpTts.url,
+                            speakText = speakText,
+                            speakSpeed = AppConfig.ttsSpeechRate,
+                            source = httpTts,
+                            headerMapF = httpTts.getHeaderMap(true)
+                        )
+                        var response = mutex.withLock {
+                            analyzeUrl.getResponseAwait()
+                        }
+                        ensureActive()
+                        httpTts.loginCheckJs?.takeIf { checkJs ->
+                            checkJs.isNotBlank()
+                        }?.let { checkJs ->
+                            response = analyzeUrl.evalJS(checkJs, response) as Response
+                        }
+                        httpTts.contentType?.takeIf { ct ->
+                            ct.isNotBlank()
+                        }?.let { ct ->
+                            response.headers["Content-Type"]?.let { contentType ->
+                                if (!contentType.matches(ct.toRegex())) {
+                                    throw NoStackTraceException(response.body!!.string())
+                                }
+                            }
+                        }
+                        ensureActive()
+                        response.body!!.bytes().let { bytes ->
+                            ensureActive()
+                            val file = createSpeakFileAsMd5IfNotExist(fileName)
+                            file.writeBytes(bytes)
+                            removeSpeakCache(fileName)
+                            val fis = FileInputStream(file)
                             if (index == nowSpeak) {
-                                val file = getSpeakFileAsMd5(fileName)
-
-                                @Suppress("BlockingMethodInNonBlockingContext")
-                                val fis = FileInputStream(file)
                                 playAudio(fis.fd)
                             }
-                        } else if (hasSpeakCacheFile(fileName)) { //缓存文件还在，可能还没下载完
-                            return@let
-                        } else { //没有下载并且没有缓存文件
-                            try {
-                                createSpeakCacheFile(fileName)
-                                AnalyzeUrl(
-                                        it.url,
-                                        speakText = item,
-                                        speakSpeed = AppConfig.ttsSpeechRate
-                                ).getByteArray().let { bytes ->
-                                    ensureActive()
-
-                                    val file = getSpeakFileAsMd5IfNotExist(fileName)
-                                    //val file = getSpeakFile(index)
-                                    file.writeBytes(bytes)
-                                    removeSpeakCacheFile(fileName)
-
-                                    val fis = FileInputStream(file)
-
-                                    if (index == nowSpeak) {
-                                        @Suppress("BlockingMethodInNonBlockingContext")
-                                        playAudio(fis.fd)
-                                    }
-                                }
-                            } catch (e: SocketTimeoutException) {
-                                removeSpeakCacheFile(fileName)
-                                toastOnUi("tts接口超时，尝试重新获取")
+                        }
+                        downloadErrorNo = 0
+                    }.onFailure {
+                        when (it) {
+                            is CancellationException -> removeSpeakCache(fileName)
+                            is ConcurrentException -> {
+                                removeSpeakCache(fileName)
+                                delay(it.waitTime.toLong())
                                 downloadAudio()
-                            } catch (e: ConnectException) {
-                                removeSpeakCacheFile(fileName)
-                                toastOnUi("网络错误")
-                            } catch (e: IOException) {
-                                val file = getSpeakFileAsMd5(fileName)
-                                if (file.exists()) {
-                                    FileUtils.deleteFile(file.absolutePath)
+                            }
+                            is ScriptException, is WrappedException -> {
+                                AppLog.put("js错误\n${it.localizedMessage}", it)
+                                toastOnUi("js错误\n${it.localizedMessage}")
+                                Timber.e(it)
+                                cancel()
+                                stopSelf()
+                            }
+                            is SocketTimeoutException, is ConnectException -> {
+                                removeSpeakCache(fileName)
+                                downloadErrorNo++
+                                if (playErrorNo > 5) {
+                                    downloadErrorNo = 0
+                                    createSilentSound(fileName)
+                                    val msg = "tts超时或连接错误超过5次\n${it.localizedMessage}"
+                                    AppLog.put(msg, it)
+                                    toastOnUi(msg)
+                                } else {
+                                    downloadAudio()
                                 }
-                                toastOnUi("tts文件解析错误")
-                            } catch (e: Exception) {
-                                removeSpeakCacheFile(fileName)
+                            }
+                            else -> {
+                                removeSpeakCache(fileName)
+                                createSilentSound(fileName)
+                                val msg = "tts下载错误\n${it.localizedMessage}"
+                                AppLog.put(msg, it)
+                                Timber.e(it)
                             }
                         }
                     }
@@ -143,49 +208,52 @@ class HttpReadAloudService : BaseReadAloudService(),
     private fun playAudio(fd: FileDescriptor) {
         if (playingIndex != nowSpeak && requestFocus()) {
             try {
-                player.reset()
-                player.setDataSource(fd)
-                player.prepareAsync()
+                mediaPlayer.reset()
+                mediaPlayer.setDataSource(fd)
+                mediaPlayer.prepareAsync()
                 playingIndex = nowSpeak
                 postEvent(EventBus.TTS_PROGRESS, readAloudNumber + 1)
             } catch (e: Exception) {
-                e.printStackTrace()
+                Timber.e(e)
             }
         }
     }
 
-    private fun speakFilePath() = ttsFolder + File.separator
     private fun md5SpeakFileName(url: String, ttsConfig: String, content: String): String {
         return MD5Utils.md5Encode16(textChapter!!.title) + "_" + MD5Utils.md5Encode16("$url-|-$ttsConfig-|-$content")
     }
 
-    private fun hasSpeakFile(name: String) =
-            FileUtils.exist("${speakFilePath()}$name.mp3")
-
-    private fun hasSpeakCacheFile(name: String) =
-            FileUtils.exist("${speakFilePath()}$name.mp3.cache")
-
-    private fun createSpeakCacheFile(name: String): File =
-            FileUtils.createFileWithReplace("${speakFilePath()}$name.mp3.cache")
-
-    private fun removeSpeakCacheFile(name: String) {
-        FileUtils.delete("${speakFilePath()}$name.mp3.cache")
+    private fun createSilentSound(fileName: String) {
+        val file = createSpeakFileAsMd5IfNotExist(fileName)
+        file.writeBytes(resources.openRawResource(R.raw.silent_sound).readBytes())
     }
 
-    private fun getSpeakFileAsMd5(name: String): File =
-            FileUtils.getFile(File(speakFilePath()), "$name.mp3")
+    @Synchronized
+    private fun clearSpeakCache() = cacheFiles.clear()
 
-    private fun getSpeakFileAsMd5IfNotExist(name: String): File =
-            FileUtils.createFileIfNotExist("${speakFilePath()}$name.mp3")
+    @Synchronized
+    private fun hasSpeakCache(name: String) = cacheFiles.contains(name)
+
+    @Synchronized
+    private fun createSpeakCache(name: String) = cacheFiles.add(name)
+
+    @Synchronized
+    private fun removeSpeakCache(name: String) = cacheFiles.remove(name)
+
+    private fun hasSpeakFile(name: String) =
+        FileUtils.exist("${ttsFolderPath}$name.mp3")
+
+    private fun getSpeakFileAsMd5(name: String): File =
+        File("${ttsFolderPath}$name.mp3")
+
+    private fun createSpeakFileAsMd5IfNotExist(name: String): File =
+        FileUtils.createFileIfNotExist("${ttsFolderPath}$name.mp3")
 
     private fun removeCacheFile() {
-        FileUtils.listDirsAndFiles(speakFilePath())?.forEach {
-            if (it == null) {
-                return@forEach
-            }
-            if (Regex(""".+\.mp3$""").matches(it.name)) { //mp3缓存文件
-                val reg =
-                        """^${MD5Utils.md5Encode16(textChapter!!.title)}_[a-z0-9]{16}\.mp3$""".toRegex()
+        val cacheRegex = Regex(""".+\.mp3$""")
+        val reg = """^${MD5Utils.md5Encode16(textChapter!!.title)}_[a-z0-9]{16}\.mp3$""".toRegex()
+        FileUtils.listDirsAndFiles(ttsFolderPath)?.forEach {
+            if (cacheRegex.matches(it.name)) { //mp3缓存文件
                 if (!reg.matches(it.name)) {
                     FileUtils.deleteFile(it.absolutePath)
                 }
@@ -200,15 +268,46 @@ class HttpReadAloudService : BaseReadAloudService(),
 
     override fun pauseReadAloud(pause: Boolean) {
         super.pauseReadAloud(pause)
-        player.pause()
+        kotlin.runCatching {
+            playIndexJob?.cancel()
+            mediaPlayer.pause()
+        }
     }
 
     override fun resumeReadAloud() {
         super.resumeReadAloud()
-        if (playingIndex == -1) {
-            play()
-        } else {
-            player.start()
+        kotlin.runCatching {
+            if (playingIndex == -1) {
+                play()
+            } else {
+                mediaPlayer.start()
+                upPlayPos()
+            }
+        }
+    }
+
+    private fun upPlayPos() {
+        playIndexJob?.cancel()
+        val textChapter = textChapter ?: return
+        playIndexJob = launch {
+            postEvent(EventBus.TTS_PROGRESS, readAloudNumber + 1)
+            if (mediaPlayer.duration <= 0) {
+                return@launch
+            }
+            val speakTextLength = contentList[nowSpeak].length
+            if (speakTextLength <= 0) {
+                return@launch
+            }
+            val sleep = mediaPlayer.duration / speakTextLength
+            val start = speakTextLength * mediaPlayer.currentPosition / mediaPlayer.duration
+            for (i in start..contentList[nowSpeak].length) {
+                if (readAloudNumber + i > textChapter.getReadLength(pageIndex + 1)) {
+                    pageIndex++
+                    ReadBook.moveToNextPage()
+                    postEvent(EventBus.TTS_PROGRESS, readAloudNumber + i)
+                }
+                delay(sleep.toLong())
+            }
         }
     }
 
@@ -217,76 +316,42 @@ class HttpReadAloudService : BaseReadAloudService(),
      */
     override fun upSpeechRate(reset: Boolean) {
         task?.cancel()
-        player.stop()
+        mediaPlayer.stop()
         playingIndex = -1
         downloadAudio()
-    }
-
-    /**
-     * 上一段
-     */
-    override fun prevP() {
-        if (nowSpeak > 0) {
-            player.stop()
-            nowSpeak--
-            readAloudNumber -= contentList[nowSpeak].length.minus(1)
-            play()
-        }
-    }
-
-    /**
-     * 下一段
-     */
-    override fun nextP() {
-        if (nowSpeak < contentList.size - 1) {
-            player.stop()
-            readAloudNumber += contentList[nowSpeak].length.plus(1)
-            nowSpeak++
-            play()
-        }
     }
 
     override fun onPrepared(mp: MediaPlayer?) {
         super.play()
         if (pause) return
-        mp?.start()
-        textChapter?.let {
-            if (readAloudNumber + 1 > it.getReadLength(pageIndex + 1)) {
-                pageIndex++
-                ReadBook.moveToNextPage()
-            }
-        }
-        postEvent(EventBus.TTS_PROGRESS, readAloudNumber + 1)
+        mediaPlayer.start()
+        upPlayPos()
     }
 
+    private var playErrorNo = 0
+
     override fun onError(mp: MediaPlayer?, what: Int, extra: Int): Boolean {
-        LogUtils.d("mp", "what:$what extra:$extra")
         if (what == -38 && extra == 0) {
+            play()
             return true
         }
-        handler.postDelayed({
-            readAloudNumber += contentList[nowSpeak].length + 1
-            if (nowSpeak < contentList.lastIndex) {
-                nowSpeak++
-                play()
-            } else {
-                nextChapter()
-            }
-        }, 50)
+        AppLog.put("朗读错误($what, $extra)\n${contentList[nowSpeak]}")
+        playErrorNo++
+        if (playErrorNo >= 5) {
+            toastOnUi("朗读连续5次错误, 最后一次错误代码($what, $extra)")
+            ReadAloud.pause(this)
+        } else {
+            playNext()
+        }
         return true
     }
 
     override fun onCompletion(mp: MediaPlayer?) {
-        readAloudNumber += contentList[nowSpeak].length + 1
-        if (nowSpeak < contentList.lastIndex) {
-            nowSpeak++
-            play()
-        } else {
-            nextChapter()
-        }
+        playErrorNo = 0
+        playNext()
     }
 
     override fun aloudServicePendingIntent(actionStr: String): PendingIntent? {
-        return IntentHelp.servicePendingIntent<HttpReadAloudService>(this, actionStr)
+        return servicePendingIntent<HttpReadAloudService>(actionStr)
     }
 }

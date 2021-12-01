@@ -1,11 +1,11 @@
 package io.legado.app.ui.book.arrange
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.viewModels
 import androidx.appcompat.widget.PopupMenu
-import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import io.legado.app.R
@@ -17,7 +17,7 @@ import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookGroup
 import io.legado.app.databinding.ActivityArrangeBookBinding
 import io.legado.app.lib.dialogs.alert
-import io.legado.app.lib.theme.ATH
+import io.legado.app.lib.theme.primaryColor
 import io.legado.app.ui.book.group.GroupManageDialog
 import io.legado.app.ui.book.group.GroupSelectDialog
 import io.legado.app.ui.widget.SelectActionBar
@@ -26,6 +26,14 @@ import io.legado.app.ui.widget.recycler.ItemTouchCallback
 import io.legado.app.ui.widget.recycler.VerticalDivider
 import io.legado.app.utils.cnCompare
 import io.legado.app.utils.getPrefInt
+import io.legado.app.utils.setEdgeEffectColor
+import io.legado.app.utils.showDialogFragment
+import io.legado.app.utils.viewbindingdelegate.viewBinding
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 class ArrangeBookActivity : VMBaseActivity<ActivityArrangeBookBinding, ArrangeBookViewModel>(),
@@ -33,24 +41,25 @@ class ArrangeBookActivity : VMBaseActivity<ActivityArrangeBookBinding, ArrangeBo
     SelectActionBar.CallBack,
     ArrangeBookAdapter.CallBack,
     GroupSelectDialog.CallBack {
-    override val viewModel: ArrangeBookViewModel
-            by viewModels()
+
+    override val binding by viewBinding(ActivityArrangeBookBinding::inflate)
+    override val viewModel by viewModels<ArrangeBookViewModel>()
     override val groupList: ArrayList<BookGroup> = arrayListOf()
     private val groupRequestCode = 22
     private val addToGroupRequestCode = 34
-    private lateinit var adapter: ArrangeBookAdapter
-    private var groupLiveData: LiveData<List<BookGroup>>? = null
-    private var booksLiveData: LiveData<List<Book>>? = null
+    private val adapter by lazy { ArrangeBookAdapter(this, this) }
+    private var booksFlowJob: Job? = null
     private var menu: Menu? = null
     private var groupId: Long = -1
 
-    override fun getViewBinding(): ActivityArrangeBookBinding {
-        return ActivityArrangeBookBinding.inflate(layoutInflater)
-    }
-
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         groupId = intent.getLongExtra("groupId", -1)
-        binding.titleBar.subtitle = intent.getStringExtra("groupName") ?: getString(R.string.all)
+        launch {
+            binding.titleBar.subtitle = withContext(IO) {
+                appDb.bookGroupDao.getByID(groupId)?.groupName
+                    ?: getString(R.string.no_group)
+            }
+        }
         initView()
         initGroupData()
         initBookData()
@@ -75,15 +84,14 @@ class ArrangeBookActivity : VMBaseActivity<ActivityArrangeBookBinding, ArrangeBo
         adapter.revertSelection()
     }
 
-    override fun onClickMainAction() {
+    override fun onClickSelectBarMainAction() {
         selectGroup(groupRequestCode, 0)
     }
 
     private fun initView() {
-        ATH.applyEdgeEffectColor(binding.recyclerView)
+        binding.recyclerView.setEdgeEffectColor(primaryColor)
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.addItemDecoration(VerticalDivider(this))
-        adapter = ArrangeBookAdapter(this, this)
         binding.recyclerView.adapter = adapter
         val itemTouchCallback = ItemTouchCallback(adapter)
         itemTouchCallback.isCanDrag = getPrefInt(PreferKey.bookshelfSort) == 3
@@ -100,44 +108,44 @@ class ArrangeBookActivity : VMBaseActivity<ActivityArrangeBookBinding, ArrangeBo
         binding.selectActionBar.setCallBack(this)
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     private fun initGroupData() {
-        groupLiveData?.removeObservers(this)
-        groupLiveData = appDb.bookGroupDao.liveDataAll()
-        groupLiveData?.observe(this, {
-            groupList.clear()
-            groupList.addAll(it)
-            adapter.notifyDataSetChanged()
-            upMenu()
-        })
+        launch {
+            appDb.bookGroupDao.flowAll().collect {
+                groupList.clear()
+                groupList.addAll(it)
+                adapter.notifyDataSetChanged()
+                upMenu()
+            }
+        }
     }
 
     private fun initBookData() {
-        booksLiveData?.removeObservers(this)
-        booksLiveData =
+        booksFlowJob?.cancel()
+        booksFlowJob = launch {
             when (groupId) {
-                AppConst.bookGroupAllId -> appDb.bookDao.observeAll()
-                AppConst.bookGroupLocalId -> appDb.bookDao.observeLocal()
-                AppConst.bookGroupAudioId -> appDb.bookDao.observeAudio()
-                AppConst.bookGroupNoneId -> appDb.bookDao.observeNoGroup()
-                else -> appDb.bookDao.observeByGroup(groupId)
-            }
-        booksLiveData?.observe(this, { list ->
-            val books = when (getPrefInt(PreferKey.bookshelfSort)) {
-                1 -> list.sortedByDescending { it.latestChapterTime }
-                2 -> list.sortedWith { o1, o2 ->
-                    o1.name.cnCompare(o2.name)
+                AppConst.bookGroupAllId -> appDb.bookDao.flowAll()
+                AppConst.bookGroupLocalId -> appDb.bookDao.flowLocal()
+                AppConst.bookGroupAudioId -> appDb.bookDao.flowAudio()
+                AppConst.bookGroupNoneId -> appDb.bookDao.flowNoGroup()
+                else -> appDb.bookDao.flowByGroup(groupId)
+            }.collect { list ->
+                val books = when (getPrefInt(PreferKey.bookshelfSort)) {
+                    1 -> list.sortedByDescending { it.latestChapterTime }
+                    2 -> list.sortedWith { o1, o2 ->
+                        o1.name.cnCompare(o2.name)
+                    }
+                    3 -> list.sortedBy { it.order }
+                    else -> list.sortedByDescending { it.durChapterTime }
                 }
-                3 -> list.sortedBy { it.order }
-                else -> list.sortedByDescending { it.durChapterTime }
+                adapter.setItems(books)
             }
-            adapter.setItems(books)
-        })
+        }
     }
 
     override fun onCompatOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.menu_group_manage -> GroupManageDialog()
-                .show(supportFragmentManager, "groupManage")
+            R.id.menu_group_manage -> showDialogFragment<GroupManageDialog>()
             else -> if (item.groupId == R.id.menu_group) {
                 binding.titleBar.subtitle = item.title
                 groupId = appDb.bookGroupDao.getByName(item.title.toString())?.groupId ?: 0
@@ -153,7 +161,7 @@ class ArrangeBookActivity : VMBaseActivity<ActivityArrangeBookBinding, ArrangeBo
                 alert(titleResource = R.string.draw, messageResource = R.string.sure_del) {
                     okButton { viewModel.deleteBook(*adapter.selectedBooks()) }
                     noButton()
-                }.show()
+                }
             R.id.menu_update_enable ->
                 viewModel.upCanUpdate(adapter.selectedBooks(), true)
             R.id.menu_update_disable ->
@@ -173,7 +181,9 @@ class ArrangeBookActivity : VMBaseActivity<ActivityArrangeBookBinding, ArrangeBo
     }
 
     override fun selectGroup(requestCode: Int, groupId: Long) {
-        GroupSelectDialog.show(supportFragmentManager, groupId, requestCode)
+        showDialogFragment(
+            GroupSelectDialog(groupId, requestCode)
+        )
     }
 
     override fun upGroup(requestCode: Int, groupId: Long) {
@@ -213,7 +223,7 @@ class ArrangeBookActivity : VMBaseActivity<ActivityArrangeBookBinding, ArrangeBo
             okButton {
                 viewModel.deleteBook(book)
             }
-        }.show()
+        }
     }
 
 }

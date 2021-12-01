@@ -10,8 +10,8 @@ import splitties.init.appCtx
 @Suppress("MemberVisibilityCanBePrivate")
 object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
     val isGooglePlay = appCtx.channel == "google"
+    val isCronet = appCtx.getPrefBoolean("Cronet")
     var userAgent: String = getPrefUserAgent()
-    var replaceEnableDefault = appCtx.getPrefBoolean(PreferKey.replaceEnableDefault, true)
     var isEInkMode = appCtx.getPrefString(PreferKey.themeMode) == "3"
     var clickActionTL = appCtx.getPrefInt(PreferKey.clickActionTL, 2)
     var clickActionTC = appCtx.getPrefInt(PreferKey.clickActionTC, 2)
@@ -57,7 +57,7 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
             "1" -> false
             "2" -> true
             "3" -> false
-            else -> context.sysIsDarkMode()
+            else -> sysConfiguration.isNightMode
         }
     }
 
@@ -73,6 +73,29 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
             }
         }
 
+    var showUnread: Boolean
+        get() = appCtx.getPrefBoolean(PreferKey.showUnread, true)
+        set(value) {
+            appCtx.putPrefBoolean(PreferKey.showUnread, value)
+        }
+
+    var readBrightness: Int
+        get() = if (isNightTheme) {
+            appCtx.getPrefInt(PreferKey.nightBrightness, 100)
+        } else {
+            appCtx.getPrefInt(PreferKey.brightness, 100)
+        }
+        set(value) {
+            if (isNightTheme) {
+                appCtx.putPrefInt(PreferKey.nightBrightness, value)
+            } else {
+                appCtx.putPrefInt(PreferKey.brightness, value)
+            }
+        }
+
+    val useDefaultCover: Boolean
+        get() = appCtx.getPrefBoolean(PreferKey.useDefaultCover, false)
+
     val isTransparentStatusBar: Boolean
         get() = appCtx.getPrefBoolean(PreferKey.transparentStatusBar, true)
 
@@ -81,6 +104,24 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
 
     val screenOrientation: String?
         get() = appCtx.getPrefString(PreferKey.screenOrientation)
+
+    var bookGroupStyle: Int
+        get() = appCtx.getPrefInt(PreferKey.bookGroupStyle, 0)
+        set(value) {
+            appCtx.putPrefInt(PreferKey.bookGroupStyle, value)
+        }
+
+    var bookExportFileName: String?
+        get() = appCtx.getPrefString(PreferKey.bookExportFileName)
+        set(value) {
+            appCtx.putPrefString(PreferKey.bookExportFileName, value)
+        }
+
+    var bookImportFileName: String?
+        get() = appCtx.getPrefString(PreferKey.bookImportFileName)
+        set(value) {
+            appCtx.putPrefString(PreferKey.bookImportFileName, value)
+        }
 
     var backupPath: String?
         get() = appCtx.getPrefString(PreferKey.backupPath)
@@ -92,7 +133,10 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
             }
         }
 
-    val isShowRSS: Boolean
+    val showDiscovery: Boolean
+        get() = appCtx.getPrefBoolean(PreferKey.showDiscovery, true)
+
+    val showRSS: Boolean
         get() = appCtx.getPrefBoolean(PreferKey.showRss, true)
 
     val autoRefreshBook: Boolean
@@ -138,6 +182,12 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
             appCtx.putPrefInt(PreferKey.barElevation, value)
         }
 
+    var readUrlInBrowser: Boolean
+        get() = appCtx.getPrefBoolean(PreferKey.readUrlOpenInBrowser)
+        set(value) {
+            appCtx.putPrefBoolean(PreferKey.readUrlOpenInBrowser, value)
+        }
+
     var exportCharset: String
         get() {
             val c = appCtx.getPrefString(PreferKey.exportCharset)
@@ -161,11 +211,33 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
         set(value) {
             appCtx.putPrefBoolean(PreferKey.exportToWebDav, value)
         }
+    var exportNoChapterName: Boolean
+        get() = appCtx.getPrefBoolean(PreferKey.exportNoChapterName)
+        set(value) {
+            appCtx.putPrefBoolean(PreferKey.exportNoChapterName, value)
+        }
+    var exportType: Int
+        get() = appCtx.getPrefInt(PreferKey.exportType)
+        set(value) {
+            appCtx.putPrefInt(PreferKey.exportType, value)
+        }
+
+    var changeSourceCheckAuthor: Boolean
+        get() = appCtx.getPrefBoolean(PreferKey.changeSourceCheckAuthor)
+        set(value) {
+            appCtx.putPrefBoolean(PreferKey.changeSourceCheckAuthor, value)
+        }
+
+    var ttsEngine: String?
+        get() = appCtx.getPrefString(PreferKey.ttsEngine)
+        set(value) {
+            appCtx.putPrefString(PreferKey.ttsEngine, value)
+        }
 
     val autoChangeSource: Boolean
         get() = appCtx.getPrefBoolean(PreferKey.autoChangeSource, true)
 
-    val changeSourceLoadInfo get() = appCtx.getPrefBoolean(PreferKey.changeSourceLoadToc)
+    val changeSourceLoadInfo get() = appCtx.getPrefBoolean(PreferKey.changeSourceLoadInfo)
 
     val changeSourceLoadToc get() = appCtx.getPrefBoolean(PreferKey.changeSourceLoadToc)
 
@@ -173,14 +245,26 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
 
     val syncBookProgress get() = appCtx.getPrefBoolean(PreferKey.syncBookProgress, true)
 
-    val preDownload get() = appCtx.getPrefBoolean(PreferKey.preDownload, true)
+    var preDownloadNum
+        get() = appCtx.getPrefInt(PreferKey.preDownloadNum, 10)
+        set(value) {
+            appCtx.putPrefInt(PreferKey.preDownloadNum, value)
+        }
 
     val mediaButtonOnExit get() = appCtx.getPrefBoolean("mediaButtonOnExit", true)
+
+    val replaceEnableDefault get() = appCtx.getPrefBoolean(PreferKey.replaceEnableDefault, true)
+
+    val fullScreenGesturesSupport: Boolean
+        get() = appCtx.getPrefBoolean(PreferKey.fullScreenGesturesSupport, false)
+
+    val doublePageHorizontal: Boolean
+        get() = appCtx.getPrefBoolean(PreferKey.doublePageHorizontal, true)
 
     private fun getPrefUserAgent(): String {
         val ua = appCtx.getPrefString(PreferKey.userAgent)
         if (ua.isNullOrBlank()) {
-            return "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36"
+            return "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
         }
         return ua
     }

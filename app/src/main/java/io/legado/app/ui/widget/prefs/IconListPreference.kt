@@ -5,7 +5,6 @@ import android.content.ContextWrapper
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.AttributeSet
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -21,9 +20,8 @@ import io.legado.app.databinding.DialogRecyclerViewBinding
 import io.legado.app.databinding.ItemIconPreferenceBinding
 import io.legado.app.lib.theme.primaryColor
 import io.legado.app.utils.getCompatDrawable
-import io.legado.app.utils.getSize
+import io.legado.app.utils.setLayout
 import io.legado.app.utils.viewbindingdelegate.viewBinding
-
 
 
 class IconListPreference(context: Context, attrs: AttributeSet) : ListPreference(context, attrs) {
@@ -55,7 +53,17 @@ class IconListPreference(context: Context, attrs: AttributeSet) : ListPreference
 
     override fun onBindViewHolder(holder: PreferenceViewHolder?) {
         super.onBindViewHolder(holder)
-        val v = Preference.bindView<ImageView>(context, holder, icon, title, summary, widgetLayoutResource, R.id.preview, 50, 50)
+        val v = Preference.bindView<ImageView>(
+            context,
+            holder,
+            icon,
+            title,
+            summary,
+            widgetLayoutResource,
+            R.id.preview,
+            50,
+            50
+        )
         if (v is ImageView) {
             val selectedIndex = findIndexOfValue(value)
             if (selectedIndex >= 0) {
@@ -111,7 +119,7 @@ class IconListPreference(context: Context, attrs: AttributeSet) : ListPreference
         return "icon_$key"
     }
 
-    class IconDialog : BaseDialogFragment() {
+    class IconDialog : BaseDialogFragment(R.layout.dialog_recycler_view) {
 
         var onChanged: ((value: String) -> Unit)? = null
         var dialogValue: String? = null
@@ -122,19 +130,10 @@ class IconListPreference(context: Context, attrs: AttributeSet) : ListPreference
 
         override fun onStart() {
             super.onStart()
-            val dm = requireActivity().getSize()
-            dialog?.window?.setLayout(
-                (dm.widthPixels * 0.8).toInt(),
+            setLayout(
+                0.8f,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
-        }
-
-        override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
-        ): View? {
-            return inflater.inflate(R.layout.dialog_recycler_view, container)
         }
 
         override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) {
@@ -168,7 +167,7 @@ class IconListPreference(context: Context, attrs: AttributeSet) : ListPreference
                 item: CharSequence,
                 payloads: MutableList<Any>
             ) {
-                with(binding) {
+                binding.run {
                     val index = findIndexOfValue(item.toString())
                     dialogEntries?.let {
                         label.text = it[index]

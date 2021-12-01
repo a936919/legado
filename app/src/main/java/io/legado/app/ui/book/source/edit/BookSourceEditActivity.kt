@@ -1,7 +1,6 @@
 package io.legado.app.ui.book.source.edit
 
 import android.app.Activity
-import android.content.Intent
 import android.graphics.Rect
 import android.os.Bundle
 import android.view.Gravity
@@ -13,6 +12,7 @@ import android.widget.PopupWindow
 import androidx.activity.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.tabs.TabLayout
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import io.legado.app.R
 import io.legado.app.base.VMBaseActivity
 import io.legado.app.constant.AppConst
@@ -22,41 +22,50 @@ import io.legado.app.databinding.ActivityBookSourceEditBinding
 import io.legado.app.help.LocalConfig
 import io.legado.app.lib.dialogs.alert
 import io.legado.app.lib.dialogs.selector
-import io.legado.app.lib.theme.ATH
 import io.legado.app.lib.theme.backgroundColor
+import io.legado.app.lib.theme.primaryColor
 import io.legado.app.ui.book.source.debug.BookSourceDebugActivity
-import io.legado.app.ui.filepicker.FilePicker
-import io.legado.app.ui.filepicker.FilePickerDialog
-import io.legado.app.ui.login.SourceLogin
-import io.legado.app.ui.qrcode.QrCodeActivity
+import io.legado.app.ui.document.HandleFileContract
+import io.legado.app.ui.login.SourceLoginActivity
+import io.legado.app.ui.qrcode.QrCodeResult
 import io.legado.app.ui.widget.KeyboardToolPop
 import io.legado.app.ui.widget.dialog.TextDialog
 import io.legado.app.utils.*
+import io.legado.app.utils.viewbindingdelegate.viewBinding
 import kotlin.math.abs
 
 class BookSourceEditActivity :
     VMBaseActivity<ActivityBookSourceEditBinding, BookSourceEditViewModel>(false),
-    FilePickerDialog.CallBack,
     KeyboardToolPop.CallBack {
-    override val viewModel: BookSourceEditViewModel
-            by viewModels()
 
-    private val qrRequestCode = 101
-    private val selectPathRequestCode = 102
-    private val adapter = BookSourceEditAdapter()
+    override val binding by viewBinding(ActivityBookSourceEditBinding::inflate)
+    override val viewModel by viewModels<BookSourceEditViewModel>()
+
+    private val adapter by lazy { BookSourceEditAdapter() }
     private val sourceEntities: ArrayList<EditEntity> = ArrayList()
     private val searchEntities: ArrayList<EditEntity> = ArrayList()
     private val findEntities: ArrayList<EditEntity> = ArrayList()
     private val infoEntities: ArrayList<EditEntity> = ArrayList()
     private val tocEntities: ArrayList<EditEntity> = ArrayList()
     private val contentEntities: ArrayList<EditEntity> = ArrayList()
+    private val qrCodeResult = registerForActivityResult(QrCodeResult()) {
+        it ?: return@registerForActivityResult
+        viewModel.importSource(it) { source ->
+            upRecyclerView(source)
+        }
+    }
+    private val selectDoc = registerForActivityResult(HandleFileContract()) {
+        it.uri?.let { uri ->
+            if (uri.isContentScheme()) {
+                sendText(uri.toString())
+            } else {
+                sendText(uri.path.toString())
+            }
+        }
+    }
 
     private var mSoftKeyboardTool: PopupWindow? = null
     private var mIsSoftKeyBoardShowing = false
-
-    override fun getViewBinding(): ActivityBookSourceEditBinding {
-        return ActivityBookSourceEditBinding.inflate(layoutInflater)
-    }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         initView()
@@ -75,6 +84,11 @@ class BookSourceEditActivity :
     override fun onCompatCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.source_edit, menu)
         return super.onCompatCreateOptionsMenu(menu)
+    }
+
+    override fun onMenuOpened(featureId: Int, menu: Menu): Boolean {
+        menu.findItem(R.id.menu_login)?.isVisible = !viewModel.bookSource?.loginUrl.isNullOrBlank()
+        return super.onMenuOpened(featureId, menu)
     }
 
     override fun onCompatOptionsItemSelected(item: MenuItem): Boolean {
@@ -98,22 +112,20 @@ class BookSourceEditActivity :
             }
             R.id.menu_copy_source -> sendToClip(GSON.toJson(getSource()))
             R.id.menu_paste_source -> viewModel.pasteSource { upRecyclerView(it) }
-            R.id.menu_qr_code_camera -> startActivityForResult<QrCodeActivity>(qrRequestCode)
+            R.id.menu_qr_code_camera -> qrCodeResult.launch()
             R.id.menu_share_str -> share(GSON.toJson(getSource()))
             R.id.menu_share_qr -> shareWithQr(
                 GSON.toJson(getSource()),
-                getString(R.string.share_book_source)
+                getString(R.string.share_book_source),
+                ErrorCorrectionLevel.L
             )
             R.id.menu_help -> showRuleHelp()
-            R.id.menu_login -> getSource().let {
-                if (checkSource(it)) {
-                    if (it.loginUrl.isNullOrEmpty()) {
-                        toastOnUi(R.string.source_no_login)
-                    } else {
-                        startActivity<SourceLogin> {
-                            putExtra("sourceUrl", it.bookSourceUrl)
-                            putExtra("loginUrl", it.loginUrl)
-                            putExtra("userAgent", it.getHeaderMap()[AppConst.UA_NAME])
+            R.id.menu_login -> getSource().let { source ->
+                if (checkSource(source)) {
+                    viewModel.save(source) {
+                        startActivity<SourceLoginActivity> {
+                            putExtra("type", "bookSource")
+                            putExtra("key", source.bookSourceUrl)
                         }
                     }
                 }
@@ -123,7 +135,7 @@ class BookSourceEditActivity :
     }
 
     private fun initView() {
-        ATH.applyEdgeEffectColor(binding.recyclerView)
+        binding.recyclerView.setEdgeEffectColor(primaryColor)
         mSoftKeyboardTool = KeyboardToolPop(this, AppConst.keyboardToolChars, this)
         window.decorView.viewTreeObserver.addOnGlobalLayoutListener(KeyboardOnGlobalChangeListener())
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
@@ -153,7 +165,7 @@ class BookSourceEditActivity :
                 negativeButton(R.string.no) {
                     super.finish()
                 }
-            }.show()
+            }
         } else {
             super.finish()
         }
@@ -190,15 +202,22 @@ class BookSourceEditActivity :
             add(EditEntity("bookSourceGroup", source?.bookSourceGroup, R.string.source_group))
             add(EditEntity("bookSourceComment", source?.bookSourceComment, R.string.comment))
             add(EditEntity("loginUrl", source?.loginUrl, R.string.login_url))
+            add(EditEntity("loginUi", source?.loginUi, R.string.login_ui))
+            add(EditEntity("loginCheckJs", source?.loginCheckJs, R.string.login_check_js))
             add(EditEntity("bookUrlPattern", source?.bookUrlPattern, R.string.book_url_pattern))
             add(EditEntity("header", source?.header, R.string.source_http_header))
-
+            add(
+                EditEntity(
+                    "concurrentRate", source?.concurrentRate, R.string.source_concurrent_rate
+                )
+            )
         }
         //搜索
         val sr = source?.getSearchRule()
         searchEntities.clear()
         searchEntities.apply {
             add(EditEntity("searchUrl", source?.searchUrl, R.string.r_search_url))
+            add(EditEntity("checkKeyWord", sr?.checkKeyWord, R.string.check_key_word))
             add(EditEntity("bookList", sr?.bookList, R.string.r_book_list))
             add(EditEntity("name", sr?.name, R.string.r_book_name))
             add(EditEntity("author", sr?.author, R.string.r_author))
@@ -208,6 +227,21 @@ class BookSourceEditActivity :
             add(EditEntity("intro", sr?.intro, R.string.rule_book_intro))
             add(EditEntity("coverUrl", sr?.coverUrl, R.string.rule_cover_url))
             add(EditEntity("bookUrl", sr?.bookUrl, R.string.r_book_url))
+        }
+        //发现
+        val er = source?.getExploreRule()
+        findEntities.clear()
+        findEntities.apply {
+            add(EditEntity("exploreUrl", source?.exploreUrl, R.string.r_find_url))
+            add(EditEntity("bookList", er?.bookList, R.string.r_book_list))
+            add(EditEntity("name", er?.name, R.string.r_book_name))
+            add(EditEntity("author", er?.author, R.string.r_author))
+            add(EditEntity("kind", er?.kind, R.string.rule_book_kind))
+            add(EditEntity("wordCount", er?.wordCount, R.string.rule_word_count))
+            add(EditEntity("lastChapter", er?.lastChapter, R.string.rule_last_chapter))
+            add(EditEntity("intro", er?.intro, R.string.rule_book_intro))
+            add(EditEntity("coverUrl", er?.coverUrl, R.string.rule_cover_url))
+            add(EditEntity("bookUrl", er?.bookUrl, R.string.r_book_url))
         }
         //详情页
         val ir = source?.getBookInfoRule()
@@ -231,8 +265,9 @@ class BookSourceEditActivity :
             add(EditEntity("chapterList", tr?.chapterList, R.string.rule_chapter_list))
             add(EditEntity("chapterName", tr?.chapterName, R.string.rule_chapter_name))
             add(EditEntity("chapterUrl", tr?.chapterUrl, R.string.rule_chapter_url))
-            add(EditEntity("isVip", tr?.isVip, R.string.rule_is_vip))
             add(EditEntity("updateTime", tr?.updateTime, R.string.rule_update_time))
+            add(EditEntity("isVip", tr?.isVip, R.string.rule_is_vip))
+            add(EditEntity("isPay", tr?.isPay, R.string.rule_is_pay))
             add(EditEntity("nextTocUrl", tr?.nextTocUrl, R.string.rule_next_toc_url))
         }
         //正文页
@@ -245,21 +280,6 @@ class BookSourceEditActivity :
             add(EditEntity("sourceRegex", cr?.sourceRegex, R.string.rule_source_regex))
             add(EditEntity("replaceRegex", cr?.replaceRegex, R.string.rule_replace_regex))
             add(EditEntity("imageStyle", cr?.imageStyle, R.string.rule_image_style))
-        }
-        //发现
-        val er = source?.getExploreRule()
-        findEntities.clear()
-        findEntities.apply {
-            add(EditEntity("exploreUrl", source?.exploreUrl, R.string.r_find_url))
-            add(EditEntity("bookList", er?.bookList, R.string.r_book_list))
-            add(EditEntity("name", er?.name, R.string.r_book_name))
-            add(EditEntity("author", er?.author, R.string.r_author))
-            add(EditEntity("kind", er?.kind, R.string.rule_book_kind))
-            add(EditEntity("wordCount", er?.wordCount, R.string.rule_word_count))
-            add(EditEntity("lastChapter", er?.lastChapter, R.string.rule_last_chapter))
-            add(EditEntity("intro", er?.intro, R.string.rule_book_intro))
-            add(EditEntity("coverUrl", er?.coverUrl, R.string.rule_cover_url))
-            add(EditEntity("bookUrl", er?.bookUrl, R.string.r_book_url))
         }
         binding.tabLayout.selectTab(binding.tabLayout.getTabAt(0))
         setEditEntities(0)
@@ -281,14 +301,18 @@ class BookSourceEditActivity :
                 "bookSourceName" -> source.bookSourceName = it.value ?: ""
                 "bookSourceGroup" -> source.bookSourceGroup = it.value
                 "loginUrl" -> source.loginUrl = it.value
+                "loginUi" -> source.loginUi = it.value
+                "loginCheckJs" -> source.loginCheckJs = it.value
                 "bookUrlPattern" -> source.bookUrlPattern = it.value
                 "header" -> source.header = it.value
                 "bookSourceComment" -> source.bookSourceComment = it.value ?: ""
+                "concurrentRate" -> source.concurrentRate = it.value
             }
         }
         searchEntities.forEach {
             when (it.key) {
                 "searchUrl" -> source.searchUrl = it.value
+                "checkKeyWord" -> searchRule.checkKeyWord = it.value
                 "bookList" -> searchRule.bookList = it.value
                 "name" -> searchRule.name = it.value
                 "author" -> searchRule.author = it.value
@@ -336,9 +360,10 @@ class BookSourceEditActivity :
                 "chapterList" -> tocRule.chapterList = it.value
                 "chapterName" -> tocRule.chapterName = it.value
                 "chapterUrl" -> tocRule.chapterUrl = it.value
-                "nextTocUrl" -> tocRule.nextTocUrl = it.value
-                "isVip" -> tocRule.isVip = it.value
                 "updateTime" -> tocRule.updateTime = it.value
+                "isVip" -> tocRule.isVip = it.value
+                "isPay" -> tocRule.isPay = it.value
+                "nextTocUrl" -> tocRule.nextTocUrl = it.value
             }
         }
         contentEntities.forEach {
@@ -397,19 +422,21 @@ class BookSourceEditActivity :
                 0 -> insertText(AppConst.urlOption)
                 1 -> showRuleHelp()
                 2 -> showRegexHelp()
-                3 -> FilePicker.selectFile(this, selectPathRequestCode)
+                3 -> selectDoc.launch {
+                    mode = HandleFileContract.FILE
+                }
             }
         }
     }
 
     private fun showRuleHelp() {
         val mdText = String(assets.open("help/ruleHelp.md").readBytes())
-        TextDialog.show(supportFragmentManager, mdText, TextDialog.MD)
+        showDialogFragment(TextDialog(mdText, TextDialog.Mode.MD))
     }
 
     private fun showRegexHelp() {
         val mdText = String(assets.open("help/regexHelp.md").readBytes())
-        TextDialog.show(supportFragmentManager, mdText, TextDialog.MD)
+        showDialogFragment(TextDialog(mdText, TextDialog.Mode.MD))
     }
 
     private fun showKeyboardTopPopupWindow() {
@@ -425,34 +452,12 @@ class BookSourceEditActivity :
         mSoftKeyboardTool?.dismiss()
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        when (requestCode) {
-            qrRequestCode -> if (resultCode == RESULT_OK) {
-                data?.getStringExtra("result")?.let {
-                    viewModel.importSource(it) { source ->
-                        upRecyclerView(source)
-                    }
-                }
-            }
-            selectPathRequestCode -> if (resultCode == RESULT_OK) {
-                data?.data?.let { uri ->
-                    if (uri.isContentScheme()) {
-                        sendText(uri.toString())
-                    } else {
-                        sendText(uri.path.toString())
-                    }
-                }
-            }
-        }
-    }
-
     private inner class KeyboardOnGlobalChangeListener : ViewTreeObserver.OnGlobalLayoutListener {
         override fun onGlobalLayout() {
             val rect = Rect()
             // 获取当前页面窗口的显示范围
             window.decorView.getWindowVisibleDisplayFrame(rect)
-            val screenHeight = this@BookSourceEditActivity.getSize().heightPixels
+            val screenHeight = this@BookSourceEditActivity.windowSize.heightPixels
             val keyboardHeight = screenHeight - rect.bottom // 输入法的高度
             val preShowing = mIsSoftKeyBoardShowing
             if (abs(keyboardHeight) > screenHeight / 5) {

@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.core.view.isGone
-import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.ItemTouchHelper
 import io.legado.app.R
 import io.legado.app.base.BaseActivity
@@ -13,13 +12,17 @@ import io.legado.app.data.entities.RuleSub
 import io.legado.app.databinding.ActivityRuleSubBinding
 import io.legado.app.databinding.DialogRuleSubEditBinding
 import io.legado.app.lib.dialogs.alert
-import io.legado.app.ui.association.ImportBookSourceActivity
-import io.legado.app.ui.association.ImportReplaceRuleActivity
-import io.legado.app.ui.association.ImportRssSourceActivity
+import io.legado.app.ui.association.ImportBookSourceDialog
+import io.legado.app.ui.association.ImportReplaceRuleDialog
+import io.legado.app.ui.association.ImportRssSourceDialog
 import io.legado.app.ui.widget.recycler.ItemTouchCallback
-import io.legado.app.utils.startActivity
+import io.legado.app.utils.showDialogFragment
+import io.legado.app.utils.toastOnUi
+import io.legado.app.utils.viewbindingdelegate.viewBinding
 import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * 规则订阅界面
@@ -27,12 +30,8 @@ import kotlinx.coroutines.launch
 class RuleSubActivity : BaseActivity<ActivityRuleSubBinding>(),
     RuleSubAdapter.Callback {
 
-    private lateinit var adapter: RuleSubAdapter
-    private var liveData: LiveData<List<RuleSub>>? = null
-
-    override fun getViewBinding(): ActivityRuleSubBinding {
-        return ActivityRuleSubBinding.inflate(layoutInflater)
-    }
+    override val binding by viewBinding(ActivityRuleSubBinding::inflate)
+    private val adapter by lazy { RuleSubAdapter(this, this) }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         initView()
@@ -55,7 +54,6 @@ class RuleSubActivity : BaseActivity<ActivityRuleSubBinding>(),
     }
 
     private fun initView() {
-        adapter = RuleSubAdapter(this, this)
         binding.recyclerView.adapter = adapter
         val itemTouchCallback = ItemTouchCallback(adapter)
         itemTouchCallback.isCanDrag = true
@@ -63,31 +61,25 @@ class RuleSubActivity : BaseActivity<ActivityRuleSubBinding>(),
     }
 
     private fun initData() {
-        liveData?.removeObservers(this)
-        liveData = appDb.ruleSubDao.observeAll()
-        liveData?.observe(this) {
-            binding.tvEmptyMsg.isGone = it.isNotEmpty()
-            adapter.setItems(it)
+        launch {
+            appDb.ruleSubDao.flowAll().collect {
+                binding.tvEmptyMsg.isGone = it.isNotEmpty()
+                adapter.setItems(it)
+            }
         }
     }
 
     override fun openSubscription(ruleSub: RuleSub) {
         when (ruleSub.type) {
-            0 -> {
-                startActivity<ImportBookSourceActivity> {
-                    putExtra("source", ruleSub.url)
-                }
-            }
-            1 -> {
-                startActivity<ImportRssSourceActivity> {
-                    putExtra("source", ruleSub.url)
-                }
-            }
-            2 -> {
-                startActivity<ImportReplaceRuleActivity> {
-                    putExtra("source", ruleSub.url)
-                }
-            }
+            0 -> showDialogFragment(
+                ImportBookSourceDialog(ruleSub.url)
+            )
+            1 -> showDialogFragment(
+                ImportRssSourceDialog(ruleSub.url)
+            )
+            2 -> showDialogFragment(
+                ImportReplaceRuleDialog(ruleSub.url)
+            )
         }
     }
 
@@ -100,15 +92,24 @@ class RuleSubActivity : BaseActivity<ActivityRuleSubBinding>(),
             }
             customView { alertBinding.root }
             okButton {
-                ruleSub.type = alertBinding.spType.selectedItemPosition
-                ruleSub.name = alertBinding.etName.text?.toString() ?: ""
-                ruleSub.url = alertBinding.etUrl.text?.toString() ?: ""
-                launch(IO) {
-                    appDb.ruleSubDao.insert(ruleSub)
+                launch {
+                    ruleSub.type = alertBinding.spType.selectedItemPosition
+                    ruleSub.name = alertBinding.etName.text?.toString() ?: ""
+                    ruleSub.url = alertBinding.etUrl.text?.toString() ?: ""
+                    val rs = withContext(IO) {
+                        appDb.ruleSubDao.findByUrl(ruleSub.url)
+                    }
+                    if (rs != null && rs.id != ruleSub.id) {
+                        toastOnUi("${getString(R.string.url_already)}(${rs.name})")
+                        return@launch
+                    }
+                    withContext(IO) {
+                        appDb.ruleSubDao.insert(ruleSub)
+                    }
                 }
             }
             cancelButton()
-        }.show()
+        }
     }
 
     override fun delSubscription(ruleSub: RuleSub) {

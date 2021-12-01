@@ -28,7 +28,7 @@ object QRCodeUtils {
      * @param heightPix 二维码的高
      * @param logo 二维码中间的logo
      * @param ratio  logo所占比例 因为二维码的最大容错率为30%，所以建议ratio的范围小于0.3
-     * @return
+     * @param errorCorrectionLevel
      */
     fun createQRCode(
         content: String,
@@ -182,7 +182,7 @@ object QRCodeUtils {
         hints: Map<DecodeHintType?, Any?> = DecodeFormatManager.ALL_HINTS
     ): Result? {
         if (bitmap.width > reqWidth || bitmap.height > reqHeight) {
-            val bm = BitmapUtils.changeBitmapSize(bitmap, reqWidth, reqHeight)
+            val bm = bitmap.changeSize(reqWidth, reqHeight)
             return parseCodeResult(getRGBLuminanceSource(bm), hints)
         }
         return parseCodeResult(getRGBLuminanceSource(bitmap), hints)

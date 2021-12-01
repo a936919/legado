@@ -1,5 +1,6 @@
 package io.legado.app.ui.rss.article
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.drawable.Drawable
 import android.view.ViewGroup
@@ -11,7 +12,7 @@ import io.legado.app.R
 import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.data.entities.RssArticle
 import io.legado.app.databinding.ItemRssArticleBinding
-import io.legado.app.help.ImageLoader
+import io.legado.app.help.glide.ImageLoader
 import io.legado.app.utils.getCompatColor
 import io.legado.app.utils.gone
 import io.legado.app.utils.visible
@@ -24,13 +25,14 @@ class RssArticlesAdapter(context: Context, callBack: CallBack) :
         return ItemRssArticleBinding.inflate(inflater, parent, false)
     }
 
+    @SuppressLint("CheckResult")
     override fun convert(
         holder: ItemViewHolder,
         binding: ItemRssArticleBinding,
         item: RssArticle,
         payloads: MutableList<Any>
     ) {
-        with(binding) {
+        binding.run {
             tvTitle.text = item.title
             tvPubDate.text = item.pubDate
             if (item.image.isNullOrBlank() && !callBack.isGridLayout) {

@@ -2,10 +2,7 @@ package io.legado.app.data.entities
 
 import android.os.Parcelable
 import android.text.TextUtils
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.Index
-import androidx.room.PrimaryKey
+import androidx.room.*
 import kotlinx.parcelize.Parcelize
 import java.util.regex.Pattern
 import java.util.regex.PatternSyntaxException
@@ -29,6 +26,8 @@ data class ReplaceRule(
     var order: Int = 0
 ) : Parcelable {
 
+    @Ignore
+    constructor() : this(id = System.currentTimeMillis())
 
     override fun equals(other: Any?): Boolean {
         if (other is ReplaceRule) {
@@ -41,12 +40,12 @@ data class ReplaceRule(
         return id.hashCode()
     }
 
-    fun isValid(): Boolean{
-        if (TextUtils.isEmpty(pattern)){
+    fun isValid(): Boolean {
+        if (TextUtils.isEmpty(pattern)) {
             return false
         }
         //判断正则表达式是否正确
-        if (isRegex){
+        if (isRegex) {
             try {
                 Pattern.compile(pattern)
             } catch (ex: PatternSyntaxException) {

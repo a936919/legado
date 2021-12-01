@@ -1,17 +1,14 @@
 package io.legado.app.ui.book.source.manage
 
 import android.app.Application
-import android.content.Intent
 import android.text.TextUtils
-import androidx.core.content.FileProvider
-import androidx.documentfile.provider.DocumentFile
-import io.legado.app.BuildConfig
 import io.legado.app.base.BaseViewModel
 import io.legado.app.constant.AppPattern
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.BookSource
 import io.legado.app.utils.*
 import java.io.File
+import java.io.FileOutputStream
 
 class BookSourceViewModel(application: Application) : BaseViewModel(application) {
 
@@ -35,8 +32,8 @@ class BookSourceViewModel(application: Application) : BaseViewModel(application)
         }
     }
 
-    fun del(bookSource: BookSource) {
-        execute { appDb.bookSourceDao.delete(bookSource) }
+    fun del(vararg sources: BookSource) {
+        execute { appDb.bookSourceDao.delete(*sources) }
     }
 
     fun update(vararg bookSource: BookSource) {
@@ -131,56 +128,20 @@ class BookSourceViewModel(application: Application) : BaseViewModel(application)
         }
     }
 
-    fun delSelection(sources: List<BookSource>) {
+    @Suppress("BlockingMethodInNonBlockingContext")
+    fun saveToFile(sources: List<BookSource>, success: (file: File) -> Unit) {
         execute {
-            appDb.bookSourceDao.delete(*sources.toTypedArray())
-        }
-    }
-
-    fun exportSelection(sources: List<BookSource>, file: File) {
-        execute {
-            val json = GSON.toJson(sources)
-            FileUtils.createFileIfNotExist(file, "exportBookSource.json")
-                .writeText(json)
-        }.onSuccess {
-            context.longToastOnUi("成功导出至\n${file.absolutePath}")
-        }.onError {
-            context.longToastOnUi("导出失败\n${it.localizedMessage}")
-        }
-    }
-
-    fun exportSelection(sources: List<BookSource>, doc: DocumentFile) {
-        execute {
-            val json = GSON.toJson(sources)
-            doc.findFile("exportBookSource.json")?.delete()
-            doc.createFile("", "exportBookSource.json")
-                ?.writeText(context, json)
-        }.onSuccess {
-            context.longToastOnUi("成功导出至\n${doc.uri.path}")
-        }.onError {
-            context.longToastOnUi("导出失败\n${it.localizedMessage}")
-        }
-    }
-
-    fun shareSelection(sources: List<BookSource>, success: ((intent: Intent) -> Unit)) {
-        execute {
-            val intent = Intent(Intent.ACTION_SEND)
-            val file = FileUtils.createFileWithReplace("${context.filesDir}/shareBookSource.json")
-            file.writeText(GSON.toJson(sources))
-            val fileUri = FileProvider.getUriForFile(
-                context,
-                BuildConfig.APPLICATION_ID + ".fileProvider",
-                file
-            )
-            intent.type = "text/*"
-            intent.putExtra(Intent.EXTRA_STREAM, fileUri)
-            intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            intent
+            val path = "${context.filesDir}/shareBookSource.json"
+            FileUtils.delete(path)
+            val file = FileUtils.createFileWithReplace(path)
+            FileOutputStream(file).use {
+                GSON.writeToOutputStream(it, sources)
+            }
+            file
         }.onSuccess {
             success.invoke(it)
         }.onError {
-            toastOnUi(it.msg)
+            context.toastOnUi(it.msg)
         }
     }
 

@@ -2,6 +2,7 @@ package io.legado.app.service
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import androidx.core.app.NotificationCompat
 import io.legado.app.R
 import io.legado.app.base.BaseService
@@ -9,10 +10,11 @@ import io.legado.app.constant.AppConst
 import io.legado.app.constant.EventBus
 import io.legado.app.constant.IntentAction
 import io.legado.app.constant.PreferKey
-import io.legado.app.help.IntentHelp
+import io.legado.app.ui.main.MainActivity
 import io.legado.app.utils.*
 import io.legado.app.web.HttpServer
 import io.legado.app.web.WebSocketServer
+import timber.log.Timber
 import java.io.IOException
 
 class WebService : BaseService() {
@@ -26,11 +28,7 @@ class WebService : BaseService() {
         }
 
         fun stop(context: Context) {
-            if (isRun) {
-                val intent = Intent(context, WebService::class.java)
-                intent.action = IntentAction.stop
-                context.startService(intent)
-            }
+            context.stopService<WebService>()
         }
 
     }
@@ -44,6 +42,7 @@ class WebService : BaseService() {
         isRun = true
         notificationContent = getString(R.string.service_starting)
         upNotification()
+        upTile(true)
     }
 
     override fun onDestroy() {
@@ -56,6 +55,7 @@ class WebService : BaseService() {
             webSocketServer?.stop()
         }
         postEvent(EventBus.WEB_SERVICE, "")
+        upTile(false)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -73,11 +73,11 @@ class WebService : BaseService() {
         if (webSocketServer?.isAlive == true) {
             webSocketServer?.stop()
         }
-        val port = getPort()
-        httpServer = HttpServer(port)
-        webSocketServer = WebSocketServer(port + 1)
         val address = NetworkUtils.getLocalIPAddress()
         if (address != null) {
+            val port = getPort()
+            httpServer = HttpServer(port)
+            webSocketServer = WebSocketServer(port + 1)
             try {
                 httpServer?.start()
                 webSocketServer?.start(1000 * 30) // 通信超时设置
@@ -88,6 +88,7 @@ class WebService : BaseService() {
                 upNotification()
             } catch (e: IOException) {
                 toastOnUi(e.localizedMessage ?: "")
+                Timber.e(e)
                 stopSelf()
             }
         } else {
@@ -112,13 +113,28 @@ class WebService : BaseService() {
             .setOngoing(true)
             .setContentTitle(getString(R.string.web_service))
             .setContentText(notificationContent)
+            .setContentIntent(
+                activityPendingIntent<MainActivity>("webService")
+            )
         builder.addAction(
             R.drawable.ic_stop_black_24dp,
             getString(R.string.cancel),
-            IntentHelp.servicePendingIntent<WebService>(this, IntentAction.stop)
+            servicePendingIntent<WebService>(IntentAction.stop)
         )
         builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
         val notification = builder.build()
         startForeground(AppConst.notificationIdWeb, notification)
+    }
+
+    private fun upTile(active: Boolean) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            startService<WebTileService> {
+                action = if (active) {
+                    IntentAction.start
+                } else {
+                    IntentAction.stop
+                }
+            }
+        }
     }
 }

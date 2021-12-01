@@ -2,7 +2,6 @@ package io.legado.app.ui.book.read.config
 
 import android.content.DialogInterface
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
@@ -18,9 +17,20 @@ import io.legado.app.utils.putPrefInt
 import io.legado.app.utils.viewbindingdelegate.viewBinding
 
 
-class ClickActionConfigDialog : BaseDialogFragment() {
+class ClickActionConfigDialog : BaseDialogFragment(R.layout.dialog_click_action_config) {
     private val binding by viewBinding(DialogClickActionConfigBinding::bind)
-    private val actions = linkedMapOf<Int, String>()
+    private val actions by lazy {
+        linkedMapOf<Int, String>().apply {
+            this[-1] = getString(R.string.non_action)
+            this[0] = getString(R.string.menu)
+            this[1] = getString(R.string.next_page)
+            this[2] = getString(R.string.prev_page)
+            this[3] = getString(R.string.next_chapter)
+            this[4] = getString(R.string.previous_chapter)
+            this[5] = getString(R.string.read_aloud_prev_paragraph)
+            this[6] = getString(R.string.read_aloud_next_paragraph)
+        }
+    }
 
     override fun onStart() {
         super.onStart()
@@ -30,41 +40,27 @@ class ClickActionConfigDialog : BaseDialogFragment() {
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        (activity as ReadBookActivity).bottomDialog++
-        return inflater.inflate(R.layout.dialog_click_action_config, container)
-    }
-
     override fun onDismiss(dialog: DialogInterface) {
         super.onDismiss(dialog)
         (activity as ReadBookActivity).bottomDialog--
     }
 
     override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) {
+        (activity as ReadBookActivity).bottomDialog++
         view.setBackgroundColor(getCompatColor(R.color.translucent))
-        actions[-1] = getString(R.string.non_action)
-        actions[0] = getString(R.string.menu)
-        actions[1] = getString(R.string.next_page)
-        actions[2] = getString(R.string.prev_page)
-        actions[3] = getString(R.string.next_chapter)
-        actions[4] = getString(R.string.previous_chapter)
         initData()
         initViewEvent()
     }
 
-    private fun initData() = with(AppConfig) {
-        binding.tvTopLeft.text = actions[clickActionTL]
-        binding.tvTopCenter.text = actions[clickActionTC]
-        binding.tvTopRight.text = actions[clickActionTR]
-        binding.tvMiddleLeft.text = actions[clickActionML]
-        binding.tvMiddleRight.text = actions[clickActionMR]
-        binding.tvBottomLeft.text = actions[clickActionBL]
-        binding.tvBottomCenter.text = actions[clickActionBC]
-        binding.tvBottomRight.text = actions[clickActionBR]
+    private fun initData() = binding.run {
+        tvTopLeft.text = actions[AppConfig.clickActionTL]
+        tvTopCenter.text = actions[AppConfig.clickActionTC]
+        tvTopRight.text = actions[AppConfig.clickActionTR]
+        tvMiddleLeft.text = actions[AppConfig.clickActionML]
+        tvMiddleRight.text = actions[AppConfig.clickActionMR]
+        tvBottomLeft.text = actions[AppConfig.clickActionBL]
+        tvBottomCenter.text = actions[AppConfig.clickActionBC]
+        tvBottomRight.text = actions[AppConfig.clickActionBR]
     }
 
     private fun initViewEvent() {
@@ -122,7 +118,7 @@ class ClickActionConfigDialog : BaseDialogFragment() {
     }
 
     private fun selectAction(success: (action: Int) -> Unit) {
-        selector(
+        context?.selector(
             getString(R.string.select_action),
             actions.values.toList()
         ) { _, index ->

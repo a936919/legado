@@ -21,6 +21,11 @@
     </item>
 
     <item
+        android:id="@+id/menu_export_all"
+        android:title="@string/export_all"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/menu_enable_replace"
         android:title="@string/replace_purify"
         android:checkable="true"
@@ -31,10 +36,25 @@
         android:title="@string/export_to_web_dav"
         android:checkable="true"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/menu_export_no_chapter_name"
+        android:title="@string/export_no_chapter_name"
+        android:checkable="true"
+        app:showAsAction="never" />
 
     <item
         android:id="@+id/menu_export_folder"
         android:title="@string/export_folder"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_export_file_name"
+        android:title="@string/export_file_name"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_export_type"
+        android:title="@string/export_type"
         app:showAsAction="never" />
 
     <item

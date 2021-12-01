@@ -2,8 +2,9 @@ package io.legado.app.ui.book.read.page.provider
 
 import android.graphics.Bitmap
 import io.legado.app.data.entities.Book
+import io.legado.app.data.entities.BookSource
 import io.legado.app.help.BookHelp
-import io.legado.app.model.localBook.EPUBFile
+import io.legado.app.model.localBook.EpubFile
 import io.legado.app.utils.BitmapUtils
 import io.legado.app.utils.FileUtils
 import kotlinx.coroutines.runBlocking
@@ -29,14 +30,20 @@ object ImageProvider {
         indexCache[src] = bitmap
     }
 
-    fun getImage(book: Book, chapterIndex: Int, src: String, onUi: Boolean = false): Bitmap? {
+    fun getImage(
+        book: Book,
+        chapterIndex: Int,
+        src: String,
+        bookSource: BookSource?,
+        onUi: Boolean = false,
+    ): Bitmap? {
         getCache(chapterIndex, src)?.let {
             return it
         }
         val vFile = BookHelp.getImage(book, src)
         if (!vFile.exists()) {
             if (book.isEpub()) {
-                EPUBFile.getImage(book, src)?.use { input ->
+                EpubFile.getImage(book, src)?.use { input ->
                     val newFile = FileUtils.createFileIfNotExist(vFile.absolutePath)
                     FileOutputStream(newFile).use { output ->
                         input.copyTo(output)
@@ -44,7 +51,7 @@ object ImageProvider {
                 }
             } else if (!onUi) {
                 runBlocking {
-                    BookHelp.saveImage(book, src)
+                    BookHelp.saveImage(bookSource, book, src)
                 }
             }
         }

@@ -2,7 +2,10 @@ package io.legado.app.ui.book.read.config
 
 import android.content.DialogInterface
 import android.os.Bundle
-import android.view.*
+import android.view.Gravity
+import android.view.View
+import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.SeekBar
 import io.legado.app.R
 import io.legado.app.base.BaseDialogFragment
@@ -10,18 +13,20 @@ import io.legado.app.databinding.DialogAutoReadBinding
 import io.legado.app.help.ReadBookConfig
 import io.legado.app.lib.theme.bottomBackground
 import io.legado.app.lib.theme.getPrimaryTextColor
+import io.legado.app.model.ReadAloud
+import io.legado.app.model.ReadBook
 import io.legado.app.service.BaseReadAloudService
-import io.legado.app.service.help.ReadAloud
+import io.legado.app.ui.book.read.BaseReadBookActivity
 import io.legado.app.ui.book.read.ReadBookActivity
 import io.legado.app.ui.widget.seekbar.SeekBarChangeListener
 import io.legado.app.utils.ColorUtils
 import io.legado.app.utils.viewbindingdelegate.viewBinding
 
 
-class AutoReadDialog : BaseDialogFragment() {
-    var callBack: CallBack? = null
+class AutoReadDialog : BaseDialogFragment(R.layout.dialog_auto_read) {
 
     private val binding by viewBinding(DialogAutoReadBinding::bind)
+    private val callBack: CallBack? get() = activity as? CallBack
 
     override fun onStart() {
         super.onStart()
@@ -42,38 +47,29 @@ class AutoReadDialog : BaseDialogFragment() {
         (activity as ReadBookActivity).bottomDialog--
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) = binding.run {
         (activity as ReadBookActivity).bottomDialog++
-        callBack = activity as? CallBack
-        return inflater.inflate(R.layout.dialog_auto_read, container)
-    }
-
-    override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) {
         val bg = requireContext().bottomBackground
         val isLight = ColorUtils.isColorLight(bg)
         val textColor = requireContext().getPrimaryTextColor(isLight)
-        binding.root.setBackgroundColor(bg)
-        binding.tvReadSpeedTitle.setTextColor(textColor)
-        binding.tvReadSpeed.setTextColor(textColor)
-        binding.ivCatalog.setColorFilter(textColor)
-        binding.tvCatalog.setTextColor(textColor)
-        binding.ivMainMenu.setColorFilter(textColor)
-        binding.tvMainMenu.setTextColor(textColor)
-        binding.ivAutoPageStop.setColorFilter(textColor)
-        binding.tvAutoPageStop.setTextColor(textColor)
-        binding.ivSetting.setColorFilter(textColor)
-        binding.tvSetting.setTextColor(textColor)
+        root.setBackgroundColor(bg)
+        tvReadSpeedTitle.setTextColor(textColor)
+        tvReadSpeed.setTextColor(textColor)
+        ivCatalog.setColorFilter(textColor)
+        tvCatalog.setTextColor(textColor)
+        ivMainMenu.setColorFilter(textColor)
+        tvMainMenu.setTextColor(textColor)
+        ivAutoPageStop.setColorFilter(textColor)
+        tvAutoPageStop.setTextColor(textColor)
+        ivSetting.setColorFilter(textColor)
+        tvSetting.setTextColor(textColor)
         initOnChange()
         initData()
         initEvent()
     }
 
     private fun initData() {
-        val speed = if (ReadBookConfig.autoReadSpeed < 10) 10 else ReadBookConfig.autoReadSpeed
+        val speed = if (ReadBookConfig.autoReadSpeed < 2) 2 else ReadBookConfig.autoReadSpeed
         binding.tvReadSpeed.text = String.format("%ds", speed)
         binding.seekAutoRead.progress = speed
     }
@@ -81,13 +77,13 @@ class AutoReadDialog : BaseDialogFragment() {
     private fun initOnChange() {
         binding.seekAutoRead.setOnSeekBarChangeListener(object : SeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                val speed = if (progress < 10) 10 else progress
+                val speed = if (progress < 2) 2 else progress
                 binding.tvReadSpeed.text = String.format("%ds", speed)
             }
 
             override fun onStopTrackingTouch(seekBar: SeekBar) {
                 ReadBookConfig.autoReadSpeed =
-                    if (binding.seekAutoRead.progress < 10) 10 else binding.seekAutoRead.progress
+                    if (binding.seekAutoRead.progress < 2) 2 else binding.seekAutoRead.progress
                 upTtsSpeechRate()
             }
         })
@@ -99,7 +95,10 @@ class AutoReadDialog : BaseDialogFragment() {
             dismissAllowingStateLoss()
         }
         binding.llSetting.setOnClickListener {
-            ReadAloudConfigDialog().show(childFragmentManager, "readAloudConfigDialog")
+            (activity as BaseReadBookActivity).showPageAnimConfig {
+                (activity as ReadBookActivity).upPageAnim()
+                ReadBook.loadContent(false)
+            }
         }
         binding.llCatalog.setOnClickListener { callBack?.openChapterList() }
         binding.llAutoPageStop.setOnClickListener {

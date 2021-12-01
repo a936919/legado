@@ -1,33 +1,35 @@
 package io.legado.app.ui.book.info
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Intent
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.CheckBox
 import android.widget.LinearLayout
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestOptions.bitmapTransform
 import io.legado.app.R
 import io.legado.app.base.VMBaseActivity
 import io.legado.app.constant.BookType
 import io.legado.app.constant.Theme
+import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookSource
 import io.legado.app.databinding.ActivityBookInfoBinding
+import io.legado.app.databinding.DialogEditTextBinding
 import io.legado.app.help.BlurTransformation
-import io.legado.app.help.ImageLoader
-import io.legado.app.help.IntentDataHelp
+import io.legado.app.help.glide.ImageLoader
 import io.legado.app.lib.dialogs.alert
 import io.legado.app.lib.theme.backgroundColor
 import io.legado.app.lib.theme.bottomBackground
 import io.legado.app.lib.theme.getPrimaryTextColor
-import io.legado.app.ui.audio.AudioPlayActivity
+import io.legado.app.model.BookCover
+import io.legado.app.ui.about.AppLogDialog
+import io.legado.app.ui.book.audio.AudioPlayActivity
 import io.legado.app.ui.book.changecover.ChangeCoverDialog
 import io.legado.app.ui.book.changesource.ChangeSourceDialog
 import io.legado.app.ui.book.group.GroupSelectDialog
@@ -35,27 +37,63 @@ import io.legado.app.ui.book.info.edit.BookInfoEditActivity
 import io.legado.app.ui.book.read.ReadBookActivity
 import io.legado.app.ui.book.search.SearchActivity
 import io.legado.app.ui.book.source.edit.BookSourceEditActivity
-import io.legado.app.ui.book.toc.ChapterListActivity
-import io.legado.app.ui.widget.image.CoverImageView
+import io.legado.app.ui.book.toc.TocActivityResult
+import io.legado.app.ui.login.SourceLoginActivity
 import io.legado.app.utils.*
+import io.legado.app.utils.viewbindingdelegate.viewBinding
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 class BookInfoActivity :
     VMBaseActivity<ActivityBookInfoBinding, BookInfoViewModel>(toolBarTheme = Theme.Dark),
     GroupSelectDialog.CallBack,
-    ChapterListAdapter.CallBack,
     ChangeSourceDialog.CallBack,
     ChangeCoverDialog.CallBack {
 
-    private val requestCodeChapterList = 568
-    private val requestCodeInfoEdit = 562
-    private val requestCodeRead = 432
-
-    override val viewModel: BookInfoViewModel by viewModels()
-
-    override fun getViewBinding(): ActivityBookInfoBinding {
-        return ActivityBookInfoBinding.inflate(layoutInflater)
+    private val tocActivityResult = registerForActivityResult(TocActivityResult()) {
+        it?.let {
+            viewModel.bookData.value?.let { book ->
+                launch {
+                    withContext(IO) {
+                        viewModel.durChapterIndex = it.first
+                        book.durChapterIndex = it.first
+                        book.durChapterPos = it.second
+                        appDb.bookDao.update(book)
+                    }
+                    viewModel.chapterListData.value?.let { chapterList ->
+                        binding.tvToc.text =
+                            getString(R.string.toc_s, chapterList[book.durChapterIndex].title)
+                    }
+                    startReadActivity(book)
+                }
+            }
+        } ?: let {
+            if (!viewModel.inBookshelf) {
+                viewModel.delBook()
+            }
+        }
     }
+    private val readBookResult = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        viewModel.refreshData(intent)
+        if (it.resultCode == RESULT_OK) {
+            viewModel.inBookshelf = true
+            upTvBookshelf()
+        }
+    }
+    private val infoEditResult = registerForActivityResult(
+        StartActivityContract(BookInfoEditActivity::class.java)
+    ) {
+        if (it.resultCode == RESULT_OK) {
+            viewModel.upEditBook()
+        }
+    }
+
+    override val binding by viewBinding(ActivityBookInfoBinding::inflate)
+    override val viewModel by viewModels<BookInfoViewModel>()
 
     @SuppressLint("PrivateResource")
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -77,14 +115,24 @@ class BookInfoActivity :
         return super.onCompatCreateOptionsMenu(menu)
     }
 
+    override fun onMenuOpened(featureId: Int, menu: Menu): Boolean {
+        menu.findItem(R.id.menu_can_update)?.isChecked =
+            viewModel.bookData.value?.canUpdate ?: true
+        menu.findItem(R.id.menu_login)?.isVisible =
+            !viewModel.bookSource?.loginUrl.isNullOrBlank()
+        menu.findItem(R.id.menu_set_source_variable)?.isVisible =
+            viewModel.bookSource != null
+        menu.findItem(R.id.menu_set_book_variable)?.isVisible =
+            viewModel.bookSource != null
+        return super.onMenuOpened(featureId, menu)
+    }
+
     override fun onCompatOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.menu_edit -> {
                 if (viewModel.inBookshelf) {
                     viewModel.bookData.value?.let {
-                        startActivityForResult<BookInfoEditActivity>(
-                            requestCodeInfoEdit
-                        ) {
+                        infoEditResult.launch {
                             putExtra("bookUrl", it.bookUrl)
                         }
                     }
@@ -108,7 +156,19 @@ class BookInfoActivity :
                     viewModel.loadBookInfo(it, false)
                 }
             }
-            R.id.menu_copy_url -> viewModel.bookData.value?.bookUrl?.let {
+            R.id.menu_login -> viewModel.bookSource?.let {
+                startActivity<SourceLoginActivity> {
+                    putExtra("type", "bookSource")
+                    putExtra("key", it.bookSourceUrl)
+                }
+            }
+            R.id.menu_top -> viewModel.topBook()
+            R.id.menu_set_source_variable -> setSourceVariable()
+            R.id.menu_set_book_variable -> setBookVariable()
+            R.id.menu_copy_book_url -> viewModel.bookData.value?.bookUrl?.let {
+                sendToClip(it)
+            } ?: toastOnUi(R.string.no_book)
+            R.id.menu_copy_toc_url -> viewModel.bookData.value?.tocUrl?.let {
                 sendToClip(it)
             } ?: toastOnUi(R.string.no_book)
             R.id.menu_can_update -> {
@@ -122,17 +182,12 @@ class BookInfoActivity :
                 }
             }
             R.id.menu_clear_cache -> viewModel.clearCache()
+            R.id.menu_log -> showDialogFragment<AppLogDialog>()
         }
         return super.onCompatOptionsItemSelected(item)
     }
 
-    override fun onMenuOpened(featureId: Int, menu: Menu): Boolean {
-        menu.findItem(R.id.menu_can_update)?.isChecked =
-            viewModel.bookData.value?.canUpdate ?: true
-        return super.onMenuOpened(featureId, menu)
-    }
-
-    private fun showBook(book: Book) = with(binding) {
+    private fun showBook(book: Book) = binding.run {
         showCover(book)
         tvName.text = book.name
         tvAuthor.text = getString(R.string.author_show, book.getRealAuthor())
@@ -154,14 +209,9 @@ class BookInfoActivity :
         binding.ivCover.load(book.getDisplayCover(), book.name, book.author)
         ImageLoader.load(this, book.getDisplayCover())
             .transition(DrawableTransitionOptions.withCrossFade(1500))
-            .thumbnail(defaultCover())
+            .thumbnail(BookCover.getBlurDefaultCover(this))
             .apply(bitmapTransform(BlurTransformation(this, 25)))
             .into(binding.bgBook)  //模糊、渐变、缩小效果
-    }
-
-    private fun defaultCover(): RequestBuilder<Drawable> {
-        return ImageLoader.load(this, CoverImageView.defaultDrawable)
-            .apply(bitmapTransform(BlurTransformation(this, 25)))
     }
 
     private fun upLoading(isLoading: Boolean, chapterList: List<BookChapter>? = null) {
@@ -203,10 +253,12 @@ class BookInfoActivity :
         }
     }
 
-    private fun initOnClick() = with(binding) {
+    private fun initOnClick() = binding.run {
         ivCover.setOnClickListener {
             viewModel.bookData.value?.let {
-                ChangeCoverDialog.show(supportFragmentManager, it.name, it.author)
+                showDialogFragment(
+                    ChangeCoverDialog(it.name, it.author)
+                )
             }
         }
         tvRead.setOnClickListener {
@@ -226,13 +278,13 @@ class BookInfoActivity :
         tvOrigin.setOnClickListener {
             viewModel.bookData.value?.let {
                 startActivity<BookSourceEditActivity> {
-                    putExtra("data", it.origin)
+                    putExtra("sourceUrl", it.origin)
                 }
             }
         }
         tvChangeSource.setOnClickListener {
             viewModel.bookData.value?.let {
-                ChangeSourceDialog.show(supportFragmentManager, it.name, it.author)
+                showDialogFragment(ChangeSourceDialog(it.name, it.author))
             }
         }
         tvTocView.setOnClickListener {
@@ -248,7 +300,9 @@ class BookInfoActivity :
         }
         tvChangeGroup.setOnClickListener {
             viewModel.bookData.value?.let {
-                GroupSelectDialog.show(supportFragmentManager, it.group)
+                showDialogFragment(
+                    GroupSelectDialog(it.group)
+                )
             }
         }
         tvAuthor.setOnClickListener {
@@ -259,6 +313,52 @@ class BookInfoActivity :
         tvName.setOnClickListener {
             startActivity<SearchActivity> {
                 putExtra("key", viewModel.bookData.value?.name)
+            }
+        }
+    }
+
+    private fun setSourceVariable() {
+        launch {
+            val variable = withContext(IO) { viewModel.bookSource?.getVariable() }
+            alert(R.string.set_source_variable) {
+                setMessage("源变量可在js中通过source.getVariable()获取")
+                val alertBinding = DialogEditTextBinding.inflate(layoutInflater).apply {
+                    editView.hint = "source variable"
+                    editView.setText(variable)
+                }
+                customView { alertBinding.root }
+                okButton {
+                    viewModel.bookSource?.setVariable(alertBinding.editView.text?.toString())
+                }
+                cancelButton()
+                neutralButton(R.string.delete) {
+                    viewModel.bookSource?.setVariable(null)
+                }
+            }
+        }
+    }
+
+    private fun setBookVariable() {
+        launch {
+            val variable = withContext(IO) { viewModel.bookData.value?.getVariable("custom") }
+            alert(R.string.set_source_variable) {
+                setMessage("""书籍变量可在js中通过book.getVariable("custom")获取""")
+                val alertBinding = DialogEditTextBinding.inflate(layoutInflater).apply {
+                    editView.hint = "book variable"
+                    editView.setText(variable)
+                }
+                customView { alertBinding.root }
+                okButton {
+                    viewModel.bookData.value
+                        ?.putVariable("custom", alertBinding.editView.text?.toString())
+                    viewModel.saveBook()
+                }
+                cancelButton()
+                neutralButton(R.string.delete) {
+                    viewModel.bookData.value
+                        ?.putVariable("custom", null)
+                    viewModel.saveBook()
+                }
             }
         }
     }
@@ -285,7 +385,7 @@ class BookInfoActivity :
                         }
                     }
                     negativeButton(R.string.no)
-                }.show()
+                }
             } else {
                 viewModel.delBook {
                     upTvBookshelf()
@@ -300,11 +400,7 @@ class BookInfoActivity :
             return
         }
         viewModel.bookData.value?.let {
-            startActivityForResult<ChapterListActivity>(
-                requestCodeChapterList
-            ) {
-                putExtra("bookUrl", it.bookUrl)
-            }
+            tocActivityResult.launch(it.bookUrl)
         }
     }
 
@@ -324,28 +420,25 @@ class BookInfoActivity :
 
     private fun startReadActivity(book: Book) {
         when (book.type) {
-            BookType.audio -> startActivityForResult<AudioPlayActivity>(
-                requestCodeRead
-            ) {
-                putExtra("bookUrl", book.bookUrl)
-                putExtra("inBookshelf", viewModel.inBookshelf)
-            }
-            else -> startActivityForResult<ReadBookActivity>(
-                requestCodeRead
-            ) {
-                putExtra("bookUrl", book.bookUrl)
-                putExtra("inBookshelf", viewModel.inBookshelf)
-                putExtra("key", IntentDataHelp.putData(book))
-            }
+            BookType.audio -> readBookResult.launch(
+                Intent(this, AudioPlayActivity::class.java)
+                    .putExtra("bookUrl", book.bookUrl)
+                    .putExtra("inBookshelf", viewModel.inBookshelf)
+            )
+            else -> readBookResult.launch(
+                Intent(this, ReadBookActivity::class.java)
+                    .putExtra("bookUrl", book.bookUrl)
+                    .putExtra("inBookshelf", viewModel.inBookshelf)
+            )
         }
     }
 
     override val oldBook: Book?
         get() = viewModel.bookData.value
 
-    override fun changeTo(book: Book) {
+    override fun changeTo(source: BookSource, book: Book) {
         upLoading(true)
-        viewModel.changeTo(book)
+        viewModel.changeTo(source, book)
     }
 
     override fun coverChangeTo(coverUrl: String) {
@@ -356,55 +449,16 @@ class BookInfoActivity :
         }
     }
 
-    override fun openChapter(chapter: BookChapter) {
-        if (chapter.index != viewModel.durChapterIndex) {
-            viewModel.bookData.value?.let {
-                it.durChapterIndex = chapter.index
-                it.durChapterPos = 0
-                readBook(it)
-            }
-        }
-    }
-
-    override fun durChapterIndex(): Int {
-        return viewModel.durChapterIndex
-    }
-
     override fun upGroup(requestCode: Int, groupId: Long) {
         upGroup(groupId)
         viewModel.bookData.value?.group = groupId
         if (viewModel.inBookshelf) {
             viewModel.saveBook()
+        } else if (groupId > 0) {
+            viewModel.saveBook()
+            viewModel.inBookshelf = true
+            upTvBookshelf()
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        when (requestCode) {
-            requestCodeInfoEdit ->
-                if (resultCode == Activity.RESULT_OK) {
-                    viewModel.upEditBook()
-                }
-            requestCodeChapterList ->
-                if (resultCode == Activity.RESULT_OK) {
-                    viewModel.bookData.value?.let {
-                        data?.getIntExtra("index", it.durChapterIndex)?.let { index ->
-                            if (it.durChapterIndex != index) {
-                                it.durChapterIndex = index
-                                it.durChapterPos = 0
-                            }
-                            startReadActivity(it)
-                        }
-                    }
-                } else {
-                    if (!viewModel.inBookshelf) {
-                        viewModel.delBook()
-                    }
-                }
-            requestCodeRead -> if (resultCode == Activity.RESULT_OK) {
-                viewModel.inBookshelf = true
-                upTvBookshelf()
-            }
-        }
-    }
 }

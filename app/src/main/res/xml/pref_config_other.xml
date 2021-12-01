@@ -32,13 +32,14 @@
 
         <io.legado.app.ui.widget.prefs.SwitchPreference
             android:defaultValue="true"
-            android:key="showRss"
-            android:title="@string/show_rss"
+            android:key="showDiscovery"
+            android:title="@string/show_discovery"
             app:iconSpaceReserved="false" />
 
-        <io.legado.app.ui.widget.prefs.Preference
-            android:key="defaultCover"
-            android:title="@string/default_cover"
+        <io.legado.app.ui.widget.prefs.SwitchPreference
+            android:defaultValue="true"
+            android:key="showRss"
+            android:title="@string/show_rss"
             app:allowDividerAbove="false"
             app:allowDividerBelow="false"
             app:iconSpaceReserved="false" />
@@ -55,9 +56,19 @@
             android:key="userAgent"
             android:title="UserAgent" />
 
+        <io.legado.app.ui.widget.prefs.Preference
+            android:key="uploadRule"
+            android:title="@string/direct_link_upload_rule"
+            android:summary="@string/direct_link_upload_rule_summary" />
+
         <io.legado.app.ui.widget.prefs.SwitchPreference
-            android:defaultValue="true"
-            android:key="preDownload"
+            android:key="Cronet"
+            android:defaultValue="false"
+            android:title="Cronet"
+            android:summary="@string/pref_cronet_summary" />
+
+        <io.legado.app.ui.widget.prefs.Preference
+            android:key="preDownloadNum"
             android:title="@string/pre_download"
             android:summary="@string/pre_download_s" />
 

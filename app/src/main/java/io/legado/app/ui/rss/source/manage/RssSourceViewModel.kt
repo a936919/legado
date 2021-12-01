@@ -1,11 +1,7 @@
 package io.legado.app.ui.rss.source.manage
 
 import android.app.Application
-import android.content.Intent
 import android.text.TextUtils
-import androidx.core.content.FileProvider
-import androidx.documentfile.provider.DocumentFile
-import io.legado.app.BuildConfig
 import io.legado.app.base.BaseViewModel
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.RssSource
@@ -35,8 +31,8 @@ class RssSourceViewModel(application: Application) : BaseViewModel(application) 
         }
     }
 
-    fun del(rssSource: RssSource) {
-        execute { appDb.rssSourceDao.delete(rssSource) }
+    fun del(vararg rssSource: RssSource) {
+        execute { appDb.rssSourceDao.delete(*rssSource) }
     }
 
     fun update(vararg rssSource: RssSource) {
@@ -73,56 +69,17 @@ class RssSourceViewModel(application: Application) : BaseViewModel(application) 
         }
     }
 
-    fun delSelection(sources: List<RssSource>) {
+    fun saveToFile(sources: List<RssSource>, success: (file: File) -> Unit) {
         execute {
-            appDb.rssSourceDao.delete(*sources.toTypedArray())
-        }
-    }
-
-    fun exportSelection(sources: List<RssSource>, file: File) {
-        execute {
-            val json = GSON.toJson(sources)
-            FileUtils.createFileIfNotExist(file, "exportRssSource.json")
-                .writeText(json)
-        }.onSuccess {
-            context.toastOnUi("成功导出至\n${file.absolutePath}")
-        }.onError {
-            context.toastOnUi("导出失败\n${it.localizedMessage}")
-        }
-    }
-
-    fun exportSelection(sources: List<RssSource>, doc: DocumentFile) {
-        execute {
-            val json = GSON.toJson(sources)
-            doc.findFile("exportRssSource.json")?.delete()
-            doc.createFile("", "exportRssSource.json")
-                ?.writeText(context, json)
-        }.onSuccess {
-            context.toastOnUi("成功导出至\n${doc.uri.path}")
-        }.onError {
-            context.toastOnUi("导出失败\n${it.localizedMessage}")
-        }
-    }
-
-    fun shareSelection(sources: List<RssSource>, success: ((intent: Intent) -> Unit)) {
-        execute {
-            val intent = Intent(Intent.ACTION_SEND)
-            val file = FileUtils.createFileWithReplace("${context.filesDir}/shareRssSource.json")
+            val path = "${context.filesDir}/shareRssSource.json"
+            FileUtils.delete(path)
+            val file = FileUtils.createFileWithReplace(path)
             file.writeText(GSON.toJson(sources))
-            val fileUri = FileProvider.getUriForFile(
-                context,
-                BuildConfig.APPLICATION_ID + ".fileProvider",
-                file
-            )
-            intent.type = "text/*"
-            intent.putExtra(Intent.EXTRA_STREAM, fileUri)
-            intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            intent
+            file
         }.onSuccess {
             success.invoke(it)
         }.onError {
-            toastOnUi(it.msg)
+            context.toastOnUi(it.msg)
         }
     }
 

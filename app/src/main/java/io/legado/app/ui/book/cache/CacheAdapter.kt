@@ -3,23 +3,21 @@ package io.legado.app.ui.book.cache
 import android.content.Context
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.ProgressBar
+import android.widget.TextView
 import io.legado.app.R
 import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.base.adapter.RecyclerAdapter
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
 import io.legado.app.databinding.ItemDownloadBinding
-import io.legado.app.service.help.CacheBook
-
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.CopyOnWriteArraySet
-
+import io.legado.app.model.CacheBook
+import io.legado.app.utils.gone
+import io.legado.app.utils.visible
 
 class CacheAdapter(context: Context, private val callBack: CallBack) :
     RecyclerAdapter<Book, ItemDownloadBinding>(context) {
 
     val cacheChapters = hashMapOf<String, HashSet<String>>()
-    var downloadMap: ConcurrentHashMap<String, CopyOnWriteArraySet<BookChapter>>? = null
 
     override fun getViewBinding(parent: ViewGroup): ItemDownloadBinding {
         return ItemDownloadBinding.inflate(inflater, parent, false)
@@ -31,7 +29,7 @@ class CacheAdapter(context: Context, private val callBack: CallBack) :
         item: Book,
         payloads: MutableList<Any>
     ) {
-        with(binding) {
+        binding.run {
             if (payloads.isEmpty()) {
                 tvName.text = item.name
                 tvAuthor.text = context.getString(R.string.author_show, item.getRealAuthor())
@@ -42,24 +40,28 @@ class CacheAdapter(context: Context, private val callBack: CallBack) :
                     tvDownload.text =
                         context.getString(R.string.download_count, cs.size, item.totalChapterNum)
                 }
-                upDownloadIv(ivDownload, item)
             } else {
                 val cacheSize = cacheChapters[item.bookUrl]?.size ?: 0
                 tvDownload.text =
                     context.getString(R.string.download_count, cacheSize, item.totalChapterNum)
-                upDownloadIv(ivDownload, item)
             }
+            upDownloadIv(ivDownload, item)
+            upExportInfo(tvMsg, progressExport, item)
         }
     }
 
     override fun registerListener(holder: ItemViewHolder, binding: ItemDownloadBinding) {
-        with(binding) {
+        binding.run {
             ivDownload.setOnClickListener {
-                getItem(holder.layoutPosition)?.let {
-                    if (downloadMap?.containsKey(it.bookUrl) == true) {
-                        CacheBook.remove(context, it.bookUrl)
-                    } else {
-                        CacheBook.start(context, it.bookUrl, 0, it.totalChapterNum)
+                getItem(holder.layoutPosition)?.let { book ->
+                    CacheBook.cacheBookMap[book.bookUrl]?.let {
+                        if (it.isRun()) {
+                            CacheBook.remove(context, book.bookUrl)
+                        } else {
+                            CacheBook.start(context, book.bookUrl, 0, book.totalChapterNum)
+                        }
+                    } ?: let {
+                        CacheBook.start(context, book.bookUrl, 0, book.totalChapterNum)
                     }
                 }
             }
@@ -70,8 +72,8 @@ class CacheAdapter(context: Context, private val callBack: CallBack) :
     }
 
     private fun upDownloadIv(iv: ImageView, book: Book) {
-        downloadMap?.let {
-            if (it.containsKey(book.bookUrl)) {
+        CacheBook.cacheBookMap[book.bookUrl]?.let {
+            if (it.isRun()) {
                 iv.setImageResource(R.drawable.ic_stop_black_24dp)
             } else {
                 iv.setImageResource(R.drawable.ic_play_24dp)
@@ -81,7 +83,28 @@ class CacheAdapter(context: Context, private val callBack: CallBack) :
         }
     }
 
+    private fun upExportInfo(msgView: TextView, progressView: ProgressBar, book: Book) {
+        val msg = callBack.exportMsg(book.bookUrl)
+        if (msg != null) {
+            msgView.text = msg
+            msgView.visible()
+            progressView.gone()
+            return
+        }
+        msgView.gone()
+        val progress = callBack.exportProgress(book.bookUrl)
+        if (progress != null) {
+            progressView.max = book.totalChapterNum
+            progressView.progress = progress
+            progressView.visible()
+            return
+        }
+        progressView.gone()
+    }
+
     interface CallBack {
         fun export(position: Int)
+        fun exportProgress(bookUrl: String): Int?
+        fun exportMsg(bookUrl: String): String?
     }
 }

@@ -1,7 +1,6 @@
 package io.legado.app.ui.rss.source.edit
 
 import android.app.Activity
-import android.content.Intent
 import android.graphics.Rect
 import android.os.Bundle
 import android.view.Gravity
@@ -11,6 +10,7 @@ import android.view.ViewTreeObserver
 import android.widget.EditText
 import android.widget.PopupWindow
 import androidx.activity.viewModels
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import io.legado.app.R
 import io.legado.app.base.VMBaseActivity
 import io.legado.app.constant.AppConst
@@ -19,12 +19,14 @@ import io.legado.app.databinding.ActivityRssSourceEditBinding
 import io.legado.app.help.LocalConfig
 import io.legado.app.lib.dialogs.alert
 import io.legado.app.lib.dialogs.selector
-import io.legado.app.lib.theme.ATH
-import io.legado.app.ui.qrcode.QrCodeActivity
+import io.legado.app.lib.theme.primaryColor
+import io.legado.app.ui.login.SourceLoginActivity
+import io.legado.app.ui.qrcode.QrCodeResult
 import io.legado.app.ui.rss.source.debug.RssSourceDebugActivity
 import io.legado.app.ui.widget.KeyboardToolPop
 import io.legado.app.ui.widget.dialog.TextDialog
 import io.legado.app.utils.*
+import io.legado.app.utils.viewbindingdelegate.viewBinding
 import kotlin.math.abs
 
 class RssSourceEditActivity :
@@ -32,18 +34,19 @@ class RssSourceEditActivity :
     ViewTreeObserver.OnGlobalLayoutListener,
     KeyboardToolPop.CallBack {
 
+    override val binding by viewBinding(ActivityRssSourceEditBinding::inflate)
+    override val viewModel by viewModels<RssSourceEditViewModel>()
     private var mSoftKeyboardTool: PopupWindow? = null
     private var mIsSoftKeyBoardShowing = false
-    private val qrRequestCode = 101
-    private val adapter = RssSourceEditAdapter()
+    private val adapter by lazy { RssSourceEditAdapter() }
     private val sourceEntities: ArrayList<EditEntity> = ArrayList()
-
-    override fun getViewBinding(): ActivityRssSourceEditBinding {
-        return ActivityRssSourceEditBinding.inflate(layoutInflater)
+    private val qrCodeResult = registerForActivityResult(QrCodeResult()) {
+        it?.let {
+            viewModel.importSource(it) { source: RssSource ->
+                upRecyclerView(source)
+            }
+        }
     }
-
-    override val viewModel: RssSourceEditViewModel
-            by viewModels()
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         initView()
@@ -68,7 +71,7 @@ class RssSourceEditActivity :
                 negativeButton(R.string.no) {
                     super.finish()
                 }
-            }.show()
+            }
         } else {
             super.finish()
         }
@@ -83,6 +86,11 @@ class RssSourceEditActivity :
         menuInflater.inflate(R.menu.source_edit, menu)
         menu.findItem(R.id.menu_login).isVisible = false
         return super.onCompatCreateOptionsMenu(menu)
+    }
+
+    override fun onMenuOpened(featureId: Int, menu: Menu): Boolean {
+        menu.findItem(R.id.menu_login)?.isVisible = !viewModel.rssSource.loginUrl.isNullOrBlank()
+        return super.onMenuOpened(featureId, menu)
     }
 
     override fun onCompatOptionsItemSelected(item: MenuItem): Boolean {
@@ -106,13 +114,24 @@ class RssSourceEditActivity :
                     }
                 }
             }
+            R.id.menu_login -> getRssSource().let {
+                if (checkSource(it)) {
+                    viewModel.save(it) {
+                        startActivity<SourceLoginActivity> {
+                            putExtra("type", "rssSource")
+                            putExtra("key", it.sourceUrl)
+                        }
+                    }
+                }
+            }
             R.id.menu_copy_source -> sendToClip(GSON.toJson(getRssSource()))
-            R.id.menu_qr_code_camera -> startActivityForResult<QrCodeActivity>(qrRequestCode)
+            R.id.menu_qr_code_camera -> qrCodeResult.launch()
             R.id.menu_paste_source -> viewModel.pasteSource { upRecyclerView(it) }
             R.id.menu_share_str -> share(GSON.toJson(getRssSource()))
             R.id.menu_share_qr -> shareWithQr(
                 GSON.toJson(getRssSource()),
-                getString(R.string.share_rss_source)
+                getString(R.string.share_rss_source),
+                ErrorCorrectionLevel.L
             )
             R.id.menu_help -> showRuleHelp()
         }
@@ -120,37 +139,45 @@ class RssSourceEditActivity :
     }
 
     private fun initView() {
-        ATH.applyEdgeEffectColor(binding.recyclerView)
+        binding.recyclerView.setEdgeEffectColor(primaryColor)
         mSoftKeyboardTool = KeyboardToolPop(this, AppConst.keyboardToolChars, this)
         window.decorView.viewTreeObserver.addOnGlobalLayoutListener(this)
         binding.recyclerView.adapter = adapter
     }
 
-    private fun upRecyclerView(rssSource: RssSource? = viewModel.rssSource) {
-        rssSource?.let {
-            binding.cbIsEnable.isChecked = rssSource.enabled
-            binding.cbSingleUrl.isChecked = rssSource.singleUrl
-            binding.cbEnableJs.isChecked = rssSource.enableJs
-            binding.cbEnableBaseUrl.isChecked = rssSource.loadWithBaseUrl
+    private fun upRecyclerView(source: RssSource? = viewModel.rssSource) {
+        source?.let {
+            binding.cbIsEnable.isChecked = source.enabled
+            binding.cbSingleUrl.isChecked = source.singleUrl
+            binding.cbEnableJs.isChecked = source.enableJs
+            binding.cbEnableBaseUrl.isChecked = source.loadWithBaseUrl
         }
         sourceEntities.clear()
         sourceEntities.apply {
-            add(EditEntity("sourceName", rssSource?.sourceName, R.string.source_name))
-            add(EditEntity("sourceUrl", rssSource?.sourceUrl, R.string.source_url))
-            add(EditEntity("sourceIcon", rssSource?.sourceIcon, R.string.source_icon))
-            add(EditEntity("sourceGroup", rssSource?.sourceGroup, R.string.source_group))
-            add(EditEntity("sourceComment", rssSource?.sourceComment, R.string.comment))
-            add(EditEntity("sortUrl", rssSource?.sortUrl, R.string.sort_url))
-            add(EditEntity("ruleArticles", rssSource?.ruleArticles, R.string.r_articles))
-            add(EditEntity("ruleNextPage", rssSource?.ruleNextPage, R.string.r_next))
-            add(EditEntity("ruleTitle", rssSource?.ruleTitle, R.string.r_title))
-            add(EditEntity("rulePubDate", rssSource?.rulePubDate, R.string.r_date))
-            add(EditEntity("ruleDescription", rssSource?.ruleDescription, R.string.r_description))
-            add(EditEntity("ruleImage", rssSource?.ruleImage, R.string.r_image))
-            add(EditEntity("ruleLink", rssSource?.ruleLink, R.string.r_link))
-            add(EditEntity("ruleContent", rssSource?.ruleContent, R.string.r_content))
-            add(EditEntity("style", rssSource?.style, R.string.r_style))
-            add(EditEntity("header", rssSource?.header, R.string.source_http_header))
+            add(EditEntity("sourceName", source?.sourceName, R.string.source_name))
+            add(EditEntity("sourceUrl", source?.sourceUrl, R.string.source_url))
+            add(EditEntity("sourceIcon", source?.sourceIcon, R.string.source_icon))
+            add(EditEntity("sourceGroup", source?.sourceGroup, R.string.source_group))
+            add(EditEntity("sourceComment", source?.sourceComment, R.string.comment))
+            add(EditEntity("loginUrl", source?.loginUrl, R.string.login_url))
+            add(EditEntity("loginUi", source?.loginUi, R.string.login_ui))
+            add(EditEntity("loginCheckJs", source?.loginCheckJs, R.string.login_check_js))
+            add(EditEntity("header", source?.header, R.string.source_http_header))
+            add(
+                EditEntity(
+                    "concurrentRate", source?.concurrentRate, R.string.source_concurrent_rate
+                )
+            )
+            add(EditEntity("sortUrl", source?.sortUrl, R.string.sort_url))
+            add(EditEntity("ruleArticles", source?.ruleArticles, R.string.r_articles))
+            add(EditEntity("ruleNextPage", source?.ruleNextPage, R.string.r_next))
+            add(EditEntity("ruleTitle", source?.ruleTitle, R.string.r_title))
+            add(EditEntity("rulePubDate", source?.rulePubDate, R.string.r_date))
+            add(EditEntity("ruleDescription", source?.ruleDescription, R.string.r_description))
+            add(EditEntity("ruleImage", source?.ruleImage, R.string.r_image))
+            add(EditEntity("ruleLink", source?.ruleLink, R.string.r_link))
+            add(EditEntity("ruleContent", source?.ruleContent, R.string.r_content))
+            add(EditEntity("style", source?.style, R.string.r_style))
         }
         adapter.editEntities = sourceEntities
     }
@@ -168,6 +195,11 @@ class RssSourceEditActivity :
                 "sourceIcon" -> source.sourceIcon = it.value ?: ""
                 "sourceGroup" -> source.sourceGroup = it.value
                 "sourceComment" -> source.sourceComment = it.value
+                "loginUrl" -> source.loginUrl = it.value
+                "loginUi" -> source.loginUi = it.value
+                "loginCheckJs" -> source.loginCheckJs = it.value
+                "header" -> source.header = it.value
+                "concurrentRate" -> source.concurrentRate = it.value
                 "sortUrl" -> source.sortUrl = it.value
                 "ruleArticles" -> source.ruleArticles = it.value
                 "ruleNextPage" -> source.ruleNextPage = it.value
@@ -178,7 +210,6 @@ class RssSourceEditActivity :
                 "ruleLink" -> source.ruleLink = it.value
                 "ruleContent" -> source.ruleContent = it.value
                 "style" -> source.style = it.value
-                "header" -> source.header = it.value
             }
         }
         return source
@@ -228,12 +259,12 @@ class RssSourceEditActivity :
 
     private fun showRuleHelp() {
         val mdText = String(assets.open("help/ruleHelp.md").readBytes())
-        TextDialog.show(supportFragmentManager, mdText, TextDialog.MD)
+        showDialogFragment(TextDialog(mdText, TextDialog.Mode.MD))
     }
 
     private fun showRegexHelp() {
         val mdText = String(assets.open("help/regexHelp.md").readBytes())
-        TextDialog.show(supportFragmentManager, mdText, TextDialog.MD)
+        showDialogFragment(TextDialog(mdText, TextDialog.Mode.MD))
     }
 
     private fun showKeyboardTopPopupWindow() {
@@ -253,7 +284,7 @@ class RssSourceEditActivity :
         val rect = Rect()
         // 获取当前页面窗口的显示范围
         window.decorView.getWindowVisibleDisplayFrame(rect)
-        val screenHeight = this@RssSourceEditActivity.getSize().heightPixels
+        val screenHeight = this@RssSourceEditActivity.windowSize.heightPixels
         val keyboardHeight = screenHeight - rect.bottom // 输入法的高度
         val preShowing = mIsSoftKeyBoardShowing
         if (abs(keyboardHeight) > screenHeight / 5) {
@@ -269,16 +300,4 @@ class RssSourceEditActivity :
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        when (requestCode) {
-            qrRequestCode -> if (resultCode == RESULT_OK) {
-                data?.getStringExtra("result")?.let {
-                    viewModel.importSource(it) { source: RssSource ->
-                        upRecyclerView(source)
-                    }
-                }
-            }
-        }
-    }
 }

@@ -3,6 +3,7 @@ package io.legado.app.data.entities
 import android.content.Context
 import android.os.Parcelable
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import io.legado.app.R
 import io.legado.app.constant.AppConst
@@ -14,9 +15,13 @@ data class BookGroup(
     @PrimaryKey
     val groupId: Long = 0b1,
     var groupName: String,
+    var cover: String? = null,
     var order: Int = 0,
     var show: Boolean = true
 ) : Parcelable {
+
+    @Ignore
+    constructor() : this(groupName = "")
 
     fun getManageName(context: Context): String {
         return when (groupId) {
@@ -36,6 +41,7 @@ data class BookGroup(
         if (other is BookGroup) {
             return other.groupId == groupId
                     && other.groupName == groupName
+                    && other.cover == cover
                     && other.order == order
                     && other.show == show
         }

@@ -5,6 +5,7 @@ import io.legado.app.R
 import io.legado.app.data.entities.RssArticle
 import io.legado.app.data.entities.RssSource
 import io.legado.app.model.Debug
+import io.legado.app.model.NoStackTraceException
 import io.legado.app.model.analyzeRule.AnalyzeRule
 import io.legado.app.model.analyzeRule.RuleDataInterface
 import io.legado.app.utils.GSON
@@ -22,22 +23,23 @@ object RssParserByRule {
         body: String?,
         rssSource: RssSource,
         ruleData: RuleDataInterface
-    ): RssResult {
+    ): Pair<MutableList<RssArticle>, String?> {
         val sourceUrl = rssSource.sourceUrl
         var nextUrl: String? = null
         if (body.isNullOrBlank()) {
-            throw Exception(
+            throw NoStackTraceException(
                 appCtx.getString(R.string.error_get_web_content, rssSource.sourceUrl)
             )
         }
         Debug.log(sourceUrl, "≡获取成功:$sourceUrl")
+        Debug.log(sourceUrl, body, state = 10)
         var ruleArticles = rssSource.ruleArticles
         if (ruleArticles.isNullOrBlank()) {
             Debug.log(sourceUrl, "⇒列表规则为空, 使用默认规则解析")
             return RssParserDefault.parseXML(sortName, body, sourceUrl)
         } else {
             val articleList = mutableListOf<RssArticle>()
-            val analyzeRule = AnalyzeRule(ruleData)
+            val analyzeRule = AnalyzeRule(ruleData, rssSource)
             analyzeRule.setContent(body).setBaseUrl(sortUrl)
             analyzeRule.setRedirectUrl(sortUrl)
             var reverse = false
@@ -50,7 +52,7 @@ object RssParserByRule {
             Debug.log(sourceUrl, "└列表大小:${collections.size}")
             if (!rssSource.ruleNextPage.isNullOrEmpty()) {
                 Debug.log(sourceUrl, "┌获取下一页链接")
-                if (rssSource.ruleNextPage!!.toUpperCase(Locale.getDefault()) == "PAGE") {
+                if (rssSource.ruleNextPage!!.uppercase(Locale.getDefault()) == "PAGE") {
                     nextUrl = sortUrl
                 } else {
                     nextUrl = analyzeRule.getString(rssSource.ruleNextPage)
@@ -78,7 +80,7 @@ object RssParserByRule {
             if (reverse) {
                 articleList.reverse()
             }
-            return RssResult(articleList, nextUrl)
+            return Pair(articleList, nextUrl)
         }
     }
 
@@ -110,7 +112,7 @@ object RssParserByRule {
             Debug.log(sourceUrl, "└${rssArticle.description}", log)
         }
         Debug.log(sourceUrl, "┌获取图片url", log)
-        rssArticle.image = analyzeRule.getString(ruleImage, true)
+        rssArticle.image = analyzeRule.getString(ruleImage, isUrl = true)
         Debug.log(sourceUrl, "└${rssArticle.image}", log)
         Debug.log(sourceUrl, "┌获取文章链接", log)
         rssArticle.link = NetworkUtils.getAbsoluteURL(sourceUrl, analyzeRule.getString(ruleLink))

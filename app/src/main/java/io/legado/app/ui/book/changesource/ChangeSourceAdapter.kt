@@ -16,21 +16,23 @@ import io.legado.app.utils.visible
 import splitties.views.onLongClick
 
 
-class ChangeSourceAdapter(context: Context, val callBack: CallBack) :
-    DiffRecyclerAdapter<SearchBook, ItemChangeSourceBinding>(context) {
+class ChangeSourceAdapter(
+    context: Context,
+    val viewModel: ChangeSourceViewModel,
+    val callBack: CallBack
+) : DiffRecyclerAdapter<SearchBook, ItemChangeSourceBinding>(context) {
 
-    override val diffItemCallback: DiffUtil.ItemCallback<SearchBook>
-        get() = object : DiffUtil.ItemCallback<SearchBook>() {
-            override fun areItemsTheSame(oldItem: SearchBook, newItem: SearchBook): Boolean {
-                return oldItem.bookUrl == newItem.bookUrl
-            }
-
-            override fun areContentsTheSame(oldItem: SearchBook, newItem: SearchBook): Boolean {
-                return oldItem.originName == newItem.originName
-                        && oldItem.getDisplayLastChapterTitle() == newItem.getDisplayLastChapterTitle()
-            }
-
+    override val diffItemCallback = object : DiffUtil.ItemCallback<SearchBook>() {
+        override fun areItemsTheSame(oldItem: SearchBook, newItem: SearchBook): Boolean {
+            return oldItem.bookUrl == newItem.bookUrl
         }
+
+        override fun areContentsTheSame(oldItem: SearchBook, newItem: SearchBook): Boolean {
+            return oldItem.originName == newItem.originName
+                    && oldItem.getDisplayLastChapterTitle() == newItem.getDisplayLastChapterTitle()
+        }
+
+    }
 
     override fun getViewBinding(parent: ViewGroup): ItemChangeSourceBinding {
         return ItemChangeSourceBinding.inflate(inflater, parent, false)
@@ -46,6 +48,7 @@ class ChangeSourceAdapter(context: Context, val callBack: CallBack) :
         binding.apply {
             if (bundle == null) {
                 tvOrigin.text = item.originName
+                tvAuthor.text = item.author
                 tvLast.text = item.getDisplayLastChapterTitle()
                 if (callBack.bookUrl == item.bookUrl) {
                     ivChecked.visible()
@@ -57,6 +60,11 @@ class ChangeSourceAdapter(context: Context, val callBack: CallBack) :
                     when (it) {
                         "name" -> tvOrigin.text = item.originName
                         "latest" -> tvLast.text = item.getDisplayLastChapterTitle()
+                        "upCurSource" -> if (callBack.bookUrl == item.bookUrl) {
+                            ivChecked.visible()
+                        } else {
+                            ivChecked.invisible()
+                        }
                     }
                 }
             }
@@ -80,8 +88,21 @@ class ChangeSourceAdapter(context: Context, val callBack: CallBack) :
         popupMenu.inflate(R.menu.change_source_item)
         popupMenu.setOnMenuItemClickListener {
             when (it.itemId) {
-                R.id.menu_disable_book_source -> {
+                R.id.menu_top_source -> {
+                    callBack.topSource(searchBook)
+                }
+                R.id.menu_bottom_source -> {
+                    callBack.bottomSource(searchBook)
+                }
+                R.id.menu_edit_source -> {
+                    callBack.editSource(searchBook)
+                }
+                R.id.menu_disable_source -> {
                     callBack.disableSource(searchBook)
+                }
+                R.id.menu_delete_source -> {
+                    callBack.deleteSource(searchBook)
+                    updateItems(0, itemCount, listOf<Int>())
                 }
             }
             true
@@ -92,6 +113,10 @@ class ChangeSourceAdapter(context: Context, val callBack: CallBack) :
     interface CallBack {
         val bookUrl: String?
         fun changeTo(searchBook: SearchBook)
+        fun topSource(searchBook: SearchBook)
+        fun bottomSource(searchBook: SearchBook)
+        fun editSource(searchBook: SearchBook)
         fun disableSource(searchBook: SearchBook)
+        fun deleteSource(searchBook: SearchBook)
     }
 }

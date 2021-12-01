@@ -10,7 +10,10 @@ import io.legado.app.constant.PreferKey
 import io.legado.app.help.coroutine.Coroutine
 import io.legado.app.ui.book.read.page.provider.ChapterProvider
 import io.legado.app.utils.*
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.withContext
 import splitties.init.appCtx
+import timber.log.Timber
 import java.io.File
 
 /**
@@ -59,7 +62,7 @@ object ReadBookConfig {
                 val json = configFile.readText()
                 configs = GSON.fromJsonArray(json)
             } catch (e: Exception) {
-                e.printStackTrace()
+                Timber.e(e)
             }
         }
         (configs ?: DefaultData.readConfigs).let {
@@ -76,7 +79,7 @@ object ReadBookConfig {
                 val json = configFile.readText()
                 c = GSON.fromJsonObject(json)
             } catch (e: Exception) {
-                e.printStackTrace()
+                Timber.e(e)
             }
         }
         shareConfig = c ?: configList.getOrNull(5) ?: Config()
@@ -89,7 +92,7 @@ object ReadBookConfig {
         val height = dm.heightPixels
         bg = durConfig.curBgDrawable(width, height).apply {
             if (this is BitmapDrawable) {
-                bgMeanColor = BitmapUtils.getMeanColor(bitmap)
+                bgMeanColor = bitmap.getMeanColor()
             } else if (this is ColorDrawable) {
                 bgMeanColor = color
             }
@@ -133,7 +136,7 @@ object ReadBookConfig {
 
     //配置写入读取
     var readBodyToLh = appCtx.getPrefBoolean(PreferKey.readBodyToLh, true)
-    var autoReadSpeed = appCtx.getPrefInt(PreferKey.autoReadSpeed, 46)
+    var autoReadSpeed = appCtx.getPrefInt(PreferKey.autoReadSpeed, 10)
         set(value) {
             field = value
             appCtx.putPrefInt(PreferKey.autoReadSpeed, value)
@@ -355,6 +358,62 @@ object ReadBookConfig {
         return exportConfig
     }
 
+    suspend fun import(byteArray: ByteArray): Config {
+        return withContext(IO) {
+            val configZipPath = FileUtils.getPath(appCtx.externalCache, configFileName)
+            FileUtils.deleteFile(configZipPath)
+            val zipFile = FileUtils.createFileIfNotExist(configZipPath)
+            zipFile.writeBytes(byteArray)
+            val configDirPath = FileUtils.getPath(appCtx.externalCache, "readConfig")
+            FileUtils.deleteFile(configDirPath)
+            @Suppress("BlockingMethodInNonBlockingContext")
+            ZipUtils.unzipFile(zipFile, FileUtils.createFolderIfNotExist(configDirPath))
+            val configDir = FileUtils.createFolderIfNotExist(configDirPath)
+            val configFile = configDir.getFile("readConfig.json")
+            val config: Config = GSON.fromJsonObject(configFile.readText())!!
+            if (config.textFont.isNotEmpty()) {
+                val fontName = FileUtils.getName(config.textFont)
+                val fontPath =
+                    FileUtils.getPath(appCtx.externalFiles, "font", fontName)
+                if (!FileUtils.exist(fontPath)) {
+                    configDir.getFile(fontName).copyTo(File(fontPath))
+                }
+                config.textFont = fontPath
+            }
+            if (config.bgType == 2) {
+                val bgName = FileUtils.getName(config.bgStr)
+                val bgPath = FileUtils.getPath(appCtx.externalFiles, "bg", bgName)
+                if (!FileUtils.exist(bgPath)) {
+                    val bgFile = configDir.getFile(bgName)
+                    if (bgFile.exists()) {
+                        bgFile.copyTo(File(bgPath))
+                    }
+                }
+            }
+            if (config.bgTypeNight == 2) {
+                val bgName = FileUtils.getName(config.bgStrNight)
+                val bgPath = FileUtils.getPath(appCtx.externalFiles, "bg", bgName)
+                if (!FileUtils.exist(bgPath)) {
+                    val bgFile = configDir.getFile(bgName)
+                    if (bgFile.exists()) {
+                        bgFile.copyTo(File(bgPath))
+                    }
+                }
+            }
+            if (config.bgTypeEInk == 2) {
+                val bgName = FileUtils.getName(config.bgStrEInk)
+                val bgPath = FileUtils.getPath(appCtx.externalFiles, "bg", bgName)
+                if (!FileUtils.exist(bgPath)) {
+                    val bgFile = configDir.getFile(bgName)
+                    if (bgFile.exists()) {
+                        bgFile.copyTo(File(bgPath))
+                    }
+                }
+            }
+            return@withContext config
+        }
+    }
+
     @Keep
     class Config(
         var name: String = "",
@@ -510,8 +569,10 @@ object ReadBookConfig {
                         BitmapUtils.decodeBitmap(curBgStr(), width, height)
                     )
                 }
+            } catch (e: OutOfMemoryError) {
+                Timber.e(e)
             } catch (e: Exception) {
-                e.printStackTrace()
+                Timber.e(e)
             }
             return bgDrawable ?: ColorDrawable(appCtx.getCompatColor(R.color.background))
         }

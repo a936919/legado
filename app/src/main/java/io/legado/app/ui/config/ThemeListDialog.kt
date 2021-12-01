@@ -1,7 +1,7 @@
 package io.legado.app.ui.config
 
+import android.content.Context
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
@@ -20,22 +20,15 @@ import io.legado.app.ui.widget.recycler.VerticalDivider
 import io.legado.app.utils.*
 import io.legado.app.utils.viewbindingdelegate.viewBinding
 
-class ThemeListDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickListener {
+class ThemeListDialog : BaseDialogFragment(R.layout.dialog_recycler_view),
+    Toolbar.OnMenuItemClickListener {
+
     private val binding by viewBinding(DialogRecyclerViewBinding::bind)
-    private lateinit var adapter: Adapter
+    private val adapter by lazy { Adapter(requireContext()) }
 
     override fun onStart() {
         super.onStart()
-        val dm = requireActivity().getSize()
-        dialog?.window?.setLayout((dm.widthPixels * 0.9).toInt(), (dm.heightPixels * 0.9).toInt())
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.dialog_recycler_view, container)
+        setLayout(0.9f, 0.9f)
     }
 
     override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) {
@@ -46,14 +39,13 @@ class ThemeListDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickListener {
         initData()
     }
 
-    private fun initView() = with(binding) {
-        adapter = Adapter()
+    private fun initView() = binding.run {
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.addItemDecoration(VerticalDivider(requireContext()))
         recyclerView.adapter = adapter
     }
 
-    private fun initMenu() = with(binding) {
+    private fun initMenu() = binding.run {
         toolBar.setOnMenuItemClickListener(this@ThemeListDialog)
         toolBar.inflateMenu(R.menu.theme_list)
         toolBar.menu.applyTint(requireContext())
@@ -85,7 +77,7 @@ class ThemeListDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickListener {
                 initData()
             }
             noButton()
-        }.show()
+        }
     }
 
     fun share(index: Int) {
@@ -93,8 +85,8 @@ class ThemeListDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickListener {
         requireContext().share(json, "主题分享")
     }
 
-    inner class Adapter :
-        RecyclerAdapter<ThemeConfig.Config, ItemThemeConfigBinding>(requireContext()) {
+    inner class Adapter(context: Context) :
+        RecyclerAdapter<ThemeConfig.Config, ItemThemeConfigBinding>(context) {
 
         override fun getViewBinding(parent: ViewGroup): ItemThemeConfigBinding {
             return ItemThemeConfigBinding.inflate(inflater, parent, false)

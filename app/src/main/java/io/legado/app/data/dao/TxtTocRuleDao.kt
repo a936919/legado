@@ -1,14 +1,14 @@
 package io.legado.app.data.dao
 
-import androidx.lifecycle.LiveData
 import androidx.room.*
 import io.legado.app.data.entities.TxtTocRule
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TxtTocRuleDao {
 
     @Query("select * from txtTocRules order by serialNumber")
-    fun observeAll(): LiveData<List<TxtTocRule>>
+    fun observeAll(): Flow<List<TxtTocRule>>
 
     @get:Query("select * from txtTocRules order by serialNumber")
     val all: List<TxtTocRule>
@@ -16,8 +16,11 @@ interface TxtTocRuleDao {
     @get:Query("select * from txtTocRules where enable = 1 order by serialNumber")
     val enabled: List<TxtTocRule>
 
+    @get:Query("select ifNull(min(serialNumber), 0) from txtTocRules")
+    val minOrder: Int
+
     @get:Query("select ifNull(max(serialNumber), 0) from txtTocRules")
-    val lastOrderNum: Int
+    val maxOrder: Int
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(vararg rule: TxtTocRule)

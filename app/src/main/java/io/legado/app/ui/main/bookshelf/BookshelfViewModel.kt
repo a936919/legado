@@ -1,19 +1,23 @@
 package io.legado.app.ui.main.bookshelf
 
 import android.app.Application
+import com.google.gson.stream.JsonWriter
 import io.legado.app.R
 import io.legado.app.base.BaseViewModel
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookGroup
 import io.legado.app.data.entities.BookSource
-import io.legado.app.model.webBook.PreciseSearch
+import io.legado.app.help.http.newCallResponseBody
+import io.legado.app.help.http.okHttpClient
+import io.legado.app.help.http.text
+import io.legado.app.model.NoStackTraceException
 import io.legado.app.model.webBook.WebBook
 import io.legado.app.utils.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.isActive
-import rxhttp.wrapper.param.RxHttp
-import rxhttp.wrapper.param.toText
+import java.io.File
+import java.io.FileOutputStream
+import java.io.OutputStreamWriter
 
 class BookshelfViewModel(application: Application) : BaseViewModel(application) {
 
@@ -45,39 +49,54 @@ class BookshelfViewModel(application: Application) : BaseViewModel(application) 
                         origin = bookSource.bookSourceUrl,
                         originName = bookSource.bookSourceName
                     )
-                    WebBook(bookSource).getBookInfo(this, book)
+                    WebBook.getBookInfo(this, bookSource, book)
                         .onSuccess(IO) {
                             it.order = appDb.bookDao.maxOrder + 1
-                            appDb.bookDao.insert(it)
+                            it.save()
                             successCount++
                         }.onError {
-                            throw Exception(it.localizedMessage)
+                            throw it
                         }
                 }
             }
         }.onSuccess {
             if (successCount > 0) {
-                toastOnUi(R.string.success)
+                context.toastOnUi(R.string.success)
             } else {
-                toastOnUi("ERROR")
+                context.toastOnUi("ERROR")
             }
         }.onError {
-            toastOnUi(it.localizedMessage ?: "ERROR")
+            context.toastOnUi(it.localizedMessage ?: "ERROR")
         }
     }
 
-    fun exportBookshelf(books: List<Book>?, success: (json: String) -> Unit) {
+    fun exportBookshelf(books: List<Book>?, success: (file: File) -> Unit) {
         execute {
-            val exportList = arrayListOf<Map<String, String?>>()
-            books?.forEach {
-                val bookMap = hashMapOf<String, String?>()
-                bookMap["name"] = it.name
-                bookMap["author"] = it.author
-                exportList.add(bookMap)
-            }
-            GSON.toJson(exportList)
+            books?.let {
+                val path = "${context.filesDir}/books.json"
+                FileUtils.delete(path)
+                val file = FileUtils.createFileWithReplace(path)
+                @Suppress("BlockingMethodInNonBlockingContext")
+                FileOutputStream(file).use { out ->
+                    val writer = JsonWriter(OutputStreamWriter(out, "UTF-8"))
+                    writer.setIndent("  ")
+                    writer.beginArray()
+                    books.forEach {
+                        val bookMap = hashMapOf<String, String?>()
+                        bookMap["name"] = it.name
+                        bookMap["author"] = it.author
+                        bookMap["intro"] = it.getDisplayIntro()
+                        GSON.toJson(bookMap, bookMap::class.java, writer)
+                    }
+                    writer.endArray()
+                    writer.close()
+                }
+                file
+            } ?: throw NoStackTraceException("书籍不能为空")
         }.onSuccess {
             success(it)
+        }.onError {
+            context.toastOnUi("导出书籍出错\n${it.localizedMessage}")
         }
     }
 
@@ -86,7 +105,9 @@ class BookshelfViewModel(application: Application) : BaseViewModel(application) 
             val text = str.trim()
             when {
                 text.isAbsUrl() -> {
-                    RxHttp.get(text).toText().await().let {
+                    okHttpClient.newCallResponseBody {
+                        url(text)
+                    }.text().let {
                         importBookshelf(it, groupId)
                     }
                 }
@@ -94,49 +115,36 @@ class BookshelfViewModel(application: Application) : BaseViewModel(application) 
                     importBookshelfByJson(text, groupId)
                 }
                 else -> {
-                    throw Exception("格式不对")
+                    throw NoStackTraceException("格式不对")
                 }
             }
         }.onError {
-            toastOnUi(it.localizedMessage ?: "ERROR")
+            context.toastOnUi(it.localizedMessage ?: "ERROR")
         }
     }
 
     private fun importBookshelfByJson(json: String, groupId: Long) {
         execute {
             val bookSources = appDb.bookSourceDao.allEnabled
-            GSON.fromJsonArray<Map<String, String?>>(json)?.forEach {
+            GSON.fromJsonArray<Map<String, String?>>(json)?.forEach { bookInfo ->
                 if (!isActive) return@execute
-                val name = it["name"] ?: ""
-                val author = it["author"] ?: ""
+                val name = bookInfo["name"] ?: ""
+                val author = bookInfo["author"] ?: ""
                 if (name.isNotEmpty() && appDb.bookDao.getBook(name, author) == null) {
-                    val book = PreciseSearch
-                        .searchFirstBook(this, bookSources, name, author)
-                    book?.let {
-                        if (groupId > 0) {
-                            book.group = groupId
+                    WebBook.preciseSearch(this, bookSources, name, author)
+                        .onSuccess {
+                            val book = it.second
+                            if (groupId > 0) {
+                                book.group = groupId
+                            }
+                            book.save()
+                        }.onError { e ->
+                            context.toastOnUi(e.localizedMessage)
                         }
-                        appDb.bookDao.insert(book)
-                    }
                 }
             }
         }.onFinally {
-            toastOnUi(R.string.success)
-        }
-    }
-
-    fun checkGroup(groups: List<BookGroup>) {
-        groups.forEach { group ->
-            if (group.groupId >= 0 && group.groupId and (group.groupId - 1) != 0L) {
-                var id = 1L
-                val idsSum = appDb.bookGroupDao.idsSum
-                while (id and idsSum != 0L) {
-                    id = id.shl(1)
-                }
-                appDb.bookGroupDao.delete(group)
-                appDb.bookGroupDao.insert(group.copy(groupId = id))
-                appDb.bookDao.upGroup(group.groupId, id)
-            }
+            context.toastOnUi(R.string.success)
         }
     }
 

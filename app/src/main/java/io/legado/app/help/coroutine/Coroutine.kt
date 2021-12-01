@@ -1,7 +1,7 @@
 package io.legado.app.help.coroutine
 
-import io.legado.app.BuildConfig
 import kotlinx.coroutines.*
+import timber.log.Timber
 import kotlin.coroutines.CoroutineContext
 
 
@@ -14,7 +14,7 @@ class Coroutine<T>(
 
     companion object {
 
-        val DEFAULT = MainScope()
+        private val DEFAULT = MainScope()
 
         fun <T> async(
             scope: CoroutineScope = DEFAULT,
@@ -137,21 +137,20 @@ class Coroutine<T>(
         return scope.plus(Dispatchers.Main).launch {
             try {
                 start?.let { dispatchVoidCallback(this, it) }
+                ensureActive()
                 val value = executeBlock(scope, context, timeMillis ?: 0L, block)
-                if (isActive) {
-                    success?.let { dispatchCallback(this, value, it) }
-                }
+                ensureActive()
+                success?.let { dispatchCallback(this, value, it) }
+            } catch (e: CancellationException) {
+                Timber.e("任务取消")
             } catch (e: Throwable) {
-                if (BuildConfig.DEBUG) {
-                    e.printStackTrace()
-                }
+                Timber.e(e)
                 val consume: Boolean = errorReturn?.value?.let { value ->
                     if (isActive) {
                         success?.let { dispatchCallback(this, value, it) }
                     }
                     true
                 } ?: false
-
                 if (!consume && isActive) {
                     error?.let { dispatchCallback(this, e, it) }
                 }

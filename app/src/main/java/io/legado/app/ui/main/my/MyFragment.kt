@@ -1,6 +1,5 @@
 package io.legado.app.ui.main.my
 
-import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.Menu
@@ -15,16 +14,14 @@ import io.legado.app.constant.PreferKey
 import io.legado.app.databinding.FragmentMyConfigBinding
 import io.legado.app.help.AppConfig
 import io.legado.app.help.ThemeConfig
-import io.legado.app.lib.theme.ATH
+import io.legado.app.lib.theme.primaryColor
 import io.legado.app.service.WebService
 import io.legado.app.ui.about.AboutActivity
 import io.legado.app.ui.about.DonateActivity
 import io.legado.app.ui.about.ReadRecordActivity
 import io.legado.app.ui.book.source.manage.BookSourceActivity
-import io.legado.app.ui.config.BackupRestoreUi
 import io.legado.app.ui.config.ConfigActivity
-import io.legado.app.ui.config.ConfigViewModel
-import io.legado.app.ui.filepicker.FilePickerDialog
+import io.legado.app.ui.config.ConfigTag
 import io.legado.app.ui.replace.ReplaceRuleActivity
 import io.legado.app.ui.widget.dialog.TextDialog
 import io.legado.app.ui.widget.prefs.NameListPreference
@@ -33,7 +30,7 @@ import io.legado.app.ui.widget.prefs.SwitchPreference
 import io.legado.app.utils.*
 import io.legado.app.utils.viewbindingdelegate.viewBinding
 
-class MyFragment : BaseFragment(R.layout.fragment_my_config), FilePickerDialog.CallBack {
+class MyFragment : BaseFragment(R.layout.fragment_my_config) {
 
     private val binding by viewBinding(FragmentMyConfigBinding::bind)
 
@@ -54,14 +51,9 @@ class MyFragment : BaseFragment(R.layout.fragment_my_config), FilePickerDialog.C
         when (item.itemId) {
             R.id.menu_help -> {
                 val text = String(requireContext().assets.open("help/appHelp.md").readBytes())
-                TextDialog.show(childFragmentManager, text, TextDialog.MD)
+                showDialogFragment(TextDialog(text, TextDialog.Mode.MD))
             }
         }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        BackupRestoreUi.onActivityResult(requestCode, resultCode, data)
     }
 
     /**
@@ -71,15 +63,10 @@ class MyFragment : BaseFragment(R.layout.fragment_my_config), FilePickerDialog.C
         SharedPreferences.OnSharedPreferenceChangeListener {
 
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-            if (WebService.isRun) {
-                putPrefBoolean(PreferKey.webService, true)
-            } else {
-                putPrefBoolean(PreferKey.webService, false)
-            }
+            putPrefBoolean(PreferKey.webService, WebService.isRun)
             addPreferencesFromResource(R.xml.pref_main)
-            val webServicePre = findPreference<SwitchPreference>(PreferKey.webService)
             observeEventSticky<String>(EventBus.WEB_SERVICE) {
-                webServicePre?.let {
+                findPreference<SwitchPreference>(PreferKey.webService)?.let {
                     it.isChecked = WebService.isRun
                     it.summary = if (WebService.isRun) {
                         WebService.hostAddress
@@ -102,7 +89,7 @@ class MyFragment : BaseFragment(R.layout.fragment_my_config), FilePickerDialog.C
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
-            ATH.applyEdgeEffectColor(listView)
+            listView.setEdgeEffectColor(primaryColor)
         }
 
         override fun onResume() {
@@ -136,13 +123,13 @@ class MyFragment : BaseFragment(R.layout.fragment_my_config), FilePickerDialog.C
                 "bookSourceManage" -> startActivity<BookSourceActivity>()
                 "replaceManage" -> startActivity<ReplaceRuleActivity>()
                 "setting" -> startActivity<ConfigActivity> {
-                    putExtra("configType", ConfigViewModel.TYPE_CONFIG)
+                    putExtra("configTag", ConfigTag.OTHER_CONFIG)
                 }
                 "web_dav_setting" -> startActivity<ConfigActivity> {
-                    putExtra("configType", ConfigViewModel.TYPE_WEB_DAV_CONFIG)
+                    putExtra("configTag", ConfigTag.BACKUP_CONFIG)
                 }
                 "theme_setting" -> startActivity<ConfigActivity> {
-                    putExtra("configType", ConfigViewModel.TYPE_THEME_CONFIG)
+                    putExtra("configTag", ConfigTag.THEME_CONFIG)
                 }
                 "readRecord" -> startActivity<ReadRecordActivity>()
                 "donate" -> startActivity<DonateActivity>()

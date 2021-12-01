@@ -1,29 +1,30 @@
 package io.legado.app.ui.rss.source.debug
 
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.SearchView
 import androidx.activity.viewModels
 import io.legado.app.R
 import io.legado.app.base.VMBaseActivity
 import io.legado.app.databinding.ActivitySourceDebugBinding
-import io.legado.app.lib.theme.ATH
 import io.legado.app.lib.theme.accentColor
-
+import io.legado.app.lib.theme.primaryColor
+import io.legado.app.ui.widget.dialog.TextDialog
 import io.legado.app.utils.gone
+import io.legado.app.utils.setEdgeEffectColor
+import io.legado.app.utils.showDialogFragment
 import io.legado.app.utils.toastOnUi
+import io.legado.app.utils.viewbindingdelegate.viewBinding
 import kotlinx.coroutines.launch
 
 
 class RssSourceDebugActivity : VMBaseActivity<ActivitySourceDebugBinding, RssSourceDebugModel>() {
 
-    override val viewModel: RssSourceDebugModel
-            by viewModels()
+    override val binding by viewBinding(ActivitySourceDebugBinding::inflate)
+    override val viewModel by viewModels<RssSourceDebugModel>()
 
-    private lateinit var adapter: RssSourceDebugAdapter
-
-    override fun getViewBinding(): ActivitySourceDebugBinding {
-        return ActivitySourceDebugBinding.inflate(layoutInflater)
-    }
+    private val adapter by lazy { RssSourceDebugAdapter(this) }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         initRecyclerView()
@@ -41,9 +42,21 @@ class RssSourceDebugActivity : VMBaseActivity<ActivitySourceDebugBinding, RssSou
         }
     }
 
+    override fun onCompatCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.rss_source_debug, menu)
+        return super.onCompatCreateOptionsMenu(menu)
+    }
+
+    override fun onCompatOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.menu_list_src -> showDialogFragment(TextDialog(viewModel.listSrc))
+            R.id.menu_content_src -> showDialogFragment(TextDialog(viewModel.contentSrc))
+        }
+        return super.onCompatOptionsItemSelected(item)
+    }
+
     private fun initRecyclerView() {
-        ATH.applyEdgeEffectColor(binding.recyclerView)
-        adapter = RssSourceDebugAdapter(this)
+        binding.recyclerView.setEdgeEffectColor(primaryColor)
         binding.recyclerView.adapter = adapter
         binding.rotateLoading.loadingColor = accentColor
     }

@@ -6,14 +6,17 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RectF
+import android.os.Build
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.ViewConfiguration
+import android.view.WindowInsets
 import android.widget.FrameLayout
 import io.legado.app.help.AppConfig
 import io.legado.app.help.ReadBookConfig
 import io.legado.app.lib.theme.accentColor
-import io.legado.app.service.help.ReadBook
+import io.legado.app.model.ReadAloud
+import io.legado.app.model.ReadBook
 import io.legado.app.ui.book.read.page.api.DataSource
 import io.legado.app.ui.book.read.page.delegate.*
 import io.legado.app.ui.book.read.page.entities.PageDirection
@@ -41,9 +44,9 @@ class ReadView(context: Context, attrs: AttributeSet) :
             upContent()
         }
     var isScroll = false
-    var prevPage: PageView = PageView(context)
-    var curPage: PageView = PageView(context)
-    var nextPage: PageView = PageView(context)
+    val prevPage by lazy { PageView(context) }
+    val curPage by lazy { PageView(context) }
+    val nextPage by lazy { PageView(context) }
     val defaultAnimationSpeed = 300
     private var pressDown = false
     private var isMove = false
@@ -77,15 +80,15 @@ class ReadView(context: Context, attrs: AttributeSet) :
     private var firstCharIndex: Int = 0
 
     val slopSquare by lazy { ViewConfiguration.get(context).scaledTouchSlop }
-    private val tlRect = RectF(0f, 0f, width * 0.33f, height * 0.33f)
-    private val tcRect = RectF(width * 0.33f, 0f, width * 0.66f, height * 0.33f)
-    private val trRect = RectF(width * 0.36f, 0f, width - 0f, height * 0.33f)
-    private val mlRect = RectF(0f, height * 0.33f, width * 0.33f, height * 0.66f)
-    private val mcRect = RectF(width * 0.33f, height * 0.33f, width * 0.66f, height * 0.66f)
-    private val mrRect = RectF(width * 0.66f, height * 0.33f, width - 0f, height * 0.66f)
-    private val blRect = RectF(0f, height * 0.66f, width * 0.33f, height - 0f)
-    private val bcRect = RectF(width * 0.33f, height * 0.66f, width * 0.66f, height - 0f)
-    private val brRect = RectF(width * 0.66f, height * 0.66f, width - 0f, height - 0f)
+    private val tlRect = RectF()
+    private val tcRect = RectF()
+    private val trRect = RectF()
+    private val mlRect = RectF()
+    private val mcRect = RectF()
+    private val mrRect = RectF()
+    private val blRect = RectF()
+    private val bcRect = RectF()
+    private val brRect = RectF()
     private val autoPageRect by lazy { Rect() }
     private val autoPagePint by lazy { Paint().apply { color = context.accentColor } }
     private val boundary by lazy { BreakIterator.getWordInstance(Locale.getDefault()) }
@@ -99,19 +102,25 @@ class ReadView(context: Context, attrs: AttributeSet) :
             setWillNotDraw(false)
             upPageAnim()
         }
+        setRect9x()
+    }
+
+    fun setRect9x() {
+        val edge = if (AppConfig.fullScreenGesturesSupport) 200f else 0f
+        tlRect.set(0f + edge, 0f, width * 0.33f, height * 0.33f)
+        tcRect.set(width * 0.33f, 0f, width * 0.66f, height * 0.33f)
+        trRect.set(width * 0.36f, 0f, width - 0f - edge, height * 0.33f)
+        mlRect.set(0f + edge, height * 0.33f, width * 0.33f, height * 0.66f)
+        mcRect.set(width * 0.33f, height * 0.33f, width * 0.66f, height * 0.66f)
+        mrRect.set(width * 0.66f, height * 0.33f, width - 0f - edge, height * 0.66f)
+        blRect.set(0f + edge, height * 0.66f, width * 0.33f, height - 10f - edge)
+        bcRect.set(width * 0.33f, height * 0.66f, width * 0.66f, height - 0f - edge)
+        brRect.set(width * 0.66f, height * 0.66f, width - 0f - edge, height - 0f - edge)
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        tlRect.set(0f, 0f, width * 0.33f, height * 0.33f)
-        tcRect.set(width * 0.33f, 0f, width * 0.66f, height * 0.33f)
-        trRect.set(width * 0.36f, 0f, width - 0f, height * 0.33f)
-        mlRect.set(0f, height * 0.33f, width * 0.33f, height * 0.66f)
-        mcRect.set(width * 0.33f, height * 0.33f, width * 0.66f, height * 0.66f)
-        mrRect.set(width * 0.66f, height * 0.33f, width - 0f, height * 0.66f)
-        blRect.set(0f, height * 0.66f, width * 0.33f, height - 10f)
-        bcRect.set(width * 0.33f, height * 0.66f, width * 0.66f, height - 0f)
-        brRect.set(width * 0.66f, height * 0.66f, width - 0f, height - 0f)
+        setRect9x()
         prevPage.x = -w.toFloat()
         pageDelegate?.setViewSize(w, h)
     }
@@ -132,6 +141,7 @@ class ReadView(context: Context, attrs: AttributeSet) :
                     bottom.toFloat(),
                     autoPagePint
                 )
+                it.recycle()
             }
         }
     }
@@ -150,6 +160,17 @@ class ReadView(context: Context, attrs: AttributeSet) :
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
         callBack.screenOffTimerStart()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val insets =
+                this.rootWindowInsets.getInsetsIgnoringVisibility(WindowInsets.Type.mandatorySystemGestures())
+            val height = activity?.windowManager?.currentWindowMetrics?.bounds?.height()
+            if (height != null) {
+                if (event.y > height.minus(insets.bottom)) {
+                    return true
+                }
+            }
+        }
+
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 if (isTextSelected) {
@@ -244,8 +265,9 @@ class ReadView(context: Context, attrs: AttributeSet) :
      */
     private fun onLongPress() {
         kotlin.runCatching {
-            with(curPage.textPage) {
-                curPage.selectText(startX, startY) { relativePage, lineIndex, charIndex ->
+            curPage.selectText(startX, startY) { relativePage, lineIndex, charIndex ->
+                val page = if (isScroll) curPage.relativePage(relativePage) else curPage.textPage
+                with(page) {
                     isTextSelected = true
                     firstRelativePage = relativePage
                     firstLineIndex = lineIndex
@@ -390,6 +412,8 @@ class ReadView(context: Context, attrs: AttributeSet) :
             2 -> pageDelegate?.prevPageByAnim(defaultAnimationSpeed)
             3 -> ReadBook.moveToNextChapter(true)
             4 -> ReadBook.moveToPrevChapter(upContent = true, toLast = false)
+            5 -> ReadAloud.prevParagraph(context)
+            6 -> ReadAloud.nextParagraph(context)
         }
     }
 
@@ -446,6 +470,7 @@ class ReadView(context: Context, attrs: AttributeSet) :
 
     fun upPageAnim() {
         isScroll = ReadBook.pageAnim() == 3
+        ChapterProvider.upLayout()
         when (ReadBook.pageAnim()) {
             0 -> if (pageDelegate !is CoverPageDelegate) {
                 pageDelegate = CoverPageDelegate(this)

@@ -5,11 +5,12 @@ import android.content.Intent
 import io.legado.app.base.BaseViewModel
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.BookSource
-import io.legado.app.help.storage.OldRule
-import io.legado.app.utils.GSON
-import io.legado.app.utils.fromJsonObject
-import io.legado.app.utils.getClipText
+import io.legado.app.help.http.newCallStrResponse
+import io.legado.app.help.http.okHttpClient
+import io.legado.app.model.NoStackTraceException
+import io.legado.app.utils.*
 import kotlinx.coroutines.Dispatchers
+import timber.log.Timber
 
 class BookSourceEditViewModel(application: Application) : BaseViewModel(application) {
 
@@ -18,10 +19,10 @@ class BookSourceEditViewModel(application: Application) : BaseViewModel(applicat
 
     fun initData(intent: Intent, onFinally: () -> Unit) {
         execute {
-            val key = intent.getStringExtra("data")
+            val sourceUrl = intent.getStringExtra("sourceUrl")
             var source: BookSource? = null
-            if (key != null) {
-                source = appDb.bookSourceDao.getBookSource(key)
+            if (sourceUrl != null) {
+                source = appDb.bookSourceDao.getBookSource(sourceUrl)
             }
             source?.let {
                 oldSourceUrl = it.bookSourceUrl
@@ -46,38 +47,52 @@ class BookSourceEditViewModel(application: Application) : BaseViewModel(applicat
         }.onSuccess {
             success?.invoke()
         }.onError {
-            toastOnUi(it.localizedMessage)
-            it.printStackTrace()
+            context.toastOnUi(it.localizedMessage)
+            Timber.e(it)
         }
     }
 
     fun pasteSource(onSuccess: (source: BookSource) -> Unit) {
         execute(context = Dispatchers.Main) {
-            var source: BookSource? = null
-            context.getClipText()?.let { json ->
-                source = OldRule.jsonToBookSource(json)
-            }
-            source
-        }.onError {
-            toastOnUi(it.localizedMessage)
-            it.printStackTrace()
-        }.onSuccess {
-            if (it != null) {
-                onSuccess(it)
+            val text = context.getClipText()
+            if (text.isNullOrBlank()) {
+                throw NoStackTraceException("剪贴板为空")
             } else {
-                toastOnUi("格式不对")
+                importSource(text, onSuccess)
             }
+        }.onError {
+            context.toastOnUi(it.localizedMessage ?: "Error")
+            Timber.e(it)
         }
     }
 
     fun importSource(text: String, finally: (source: BookSource) -> Unit) {
         execute {
-            val text1 = text.trim()
-            GSON.fromJsonObject<BookSource>(text1)?.let {
-                finally.invoke(it)
-            }
+            importSource(text)
+        }.onSuccess {
+            it?.let(finally) ?: context.toastOnUi("格式不对")
         }.onError {
-            toastOnUi(it.localizedMessage ?: "Error")
+            context.toastOnUi(it.localizedMessage ?: "Error")
+        }
+    }
+
+    suspend fun importSource(text: String): BookSource? {
+        return when {
+            text.isAbsUrl() -> {
+                val text1 = okHttpClient.newCallStrResponse { url(text) }.body
+                text1?.let { importSource(text1) }
+            }
+            text.isJsonArray() -> {
+                val items: List<Map<String, Any>> = jsonPath.parse(text).read("$")
+                val jsonItem = jsonPath.parse(items[0])
+                BookSource.fromJson(jsonItem.jsonString())
+            }
+            text.isJsonObject() -> {
+                BookSource.fromJson(text)
+            }
+            else -> {
+                null
+            }
         }
     }
 }

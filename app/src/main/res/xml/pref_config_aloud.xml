@@ -10,15 +10,23 @@
 
         <io.legado.app.ui.widget.prefs.SwitchPreference
             android:defaultValue="false"
+            android:title="@string/pref_media_button_per_next"
+            android:summary="@string/pref_media_button_per_next_summary"
+            android:key="mediaButtonPerNext"
+            app:iconSpaceReserved="false" />
+
+        <io.legado.app.ui.widget.prefs.SwitchPreference
+            android:defaultValue="false"
             android:title="@string/read_aloud_by_page"
+            android:summary="@string/read_aloud_by_page_summary"
             android:key="readAloudByPage"
             app:iconSpaceReserved="false" />
 
         <io.legado.app.ui.widget.prefs.Preference
             android:defaultValue="false"
             android:title="@string/speak_engine"
-            android:summary="本地TTS"
-            android:key="speakEngine"
+            android:summary="TTS"
+            android:key="appTtsEngine"
             app:iconSpaceReserved="false" />
 
     </io.legado.app.ui.widget.prefs.PreferenceCategory>

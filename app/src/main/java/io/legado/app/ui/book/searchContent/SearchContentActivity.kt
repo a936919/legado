@@ -15,14 +15,15 @@ import io.legado.app.data.entities.BookChapter
 import io.legado.app.databinding.ActivitySearchContentBinding
 import io.legado.app.help.AppConfig
 import io.legado.app.help.BookHelp
-import io.legado.app.lib.theme.ATH
 import io.legado.app.lib.theme.bottomBackground
 import io.legado.app.lib.theme.getPrimaryTextColor
 import io.legado.app.lib.theme.primaryTextColor
 import io.legado.app.ui.widget.recycler.UpLinearLayoutManager
 import io.legado.app.ui.widget.recycler.VerticalDivider
 import io.legado.app.utils.ColorUtils
+import io.legado.app.utils.applyTint
 import io.legado.app.utils.observeEvent
+import io.legado.app.utils.viewbindingdelegate.viewBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -32,21 +33,18 @@ class SearchContentActivity :
     VMBaseActivity<ActivitySearchContentBinding, SearchContentViewModel>(),
     SearchContentAdapter.Callback {
 
-    override val viewModel: SearchContentViewModel
-            by viewModels()
-    lateinit var adapter: SearchContentAdapter
-    private lateinit var mLayoutManager: UpLinearLayoutManager
-    private lateinit var searchView: SearchView
+    override val binding by viewBinding(ActivitySearchContentBinding::inflate)
+    override val viewModel by viewModels<SearchContentViewModel>()
+    private val adapter by lazy { SearchContentAdapter(this, this) }
+    private val mLayoutManager by lazy { UpLinearLayoutManager(this) }
+    private val searchView: SearchView by lazy {
+        binding.titleBar.findViewById(R.id.search_view)
+    }
     private var searchResultCounts = 0
     private var durChapterIndex = 0
     private var searchResultList: MutableList<SearchResult> = mutableListOf()
 
-    override fun getViewBinding(): ActivitySearchContentBinding {
-        return ActivitySearchContentBinding.inflate(layoutInflater)
-    }
-
     override fun onActivityCreated(savedInstanceState: Bundle?) {
-        searchView = binding.titleBar.findViewById(R.id.search_view)
         val bbg = bottomBackground
         val btc = getPrimaryTextColor(ColorUtils.isColorLight(bbg))
         binding.llSearchBaseInfo.setBackgroundColor(bbg)
@@ -64,7 +62,7 @@ class SearchContentActivity :
     }
 
     private fun initSearchView() {
-        ATH.setTint(searchView, primaryTextColor)
+        searchView.applyTint(primaryTextColor)
         searchView.onActionViewExpanded()
         searchView.isSubmitButtonEnabled = true
         searchView.queryHint = getString(R.string.search)
@@ -84,8 +82,6 @@ class SearchContentActivity :
     }
 
     private fun initRecyclerView() {
-        adapter = SearchContentAdapter(this, this)
-        mLayoutManager = UpLinearLayoutManager(this)
         binding.recyclerView.layoutManager = mLayoutManager
         binding.recyclerView.addItemDecoration(VerticalDivider(this))
         binding.recyclerView.adapter = adapter
@@ -187,8 +183,10 @@ class SearchContentActivity :
                         replaceContents =
                             viewModel.contentProcessor!!.getContent(
                                 book,
-                                chapter.title,
-                                bookContent
+                                chapter,
+                                bookContent,
+                                chineseConvert = false,
+                                reSegment = false
                             )
                     }
                     totalContents = replaceContents?.joinToString("") ?: bookContent

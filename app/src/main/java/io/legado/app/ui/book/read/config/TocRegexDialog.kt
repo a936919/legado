@@ -3,16 +3,12 @@ package io.legado.app.ui.book.read.config
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.widget.Toolbar
-import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import io.legado.app.R
@@ -33,30 +29,29 @@ import io.legado.app.ui.widget.recycler.VerticalDivider
 import io.legado.app.utils.*
 import io.legado.app.utils.viewbindingdelegate.viewBinding
 import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.util.*
 
-class TocRegexDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickListener {
+class TocRegexDialog() : BaseDialogFragment(R.layout.dialog_toc_regex),
+    Toolbar.OnMenuItemClickListener {
+
+    constructor(tocRegex: String?) : this() {
+        arguments = Bundle().apply {
+            putString("tocRegex", tocRegex)
+        }
+    }
+
     private val importTocRuleKey = "tocRuleUrl"
-    private lateinit var adapter: TocRegexAdapter
-    private var tocRegexLiveData: LiveData<List<TxtTocRule>>? = null
-    var selectedName: String? = null
-    private var durRegex: String? = null
     private val viewModel: TocRegexViewModel by viewModels()
     private val binding by viewBinding(DialogTocRegexBinding::bind)
+    private val adapter by lazy { TocRegexAdapter(requireContext()) }
+    var selectedName: String? = null
+    private var durRegex: String? = null
 
     override fun onStart() {
         super.onStart()
-        val dm = requireActivity().getSize()
-        dialog?.window?.setLayout((dm.widthPixels * 0.9).toInt(), (dm.heightPixels * 0.8).toInt())
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.dialog_toc_regex, container)
+        setLayout(0.9f, 0.8f)
     }
 
     override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) {
@@ -70,9 +65,7 @@ class TocRegexDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickListener {
         initData()
     }
 
-    private fun initView() = with(binding) {
-        adapter = TocRegexAdapter(requireContext())
-        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+    private fun initView() = binding.run {
         recyclerView.addItemDecoration(VerticalDivider(requireContext()))
         recyclerView.adapter = adapter
         val itemTouchCallback = ItemTouchCallback(adapter)
@@ -94,12 +87,12 @@ class TocRegexDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickListener {
     }
 
     private fun initData() {
-        tocRegexLiveData?.removeObservers(viewLifecycleOwner)
-        tocRegexLiveData = appDb.txtTocRuleDao.observeAll()
-        tocRegexLiveData?.observe(viewLifecycleOwner, { tocRules ->
-            initSelectedName(tocRules)
-            adapter.setItems(tocRules)
-        })
+        launch {
+            appDb.txtTocRuleDao.observeAll().collect { tocRules ->
+                initSelectedName(tocRules)
+                adapter.setItems(tocRules)
+            }
+        }
     }
 
     private fun initSelectedName(tocRules: List<TxtTocRule>) {
@@ -137,9 +130,9 @@ class TocRegexDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickListener {
         if (!cacheUrls.contains(defaultUrl)) {
             cacheUrls.add(0, defaultUrl)
         }
-        requireContext().alert(titleResource = R.string.import_book_source_on_line) {
-            val alertBinding = DialogEditTextBinding.inflate(layoutInflater)
-            alertBinding.apply {
+        requireContext().alert(titleResource = R.string.import_on_line) {
+            val alertBinding = DialogEditTextBinding.inflate(layoutInflater).apply {
+                editView.hint = "url"
                 editView.setFilterValues(cacheUrls)
                 editView.delCallBack = {
                     cacheUrls.remove(it)
@@ -162,7 +155,7 @@ class TocRegexDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickListener {
                 }
             }
             cancelButton()
-        }.show()
+        }
     }
 
     @SuppressLint("InflateParams")
@@ -183,7 +176,7 @@ class TocRegexDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickListener {
                 }
             }
             cancelButton()
-        }.show()
+        }
     }
 
     inner class TocRegexAdapter(context: Context) :
@@ -262,16 +255,6 @@ class TocRegexDialog : BaseDialogFragment(), Toolbar.OnMenuItemClickListener {
                 }
             }
             isMoved = false
-        }
-    }
-
-    companion object {
-        fun show(fragmentManager: FragmentManager, tocRegex: String? = null) {
-            val dialog = TocRegexDialog()
-            val bundle = Bundle()
-            bundle.putString("tocRegex", tocRegex)
-            dialog.arguments = bundle
-            dialog.show(fragmentManager, "tocRegexDialog")
         }
     }
 

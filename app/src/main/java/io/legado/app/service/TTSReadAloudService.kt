@@ -1,20 +1,17 @@
 package io.legado.app.service
 
 import android.app.PendingIntent
-import android.content.Intent
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import io.legado.app.R
 import io.legado.app.constant.AppConst
+import io.legado.app.constant.AppPattern
 import io.legado.app.constant.EventBus
 import io.legado.app.help.AppConfig
-import io.legado.app.help.IntentHelp
 import io.legado.app.help.MediaHelp
-import io.legado.app.service.help.ReadBook
-import io.legado.app.utils.getPrefBoolean
-import io.legado.app.utils.postEvent
-import io.legado.app.utils.toastOnUi
-import kotlinx.coroutines.launch
+import io.legado.app.lib.dialogs.SelectItem
+import io.legado.app.model.ReadBook
+import io.legado.app.utils.*
 import java.util.*
 
 class TTSReadAloudService : BaseReadAloudService(), TextToSpeech.OnInitListener {
@@ -29,12 +26,6 @@ class TTSReadAloudService : BaseReadAloudService(), TextToSpeech.OnInitListener 
         upSpeechRate()
     }
 
-    override fun onTaskRemoved(rootIntent: Intent?) {
-        super.onTaskRemoved(rootIntent)
-        clearTTS()
-        stopSelf()
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         clearTTS()
@@ -43,7 +34,12 @@ class TTSReadAloudService : BaseReadAloudService(), TextToSpeech.OnInitListener 
     @Synchronized
     private fun initTts() {
         ttsInitFinish = false
-        textToSpeech = TextToSpeech(this, this)
+        val engine = GSON.fromJsonObject<SelectItem<String>>(AppConfig.ttsEngine)?.value
+        textToSpeech = if (engine.isNullOrBlank()) {
+            TextToSpeech(this, this)
+        } else {
+            TextToSpeech(this, this, engine)
+        }
     }
 
     @Synchronized
@@ -63,9 +59,7 @@ class TTSReadAloudService : BaseReadAloudService(), TextToSpeech.OnInitListener 
                 play()
             }
         } else {
-            launch {
-                toastOnUi(R.string.tts_init_failed)
-            }
+            toastOnUi(R.string.tts_init_failed)
         }
     }
 
@@ -79,11 +73,16 @@ class TTSReadAloudService : BaseReadAloudService(), TextToSpeech.OnInitListener 
                 textToSpeech?.let {
                     it.speak("", TextToSpeech.QUEUE_FLUSH, null, null)
                     for (i in nowSpeak until contentList.size) {
-                        it.speak(contentList[i], TextToSpeech.QUEUE_ADD, null, AppConst.APP_TAG + i)
+                        val text = contentList[i].replace(AppPattern.notReadAloudRegex, "")
+                        it.speak(text, TextToSpeech.QUEUE_ADD, null, AppConst.APP_TAG + i)
                     }
                 }
             }
         }
+    }
+
+    override fun playStop() {
+        textToSpeech?.stop()
     }
 
     /**
@@ -97,30 +96,6 @@ class TTSReadAloudService : BaseReadAloudService(), TextToSpeech.OnInitListener 
             }
         } else {
             textToSpeech?.setSpeechRate((AppConfig.ttsSpeechRate + 5) / 10f)
-        }
-    }
-
-    /**
-     * 上一段
-     */
-    override fun prevP() {
-        if (nowSpeak > 0) {
-            textToSpeech?.stop()
-            nowSpeak--
-            readAloudNumber -= contentList[nowSpeak].length.minus(1)
-            play()
-        }
-    }
-
-    /**
-     * 下一段
-     */
-    override fun nextP() {
-        if (nowSpeak < contentList.size - 1) {
-            textToSpeech?.stop()
-            readAloudNumber += contentList[nowSpeak].length.plus(1)
-            nowSpeak++
-            play()
         }
     }
 
@@ -181,7 +156,7 @@ class TTSReadAloudService : BaseReadAloudService(), TextToSpeech.OnInitListener 
     }
 
     override fun aloudServicePendingIntent(actionStr: String): PendingIntent? {
-        return IntentHelp.servicePendingIntent<TTSReadAloudService>(this, actionStr)
+        return servicePendingIntent<TTSReadAloudService>(actionStr)
     }
 
 }

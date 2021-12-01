@@ -1,8 +1,6 @@
 package io.legado.app.ui.config
 
 import android.annotation.SuppressLint
-import android.app.Activity
-import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Build
@@ -11,51 +9,56 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
-import androidx.documentfile.provider.DocumentFile
+import android.widget.SeekBar
 import androidx.preference.Preference
 import io.legado.app.R
+import io.legado.app.base.AppContextWrapper
 import io.legado.app.base.BasePreferenceFragment
 import io.legado.app.constant.AppConst
 import io.legado.app.constant.EventBus
 import io.legado.app.constant.PreferKey
 import io.legado.app.databinding.DialogEditTextBinding
+import io.legado.app.databinding.DialogImageBlurringBinding
 import io.legado.app.help.AppConfig
 import io.legado.app.help.LauncherIconHelp
 import io.legado.app.help.ThemeConfig
-import io.legado.app.help.permission.Permissions
-import io.legado.app.help.permission.PermissionsCompat
 import io.legado.app.lib.dialogs.alert
 import io.legado.app.lib.dialogs.selector
-import io.legado.app.lib.theme.ATH
+import io.legado.app.lib.theme.primaryColor
 import io.legado.app.ui.widget.number.NumberPickerDialog
 import io.legado.app.ui.widget.prefs.ColorPreference
-import io.legado.app.ui.widget.prefs.PreferenceCategory
+import io.legado.app.ui.widget.seekbar.SeekBarChangeListener
 import io.legado.app.utils.*
-import java.io.File
 
 
 @Suppress("SameParameterValue")
 class ThemeConfigFragment : BasePreferenceFragment(),
     SharedPreferences.OnSharedPreferenceChangeListener {
 
-    private val requestCodeBgImage = 234
-    private val requestCodeBgImageN = 342
+    private val requestCodeBgLight = 121
+    private val requestCodeBgDark = 122
+    private val selectImage = registerForActivityResult(SelectImageContract()) {
+        it.uri?.let { uri ->
+            when (it.requestCode) {
+                requestCodeBgLight -> setBgFromUri(uri, PreferKey.bgImage) {
+                    upTheme(false)
+                }
+                requestCodeBgDark -> setBgFromUri(uri, PreferKey.bgImageN) {
+                    upTheme(true)
+                }
+            }
+        }
+    }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         addPreferencesFromResource(R.xml.pref_config_theme)
         if (Build.VERSION.SDK_INT < 26) {
             preferenceScreen.removePreferenceRecursively(PreferKey.launcherIcon)
         }
-        if (AppConfig.isGooglePlay) {
-            upPreferenceSummary(PreferKey.bgImage, getPrefString(PreferKey.bgImage))
-            upPreferenceSummary(PreferKey.bgImageN, getPrefString(PreferKey.bgImageN))
-        } else {
-            findPreference<PreferenceCategory>("dayThemeCategory")
-                ?.removePreferenceRecursively(PreferKey.bgImage)
-            findPreference<PreferenceCategory>("nightThemeCategory")
-                ?.removePreferenceRecursively(PreferKey.bgImageN)
-        }
+        upPreferenceSummary(PreferKey.bgImage, getPrefString(PreferKey.bgImage))
+        upPreferenceSummary(PreferKey.bgImageN, getPrefString(PreferKey.bgImageN))
         upPreferenceSummary(PreferKey.barElevation, AppConfig.elevation.toString())
+        upPreferenceSummary(PreferKey.fontScale)
         findPreference<ColorPreference>(PreferKey.cBackground)?.let {
             it.onSaveColor = { color ->
                 if (!ColorUtils.isColorLight(color)) {
@@ -76,58 +79,23 @@ class ThemeConfigFragment : BasePreferenceFragment(),
                 }
             }
         }
-        findPreference<ColorPreference>(PreferKey.cAccent)?.let {
-            it.onSaveColor = { color ->
-                val background =
-                    getPrefInt(PreferKey.cBackground, getCompatColor(R.color.md_grey_100))
-                val textColor = getCompatColor(R.color.primaryText)
-                when {
-                    ColorUtils.getColorDifference(color, background) <= 60 -> {
-                        toastOnUi(R.string.accent_background_diff)
-                        true
-                    }
-                    ColorUtils.getColorDifference(color, textColor) <= 60 -> {
-                        toastOnUi(R.string.accent_text_diff)
-                        true
-                    }
-                    else -> false
-                }
-            }
-        }
-        findPreference<ColorPreference>(PreferKey.cNAccent)?.let {
-            it.onSaveColor = { color ->
-                val background =
-                    getPrefInt(PreferKey.cNBackground, getCompatColor(R.color.md_grey_900))
-                val textColor = getCompatColor(R.color.primaryText)
-                when {
-                    ColorUtils.getColorDifference(color, background) <= 60 -> {
-                        toastOnUi(R.string.accent_background_diff)
-                        true
-                    }
-                    ColorUtils.getColorDifference(color, textColor) <= 60 -> {
-                        toastOnUi(R.string.accent_text_diff)
-                        true
-                    }
-                    else -> false
-                }
-            }
-        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        ATH.applyEdgeEffectColor(listView)
+        activity?.setTitle(R.string.theme_setting)
+        listView.setEdgeEffectColor(primaryColor)
         setHasOptionsMenu(true)
     }
 
-    override fun onResume() {
-        super.onResume()
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
         preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
     }
 
-    override fun onPause() {
+    override fun onDestroy() {
+        super.onDestroy()
         preferenceManager.sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
-        super.onPause()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -163,6 +131,10 @@ class ThemeConfigFragment : BasePreferenceFragment(),
             PreferKey.cNBBackground -> {
                 upTheme(true)
             }
+            PreferKey.bgImage,
+            PreferKey.bgImageN -> {
+                upPreferenceSummary(key, getPrefString(key))
+            }
         }
 
     }
@@ -183,47 +155,36 @@ class ThemeConfigFragment : BasePreferenceFragment(),
                     AppConfig.elevation = it
                     recreateActivities()
                 }
+            PreferKey.fontScale -> NumberPickerDialog(requireContext())
+                .setTitle(getString(R.string.font_scale))
+                .setMaxValue(16)
+                .setMinValue(8)
+                .setValue(10)
+                .setCustomButton((R.string.btn_default_s)) {
+                    putPrefInt(PreferKey.fontScale, 0)
+                    recreateActivities()
+                }
+                .show {
+                    putPrefInt(PreferKey.fontScale, it)
+                    recreateActivities()
+                }
+            PreferKey.bgImage -> selectBgAction(false)
+            PreferKey.bgImageN -> selectBgAction(true)
             "themeList" -> ThemeListDialog().show(childFragmentManager, "themeList")
-            "saveDayTheme", "saveNightTheme" -> saveThemeAlert(key)
-            PreferKey.bgImage -> if (getPrefString(PreferKey.bgImage).isNullOrEmpty()) {
-                selectImage(requestCodeBgImage)
-            } else {
-                selector(items = arrayListOf("删除图片", "选择图片")) { _, i ->
-                    if (i == 0) {
-                        removePref(PreferKey.bgImage)
-                        upTheme(false)
-                    } else {
-                        selectImage(requestCodeBgImage)
-                    }
-                }
-            }
-            PreferKey.bgImageN -> if (getPrefString(PreferKey.bgImageN).isNullOrEmpty()) {
-                selectImage(requestCodeBgImageN)
-            } else {
-                selector(items = arrayListOf("删除图片", "选择图片")) { _, i ->
-                    if (i == 0) {
-                        removePref(PreferKey.bgImageN)
-                        upTheme(true)
-                    } else {
-                        selectImage(requestCodeBgImageN)
-                    }
-                }
-            }
+            "saveDayTheme",
+            "saveNightTheme" -> alertSaveTheme(key)
+            "coverConfig" -> (activity as? ConfigActivity)
+                ?.replaceFragment<CoverConfigFragment>(ConfigTag.COVER_CONFIG)
         }
         return super.onPreferenceTreeClick(preference)
     }
 
-    private fun selectImage(requestCode: Int) {
-        val intent = Intent(Intent.ACTION_GET_CONTENT)
-        intent.addCategory(Intent.CATEGORY_OPENABLE)
-        intent.type = "image/*"
-        startActivityForResult(intent, requestCode)
-    }
-
     @SuppressLint("InflateParams")
-    private fun saveThemeAlert(key: String) {
+    private fun alertSaveTheme(key: String) {
         alert(R.string.theme_name) {
-            val alertBinding = DialogEditTextBinding.inflate(layoutInflater)
+            val alertBinding = DialogEditTextBinding.inflate(layoutInflater).apply {
+                editView.hint = "name"
+            }
             customView { alertBinding.root }
             okButton {
                 alertBinding.editView.text?.toString()?.let { themeName ->
@@ -238,7 +199,65 @@ class ThemeConfigFragment : BasePreferenceFragment(),
                 }
             }
             noButton()
-        }.show()
+        }
+    }
+
+    private fun selectBgAction(isNight: Boolean) {
+        val bgKey = if (isNight) PreferKey.bgImageN else PreferKey.bgImage
+        val blurringKey = if (isNight) PreferKey.bgImageNBlurring else PreferKey.bgImageBlurring
+        val actions = arrayListOf(
+            getString(R.string.background_image_blurring),
+            getString(R.string.select_image)
+        )
+        if (!getPrefString(bgKey).isNullOrEmpty()) {
+            actions.add(getString(R.string.delete))
+        }
+        context?.selector(items = actions) { _, i ->
+            when (i) {
+                0 -> alertImageBlurring(blurringKey) {
+                    upTheme(isNight)
+                }
+                1 -> {
+                    if (isNight) {
+                        selectImage.launch(requestCodeBgDark)
+                    } else {
+                        selectImage.launch(requestCodeBgLight)
+                    }
+                }
+                2 -> {
+                    removePref(bgKey)
+                    upTheme(isNight)
+                }
+            }
+        }
+    }
+
+    private fun alertImageBlurring(preferKey: String, success: () -> Unit) {
+        alert(R.string.background_image_blurring) {
+            val alertBinding = DialogImageBlurringBinding.inflate(layoutInflater).apply {
+                getPrefInt(preferKey, 0).let {
+                    seekBar.progress = it
+                    textViewValue.text = it.toString()
+                }
+                seekBar.setOnSeekBarChangeListener(object : SeekBarChangeListener {
+                    override fun onProgressChanged(
+                        seekBar: SeekBar,
+                        progress: Int,
+                        fromUser: Boolean
+                    ) {
+                        textViewValue.text = progress.toString()
+                    }
+                })
+            }
+            customView { alertBinding.root }
+            okButton {
+                alertBinding.seekBar.progress.let {
+                    putPrefInt(preferKey, it)
+                    success.invoke()
+                }
+            }
+            noButton()
+        }
     }
 
     private fun upTheme(isNightTheme: Boolean) {
@@ -254,71 +273,32 @@ class ThemeConfigFragment : BasePreferenceFragment(),
         postEvent(EventBus.RECREATE, "")
     }
 
-    private fun upPreferenceSummary(preferenceKey: String, value: String?) {
+    private fun upPreferenceSummary(preferenceKey: String, value: String? = null) {
         val preference = findPreference<Preference>(preferenceKey) ?: return
         when (preferenceKey) {
             PreferKey.barElevation -> preference.summary =
                 getString(R.string.bar_elevation_s, value)
+            PreferKey.fontScale -> {
+                val fontScale = AppContextWrapper.getFontScale(requireContext())
+                preference.summary = getString(R.string.font_scale_summary, fontScale)
+            }
+            PreferKey.bgImage,
+            PreferKey.bgImageN -> preference.summary = if (value.isNullOrBlank()) {
+                getString(R.string.select_image)
+            } else {
+                value
+            }
             else -> preference.summary = value
         }
     }
 
     private fun setBgFromUri(uri: Uri, preferenceKey: String, success: () -> Unit) {
-        if (uri.isContentScheme()) {
-            val doc = DocumentFile.fromSingleUri(requireContext(), uri)
-            doc?.name?.let {
-                var file = requireContext().externalFilesDir
-                file = FileUtils.createFileIfNotExist(file, preferenceKey, it)
-                kotlin.runCatching {
-                    DocumentUtils.readBytes(requireContext(), doc.uri)
-                }.getOrNull()?.let { byteArray ->
-                    file.writeBytes(byteArray)
-                    putPrefString(preferenceKey, file.absolutePath)
-                    upPreferenceSummary(preferenceKey, file.absolutePath)
-                    success()
-                } ?: toastOnUi("获取文件出错")
-            }
-        } else {
-            PermissionsCompat.Builder(this)
-                .addPermissions(
-                    Permissions.READ_EXTERNAL_STORAGE,
-                    Permissions.WRITE_EXTERNAL_STORAGE
-                )
-                .rationale(R.string.bg_image_per)
-                .onGranted {
-                    RealPathUtil.getPath(requireContext(), uri)?.let { path ->
-                        val imgFile = File(path)
-                        if (imgFile.exists()) {
-                            var file = requireContext().externalFilesDir
-                            file = FileUtils.createFileIfNotExist(file, preferenceKey, imgFile.name)
-                            file.writeBytes(imgFile.readBytes())
-                            putPrefString(preferenceKey, file.absolutePath)
-                            upPreferenceSummary(preferenceKey, file.absolutePath)
-                            success()
-                        }
-                    }
-                }
-                .request()
-        }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        when (requestCode) {
-            requestCodeBgImage -> if (resultCode == Activity.RESULT_OK) {
-                data?.data?.let { uri ->
-                    setBgFromUri(uri, PreferKey.bgImage) {
-                        upTheme(false)
-                    }
-                }
-            }
-            requestCodeBgImageN -> if (resultCode == Activity.RESULT_OK) {
-                data?.data?.let { uri ->
-                    setBgFromUri(uri, PreferKey.bgImageN) {
-                        upTheme(true)
-                    }
-                }
-            }
+        readUri(uri) { name, bytes ->
+            var file = requireContext().externalFiles
+            file = FileUtils.createFileIfNotExist(file, preferenceKey, name)
+            file.writeBytes(bytes)
+            putPrefString(preferenceKey, file.absolutePath)
+            success()
         }
     }
 
