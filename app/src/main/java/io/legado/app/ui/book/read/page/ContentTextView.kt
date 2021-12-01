@@ -122,7 +122,8 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
             lineBase,
             lineBottom,
             isTitle = textLine.isTitle,
-            isReadAloud = textLine.isReadAloud
+            isReadAloud = textLine.isReadAloud,
+            textLine.isImage
         )
     }
 
@@ -137,6 +138,7 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
         lineBottom: Float,
         isTitle: Boolean,
         isReadAloud: Boolean,
+        isImageLine: Boolean
     ) {
         val textPaint = if (isTitle) {
             ChapterProvider.titlePaint
@@ -149,7 +151,7 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
             if (isReadAloud || isTitle) context.accentColor else ReadBookConfig.textColor
         textChars.forEach {
             if (it.isImage) {
-                drawImage(canvas, it, lineTop, lineBottom)
+                drawImage(canvas, it, lineTop, lineBottom,isImageLine)
             } else {
                 canvas.drawText(it.charData, it.start, lineBase, textPaint)
             }

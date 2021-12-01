@@ -133,7 +133,7 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
     private fun getContent(chapter: BookChapter): String? {
         /*获取当前章节文本*/
         var string = getChildChapter(chapter, chapter.url)
-        val childContends = appDb.epubChapter.get(book.bookUrl, chapter.url)
+        val childContends = appDb.epubChapterDao.get(book.bookUrl, chapter.url)
         childContends?.forEach {
             string += "\n" + getChildChapter(chapter, it.href)
         }
@@ -289,8 +289,8 @@ class EPUBFile(var book: io.legado.app.data.entities.Book) {
                     i++
                 }
             }
-            appDb.epubChapter.deleteByName(book.bookUrl)
-            if (chapters.size > 0) appDb.epubChapter.insert(*chapters.toTypedArray())
+            appDb.epubChapterDao.deleteByName(book.bookUrl)
+            if (chapters.size > 0) appDb.epubChapterDao.insert(*chapters.toTypedArray())
         }
     }
 
