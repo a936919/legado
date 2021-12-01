@@ -144,6 +144,8 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
                         binding.viewPagerMain.currentItem = 0
                         return true
                     }
+                    moveTaskToBack(true)
+/*
                     if (System.currentTimeMillis() - exitTime > 2000) {
                         toastOnUi(R.string.double_click_exit)
                         exitTime = System.currentTimeMillis()
@@ -153,7 +155,7 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
                         } else {
                             moveTaskToBack(true)
                         }
-                    }
+                    }*/
                     return true
                 }
             }
