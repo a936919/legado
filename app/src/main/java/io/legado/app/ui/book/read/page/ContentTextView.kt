@@ -148,7 +148,7 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
         textPaint.style = Paint.Style.FILL_AND_STROKE
         textPaint.strokeWidth = ReadBookConfig.boldSize
         textPaint.color =
-            if (isReadAloud || isTitle) context.accentColor else ReadBookConfig.textColor
+            if (isReadAloud) context.accentColor else ReadBookConfig.textColor
         textChars.forEach {
             if (it.isImage) {
                 drawImage(canvas, it, lineTop, lineBottom,isImageLine)
