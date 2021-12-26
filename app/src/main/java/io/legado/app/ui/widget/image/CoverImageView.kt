@@ -38,8 +38,8 @@ class CoverImageView @JvmOverloads constructor(
         val textPaint = TextPaint()
         textPaint.typeface = Typeface.DEFAULT
         textPaint.isAntiAlias = true
-        textPaint.textAlign = Paint.Align.RIGHT
-        textPaint.textSkewX = -0.1f
+        textPaint.textAlign = Paint.Align.CENTER
+        textPaint.textSkewX = -0.2f
         textPaint
     }
     private val authorPaint by lazy {
@@ -67,13 +67,13 @@ class CoverImageView @JvmOverloads constructor(
         super.onLayout(changed, left, top, right, bottom)
         width = getWidth().toFloat()
         height = getHeight().toFloat()
-        namePaint.textSize = width / 8
+        namePaint.textSize = width / 7
         namePaint.strokeWidth = namePaint.textSize / 10
         authorPaint.textSize = width / 9
         authorPaint.strokeWidth = authorPaint.textSize / 10
         val fm = namePaint.fontMetrics
-        nameHeight = height * 0.2f + (fm.bottom - fm.top) * 0.2f
-        authorHeight = nameHeight + (fm.bottom - fm.top) * 0.6f
+        nameHeight = height * 0.3f + (fm.bottom - fm.top) * 0.5f
+        authorHeight = nameHeight + (fm.bottom - fm.top) * 2f
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -96,23 +96,22 @@ class CoverImageView @JvmOverloads constructor(
         super.onDraw(canvas)
         if (!loadFailed || !showBookName) return
         name?.let {
-            /*
             namePaint.color = Color.WHITE
             namePaint.style = Paint.Style.STROKE
-            canvas.drawText(it, width / 2, nameHeight, namePaint)*/
-            namePaint.color = Color.WHITE
+            canvas.drawText(it, width / 2, nameHeight, namePaint)
+            namePaint.color = Color.GRAY
             namePaint.style = Paint.Style.FILL
-            canvas.drawText(it, width*0.93f, nameHeight, namePaint)
+            canvas.drawText(it, width / 2, nameHeight, namePaint)
         }
-        /*
+
         author?.let {
             authorPaint.color = Color.WHITE
             authorPaint.style = Paint.Style.STROKE
             canvas.drawText(it, width / 2, authorHeight, authorPaint)
-            authorPaint.color = Color.DKGRAY
+            authorPaint.color = Color.GRAY
             authorPaint.style = Paint.Style.FILL
             canvas.drawText(it, width / 2, authorHeight, authorPaint)
-        }*/
+        }
     }
 
     fun setHeight(height: Int) {
