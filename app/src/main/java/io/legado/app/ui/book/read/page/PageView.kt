@@ -158,7 +158,7 @@ class PageView(context: Context) : FrameLayout(context) {
         tvPageAndTotal?.apply {
             isBattery = false
             typeface = ChapterProvider.typeface
-            textSize = 12f
+            textSize = 11f
         }
         tvBookName = getTipView(ReadTipConfig.bookName)
         tvBookName?.apply {
@@ -170,7 +170,7 @@ class PageView(context: Context) : FrameLayout(context) {
         tvTimeBattery?.apply {
             isBattery = false
             typeface = ChapterProvider.typeface
-            textSize = 12f
+            textSize = 11f
         }
     }
 
@@ -207,7 +207,7 @@ class PageView(context: Context) : FrameLayout(context) {
     private fun upTimeBattery() {
         tvTimeBattery?.let {
             val time = timeFormat.format(Date(System.currentTimeMillis()))
-            it.text = "$time  [$battery%]"
+            it.text = "$battery%   $time"
         }
     }
 
@@ -233,7 +233,7 @@ class PageView(context: Context) : FrameLayout(context) {
         tvTitle?.text = textPage.title
         tvPage?.text = "${index.plus(1)}/$pageSize"
         tvTotalProgress?.text = readProgress
-        tvPageAndTotal?.text = "${index.plus(1)}/$pageSize  $readProgress"
+        tvPageAndTotal?.text = "${index.plus(1)}/$pageSize   $readProgress"
     }
 
     fun scroll(offset: Int) {
