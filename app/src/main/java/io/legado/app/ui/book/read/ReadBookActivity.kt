@@ -13,7 +13,6 @@ import androidx.core.view.get
 import androidx.core.view.isVisible
 import androidx.core.view.size
 import com.jaredrummler.android.colorpicker.ColorPickerDialogListener
-import io.legado.app.App
 import io.legado.app.R
 import io.legado.app.constant.AppConst
 import io.legado.app.constant.EventBus
@@ -308,7 +307,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
                     imgStyles
                 ) { _, index ->
                     ReadBook.book?.setImageStyle(imgStyles[index])
-                    refreshBook()
+                    ReadBook.loadContent(false)
                 }
             }
             R.id.menu_get_progress -> synProgress()
