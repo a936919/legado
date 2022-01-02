@@ -28,11 +28,6 @@
         android:title="@string/book_source_manage"
         app:showAsAction="never" />
     <item
-        android:id="@+id/menu_ignore_author"
-        android:title="忽略作者"
-        android:checkable="true"
-        app:showAsAction="never" />
-    <item
         android:id="@+id/menu_check_author"
         android:title="@string/checkAuthor"
         android:checkable="true"

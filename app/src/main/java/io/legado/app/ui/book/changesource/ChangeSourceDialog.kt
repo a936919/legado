@@ -95,8 +95,6 @@ class ChangeSourceDialog : BaseDialogFragment(),
             ?.isChecked = AppConfig.changeSourceLoadInfo
         binding.toolBar.menu.findItem(R.id.menu_load_toc)
             ?.isChecked = AppConfig.changeSourceLoadToc
-        binding.toolBar.menu.findItem(R.id.menu_ignore_author)
-            ?.isChecked = AppConfig.ignoreAuthor
     }
 
     private fun initSourceName(){
