@@ -22,10 +22,11 @@ import io.legado.app.help.BookHelp
 import io.legado.app.help.DefaultData
 import io.legado.app.help.LocalConfig
 import io.legado.app.help.storage.Backup
+import io.legado.app.lib.permission.Permissions
+import io.legado.app.lib.permission.PermissionsCompat
 import io.legado.app.lib.theme.ATH
 import io.legado.app.lib.theme.elevation
 import io.legado.app.service.BaseReadAloudService
-import io.legado.app.ui.filepicker.FilePicker
 import io.legado.app.ui.main.bookshelf.BookshelfFragment
 import io.legado.app.ui.main.explore.ExploreFragment
 import io.legado.app.ui.main.my.MyFragment
@@ -110,10 +111,8 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
         if (LocalConfig.versionCode != appInfo.versionCode) {
             LocalConfig.versionCode = appInfo.versionCode
             if (LocalConfig.isFirstOpenApp) {
-                FilePicker.checkPermissions(this)
-                //val text = String(assets.open("help/appHelp.md").readBytes())
-                //TextDialog.show(supportFragmentManager, text, TextDialog.MD)
-            } else  {
+                checkPermissions()
+            } else if (!BuildConfig.DEBUG) {
                 val log = String(assets.open("updateLog.md").readBytes())
                 TextDialog.show(supportFragmentManager, log, TextDialog.MD)
                 DefaultData.importDefaultTocRules()//版本更新时更新自带本地txt目录规则
@@ -121,7 +120,16 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
             viewModel.upVersion()
         }
     }
-
+    
+    private fun checkPermissions(success: (() -> Unit)? = null) {
+        PermissionsCompat.Builder(this)
+            .addPermissions(*Permissions.Group.STORAGE)
+            .rationale(R.string.tip_perm_request_storage)
+            .onGranted {
+                success?.invoke()
+            }
+            .request()
+    }
     override fun onPageSelected(position: Int) = with(binding) {
         pagePosition = position
         when (position) {
@@ -163,7 +171,9 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
 
     override fun onPause() {
         super.onPause()
-        Backup.autoBack(this)
+        if (!BuildConfig.DEBUG) {
+            Backup.autoBack(this)
+        }
     }
 
     override fun onDestroy() {
