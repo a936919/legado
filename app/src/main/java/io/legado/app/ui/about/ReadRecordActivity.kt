@@ -22,6 +22,10 @@ import io.legado.app.lib.theme.accentColor
 import io.legado.app.lib.theme.backgroundColor
 import io.legado.app.ui.book.info.BookInfoActivity
 import io.legado.app.utils.*
+import io.legado.app.ui.book.read.ReadBookActivity
+import io.legado.app.ui.book.search.SearchActivity
+import io.legado.app.utils.cnCompare
+import io.legado.app.utils.startActivity
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
@@ -125,7 +129,7 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
 
             }
 
-            if(status == 5) readRecords = readRecords.filter { appDb.bookmarkDao.haveBook(it.bookUrl)}
+            if(status == 5) readRecords = readRecords.filter { appDb.bookmarkDao.haveBook(it.bookName,it.author)}
             else if(status>=0) readRecords = readRecords.filter { it.status==status }
             if(sortMode == 1) readRecords = readRecords.sortedBy { -it.readTime }
             withContext(Main) {
@@ -201,6 +205,23 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
 
         override fun registerListener(holder: ItemViewHolder, binding: ItemReadRecordBinding) {
             binding.apply {
+                root.setOnClickListener {
+                    val item = getItem(holder.layoutPosition) ?: return@setOnClickListener
+                    launch {
+                        val book = withContext(IO) {
+                            appDb.bookDao.findByName(item.bookName).firstOrNull()
+                        }
+                        if (book == null) {
+                            startActivity<SearchActivity> {
+                                putExtra("key", item.bookName)
+                            }
+                        } else {
+                            startActivity<ReadBookActivity> {
+                                putExtra("bookUrl", book.bookUrl)
+                            }
+                        }
+                    }
+                }
                 tvRemove.setOnClickListener {
                     getItem(holder.layoutPosition)?.let { item ->
                         sureDelAlert(item)

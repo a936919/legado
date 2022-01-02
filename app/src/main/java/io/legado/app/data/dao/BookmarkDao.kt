@@ -17,18 +17,25 @@ interface BookmarkDao {
     @Query("delete from bookmarks where bookUrl = :bookUrl")
     fun delByBook(bookUrl: String)
 
-    @Query("select * from bookmarks where bookUrl = :bookUrl or (bookName = :bookName and bookAuthor = :bookAuthor)")
+    @Query("select * from bookmarks where bookName = :bookName and bookAuthor = :bookAuthor")
     fun observeByBook(
-        bookUrl: String,
         bookName: String,
         bookAuthor: String
     ): LiveData<List<Bookmark>>
+    @Query("select count(bookName) as Boolean from bookmarks where bookName = :bookName and bookAuthor = :bookAuthor ")
+    fun haveBook(bookName: String,bookAuthor: String): Boolean
 
-    @Query("select count(bookUrl) as Boolean from bookmarks where bookUrl = :bookUrl")
-    fun haveBook(bookUrl: String): Boolean
-
-    @Query("SELECT * FROM bookmarks where bookUrl = :bookUrl and chapterName like '%'||:key||'%' or content like '%'||:key||'%'")
-    fun liveDataSearch(bookUrl: String, key: String): LiveData<List<Bookmark>>
+    @Query(
+        """
+        SELECT * FROM bookmarks where bookName = :bookName and bookAuthor = :bookAuthor 
+        and chapterName like '%'||:key||'%' or content like '%'||:key||'%'
+    """
+    )
+    fun liveDataSearch(
+        bookName: String,
+        bookAuthor: String,
+        key: String
+    ): LiveData<List<Bookmark>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(vararg bookmark: Bookmark)
@@ -38,8 +45,5 @@ interface BookmarkDao {
 
     @Delete
     fun delete(vararg bookmark: Bookmark)
-
-    @Query("delete from bookmarks where bookUrl = :bookUrl and chapterName like '%'||:chapterName||'%'")
-    fun delByBookmark(bookUrl: String, chapterName: String)
 
 }

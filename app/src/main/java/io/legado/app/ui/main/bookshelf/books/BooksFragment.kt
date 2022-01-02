@@ -19,7 +19,6 @@ import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.databinding.FragmentBooksBinding
 import io.legado.app.help.AppConfig
-import io.legado.app.help.IntentDataHelp
 import io.legado.app.lib.theme.ATH
 import io.legado.app.lib.theme.accentColor
 import io.legado.app.ui.audio.AudioPlayActivity
@@ -154,7 +153,6 @@ class BooksFragment : BaseFragment(R.layout.fragment_books),
                 }
             else -> startActivity<ReadBookActivity> {
                 putExtra("bookUrl", book.bookUrl)
-                putExtra("key", IntentDataHelp.putData(book))
             }
         }
     }

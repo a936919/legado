@@ -2,6 +2,7 @@ package io.legado.app.constant
 
 import android.annotation.SuppressLint
 import android.provider.Settings
+import io.legado.app.BuildConfig
 import io.legado.app.R
 import splitties.init.appCtx
 import java.text.SimpleDateFormat
@@ -102,4 +103,7 @@ object AppConst {
         var versionCode: Long = 0L,
         var versionName: String = ""
     )
+
+    const val authority = BuildConfig.APPLICATION_ID + ".fileProvider"
+
 }

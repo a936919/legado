@@ -1,5 +1,6 @@
 package io.legado.app.api.controller
 
+import io.legado.app.R
 import io.legado.app.api.ReturnData
 import io.legado.app.constant.AppConst.androidId
 import io.legado.app.constant.PreferKey
@@ -11,6 +12,7 @@ import io.legado.app.help.BookHelp
 import io.legado.app.help.ContentProcessor
 import io.legado.app.help.ReadBookConfig
 import io.legado.app.help.coroutine.Coroutine
+import io.legado.app.model.localBook.LocalBook
 import io.legado.app.model.webBook.WebBook
 import io.legado.app.service.help.ReadBook
 import io.legado.app.utils.*
@@ -18,8 +20,11 @@ import kotlinx.coroutines.runBlocking
 import kotlin.math.min
 import splitties.init.appCtx
 
-object BookshelfController {
+object BookController {
 
+    /**
+     * 书架所有书籍
+     */
     val bookshelf: ReturnData
         get() {
             val books = appDb.bookDao.all.filter {
@@ -56,6 +61,55 @@ object BookshelfController {
         return returnData.setData(book)
     }
 
+    /**
+     * 更新目录
+     */
+    fun refreshToc(parameters: Map<String, List<String>>): ReturnData {
+        val returnData = ReturnData()
+        try {
+            val bookUrl = parameters["url"]?.getOrNull(0)
+            if (bookUrl.isNullOrEmpty()) {
+                return returnData.setErrorMsg("参数url不能为空，请指定书籍地址")
+            }
+            val book = appDb.bookDao.getBook(bookUrl)
+                ?: return returnData.setErrorMsg("bookUrl不对")
+            if (book.isLocalBook()) {
+                val toc = LocalBook.getChapterList(book)
+                appDb.bookChapterDao.delByBook(book.bookUrl)
+                appDb.bookChapterDao.insert(*toc.toTypedArray())
+                appDb.bookDao.update(book)
+                return if (toc.isEmpty()) {
+                    returnData.setErrorMsg(appCtx.getString(R.string.error_load_toc))
+                } else {
+                    returnData.setData(toc)
+                }
+            } else {
+                val bookSource = appDb.bookSourceDao.getBookSource(book.origin)
+                    ?: return returnData.setErrorMsg("未找到对应书源,请换源")
+                val webBook = WebBook(bookSource)
+                val toc = runBlocking {
+                    if (book.tocUrl.isBlank()) {
+                        webBook.getBookInfoAwait(this, book)
+                    }
+                    webBook.getChapterListAwait(this, book)
+                }
+                appDb.bookChapterDao.delByBook(book.bookUrl)
+                appDb.bookChapterDao.insert(*toc.toTypedArray())
+                appDb.bookDao.update(book)
+                return if (toc.isEmpty()) {
+                    returnData.setErrorMsg(appCtx.getString(R.string.error_load_toc))
+                } else {
+                    returnData.setData(toc)
+                }
+            }
+        } catch (e: Exception) {
+            return returnData.setErrorMsg(e.localizedMessage ?: "refresh toc error")
+        }
+    }
+
+    /**
+     * 获取目录
+     */
     fun getChapterList(parameters: Map<String, List<String>>): ReturnData {
         val bookUrl = parameters["url"]?.getOrNull(0)
         val returnData = ReturnData()
@@ -66,6 +120,9 @@ object BookshelfController {
         return returnData.setData(chapterList)
     }
 
+    /**
+     * 获取正文
+     */
     fun getBookContent(parameters: Map<String, List<String>>): ReturnData {
         val bookUrl = parameters["url"]?.getOrNull(0)
         val index = parameters["index"]?.getOrNull(0)?.toInt()
@@ -133,7 +190,7 @@ object BookshelfController {
         val book = appDb.bookDao.getBook(bookUrl) ?: return returnData.setData("获取失败")
         val chapterName = appDb.bookChapterDao.getChapter(book.bookUrl, chapterIndex)?.title ?: ""
         val bookmark = Bookmark(
-                System.currentTimeMillis(), bookUrl, book.name, book.author, chapterIndex, pos, chapterName, bookText, ""
+                System.currentTimeMillis(), book.name, book.author, chapterIndex, pos, chapterName, bookText, ""
         )
         appDb.bookmarkDao.insert(bookmark)
         synRecord(book, chapterIndex, pos)

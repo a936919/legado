@@ -78,6 +78,9 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
             appCtx.putPrefBoolean(PreferKey.showUnread, value)
         }
 
+    val useDefaultCover: Boolean
+        get() = appCtx.getPrefBoolean(PreferKey.useDefaultCover, false)
+
     val isTransparentStatusBar: Boolean
         get() = appCtx.getPrefBoolean(PreferKey.transparentStatusBar, true)
 
@@ -97,7 +100,10 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
             }
         }
 
-    val isShowRSS: Boolean
+    val showDiscovery: Boolean
+        get() = appCtx.getPrefBoolean(PreferKey.showDiscovery, true)
+
+    val showRSS: Boolean
         get() = appCtx.getPrefBoolean(PreferKey.showRss, true)
 
     val autoRefreshBook: Boolean

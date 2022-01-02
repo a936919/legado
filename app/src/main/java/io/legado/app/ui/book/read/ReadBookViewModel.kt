@@ -29,9 +29,7 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
         execute {
             if (book != null) initBook(book)
         }.onFinally {
-            if (ReadBook.inBookshelf) {
-                ReadBook.saveRead()
-            }
+            ReadBook.saveRead()
         }
     }
 
@@ -64,9 +62,7 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
             if (ReadBook.durChapterIndex != book.durChapterIndex || ReadBook.durChapterPos != book.durChapterPos) {
                 ReadBook.durChapterIndex = book.durChapterIndex
                 ReadBook.durChapterPos = book.durChapterPos
-                ReadBook.prevTextChapter = null
-                ReadBook.curTextChapter = null
-                ReadBook.nextTextChapter = null
+                ReadBook.clearTextChapter()
                 offset = true
             }
             ReadBook.titleDate.postValue(book.name)
@@ -240,9 +236,7 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
     }
 
     fun openChapter(index: Int, durChapterPos: Int = 0, success: (() -> Unit)? = null) {
-        ReadBook.prevTextChapter = null
-        ReadBook.curTextChapter = null
-        ReadBook.nextTextChapter = null
+        ReadBook.clearTextChapter()
         ReadBook.callBack?.upContent()
         if (index != ReadBook.durChapterIndex || durChapterPos != ReadBook.durChapterPos) {
             ReadBook.durChapterIndex = index
@@ -256,7 +250,7 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
 
     fun removeFromBookshelf(success: (() -> Unit)?) {
         execute {
-            ReadBook.book?.delete()
+            Book.delete(ReadBook.book)
         }.onSuccess {
             success?.invoke()
         }

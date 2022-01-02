@@ -26,7 +26,6 @@ import io.legado.app.databinding.ActivityBookInfoBinding
 import io.legado.app.databinding.DialogBookStatusBinding
 import io.legado.app.help.BlurTransformation
 import io.legado.app.help.ImageLoader
-import io.legado.app.help.IntentDataHelp
 import io.legado.app.lib.dialogs.alert
 import io.legado.app.lib.theme.backgroundColor
 import io.legado.app.lib.theme.bottomBackground
@@ -42,6 +41,9 @@ import io.legado.app.ui.book.source.edit.BookSourceEditActivity
 import io.legado.app.ui.book.toc.TocActivityResult
 import io.legado.app.ui.widget.image.CoverImageView
 import io.legado.app.utils.*
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 class BookInfoActivity :
@@ -54,11 +56,18 @@ class BookInfoActivity :
     private val tocActivityResult = registerForActivityResult(TocActivityResult()) {
         it?.let {
             viewModel.bookData.value?.let { book ->
-                if (book.durChapterIndex != it.first) {
-                    book.durChapterIndex = it.first
-                    book.durChapterPos = it.second
+                launch {
+                    withContext(IO) {
+                        book.durChapterIndex = it.first
+                        book.durChapterPos = it.second
+                        appDb.bookDao.update(book)
+                    }
+                    viewModel.chapterListData.value?.let { chapterList ->
+                        binding.tvToc.text =
+                            getString(R.string.toc_s, chapterList[book.durChapterIndex].title)
+                    }
+                    startReadActivity(book)
                 }
-                startReadActivity(book)
             }
         } ?: let {
             if (!viewModel.inBookshelf) {
@@ -124,6 +133,14 @@ class BookInfoActivity :
         return super.onCompatCreateOptionsMenu(menu)
     }
 
+    override fun onMenuOpened(featureId: Int, menu: Menu): Boolean {
+        menu.findItem(R.id.menu_can_update)?.isChecked =
+            viewModel.bookData.value?.canUpdate ?: true
+        menu.findItem(R.id.menu_login)?.isVisible =
+            !viewModel.bookSource?.loginUrl.isNullOrBlank()
+        return super.onMenuOpened(featureId, menu)
+    }
+
     override fun onCompatOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.menu_edit -> {
@@ -173,12 +190,6 @@ class BookInfoActivity :
             R.id.menu_clear_cache -> viewModel.clearCache()
         }
         return super.onCompatOptionsItemSelected(item)
-    }
-
-    override fun onMenuOpened(featureId: Int, menu: Menu): Boolean {
-        menu.findItem(R.id.menu_can_update)?.isChecked =
-            viewModel.bookData.value?.canUpdate ?: false
-        return super.onMenuOpened(featureId, menu)
     }
 
     private fun showBook(book: Book) = with(binding) {
@@ -399,8 +410,6 @@ class BookInfoActivity :
         }
     }
 
-
-
     private fun startReadActivity(book: Book) {
         when (book.type) {
             BookType.audio -> readBookResult.launch(
@@ -412,7 +421,6 @@ class BookInfoActivity :
                 Intent(this, ReadBookActivity::class.java)
                     .putExtra("bookUrl", book.bookUrl)
                     .putExtra("inBookshelf", viewModel.inBookshelf)
-                    .putExtra("key", IntentDataHelp.putData(book))
             )
         }
     }
