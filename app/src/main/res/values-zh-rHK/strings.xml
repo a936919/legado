@@ -1,4 +1,7 @@
 <resources>
+    <!--mq-->
+    <string name="read_over_enable">请设置阅读状态</string>
+
     <!--App-->
     <string name="app_name">閲讀</string>
     <string name="receiving_shared_label">閲讀·搜尋</string>
@@ -838,5 +841,4 @@
     <string name="diy_edit_source_group_title">【%s】</string>
     <string name="reverse_toc">反转目录</string>
     <string name="show_discovery">显示发现</string>
-    <string name="read_over_enable">请设置阅读状态</string>
 </resources>

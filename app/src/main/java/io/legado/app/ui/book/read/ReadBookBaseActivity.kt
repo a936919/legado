@@ -204,38 +204,6 @@ abstract class ReadBookBaseActivity :
     }
 
     @SuppressLint("InflateParams")
-    fun showDelParagraphDialog() {
-        ReadBook.book?.let { book ->
-            alert("删除本章前面的段落") {
-                val moreId = 4
-                var checkId = min(moreId, book.getDelParagraph())
-                val alertBinding = DialogDeleteParagraphBinding.inflate(layoutInflater).apply {
-                    root.setBackgroundColor(root.context.backgroundColor)
-                    rgLayout.checkByIndex(checkId)
-                    llMore.isVisible = checkId == moreId
-                    val editId = max(moreId, book.getDelParagraph())
-                    editStart.setText(editId.toString())
-                    rgLayout.setOnCheckedChangeListener { _, _ ->
-                        llMore.isVisible = rgLayout.getCheckedIndex() == moreId
-                    }
-                }
-                customView { alertBinding.root }
-                yesButton {
-                    alertBinding.run {
-                        val id = rgLayout.getCheckedIndex()
-                        checkId = if (id == moreId) editStart.text?.toString()
-                            ?.let { if (it.isNotBlank()) it.toInt() else 0 }
-                            ?: 0 else id
-                        book.setDelParagraph(checkId)
-                        ReadBook.loadContent(resetPageOffset = false)
-                    }
-                }
-                noButton()
-            }.show()
-        }
-    }
-
-    @SuppressLint("InflateParams")
     fun showSelectRecord(history: BookProgress?, web: BookProgress?, net: BookProgress?) {
         alert("请选择阅读进度") {
             var string: String

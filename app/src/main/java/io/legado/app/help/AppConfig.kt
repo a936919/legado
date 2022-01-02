@@ -9,7 +9,7 @@ import splitties.init.appCtx
 
 @Suppress("MemberVisibilityCanBePrivate")
 object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
-    const val isGooglePlay = true
+    val isGooglePlay = appCtx.channel == "google"
     var userAgent: String = getPrefUserAgent()
     var isEInkMode = appCtx.getPrefString(PreferKey.themeMode) == "3"
     var clickActionTL = appCtx.getPrefInt(PreferKey.clickActionTL, 2)

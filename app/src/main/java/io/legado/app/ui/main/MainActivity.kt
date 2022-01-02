@@ -5,10 +5,10 @@ import android.view.KeyEvent
 import android.view.MenuItem
 import androidx.activity.viewModels
 import androidx.fragment.app.Fragment
+import androidx.multidex.BuildConfig
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import io.legado.app.BuildConfig
 import io.legado.app.R
 import io.legado.app.base.VMBaseActivity
 import io.legado.app.constant.AppConst.appInfo
@@ -129,29 +129,6 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
             viewModel.upVersion()
         }
     }
-    
-    private fun checkPermissions(success: (() -> Unit)? = null) {
-        PermissionsCompat.Builder(this)
-            .addPermissions(*Permissions.Group.STORAGE)
-            .rationale(R.string.tip_perm_request_storage)
-            .onGranted {
-                success?.invoke()
-            }
-            .request()
-    }
-
-    fun onPageSelected(position: Int) = with(binding) {
-        pagePosition = position
-        when (position) {
-            0, 1, 3 -> bottomNavigationView.menu.getItem(position).isChecked = true
-            2 -> if (AppConfig.isShowRSS) {
-                bottomNavigationView.menu.getItem(position).isChecked = true
-            } else {
-                bottomNavigationView.menu.getItem(3).isChecked = true
-            }
-        }
-    }
-
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
         event?.let {
@@ -162,17 +139,6 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
                         return true
                     }
                     moveTaskToBack(true)
-/*
-                    if (System.currentTimeMillis() - exitTime > 2000) {
-                        toastOnUi(R.string.double_click_exit)
-                        exitTime = System.currentTimeMillis()
-                    } else {
-                        if (BaseReadAloudService.pause) {
-                            finish()
-                        } else {
-                            moveTaskToBack(true)
-                        }
-                    }*/
                     return true
                 }
             }
@@ -235,7 +201,15 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
             realPositions[2] = 3
         }
     }
-
+    private fun checkPermissions(success: (() -> Unit)? = null) {
+        PermissionsCompat.Builder(this)
+            .addPermissions(*Permissions.Group.STORAGE)
+            .rationale(R.string.tip_perm_request_storage)
+            .onGranted {
+                success?.invoke()
+            }
+            .request()
+    }
     private inner class PageChangeCallback : ViewPager2.OnPageChangeCallback() {
         override fun onPageSelected(position: Int) {
             pagePosition = position

@@ -66,10 +66,6 @@
             app:showAsAction="never" />
     </group>
 
-    <item
-        android:id="@+id/menu_delete_paragraph"
-        android:title="删除段首"
-        app:showAsAction="never" />
 
     <item
         android:id="@+id/ReplaceRule"

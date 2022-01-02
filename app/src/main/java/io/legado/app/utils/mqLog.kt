@@ -27,11 +27,11 @@ object mqLog {
     var addIndex = 0
     private fun upIndex() {
         ReadBook.book?.let {
-            val mark = appDb.bookmarkDao.getByBook(it.bookUrl)
+            val mark = appDb.bookmarkDao.getByBook(it.name,it.author)
             for (m in mark) {
                 m.chapterIndex -= 1
             }
-            appDb.bookmarkDao.delByBook(it.bookUrl)
+            appDb.bookmarkDao.delByBook(it.name,it.author)
             appDb.bookmarkDao.insert(*mark.toTypedArray())
             d("$mark")
         }
