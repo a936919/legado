@@ -532,8 +532,9 @@ class ReadBookActivity : ReadBookBaseActivity(),
                 ReadBook.bookSource?.bookSourceUrl?.let {
                     scopes.add(it)
                 }
-                ReplaceEditActivity.show(
+                ReplaceEditActivity.startForResult(
                     this,
+                    requestCodeReplace,
                     pattern = selectedText,
                     scope = scopes.joinToString(";")
                 )
@@ -1046,9 +1047,6 @@ class ReadBookActivity : ReadBookBaseActivity(),
         }
         observeEvent<String>(PreferKey.showBrightnessView) {
             readMenu.upBrightnessState()
-        }
-        observeEvent<String>(EventBus.REPLACE_RULE_SAVE) {
-            viewModel.replaceRuleChanged()
         }
     }
 
