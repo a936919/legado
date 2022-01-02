@@ -1,13 +1,12 @@
 package io.legado.app.ui.filepicker
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Build
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import io.legado.app.R
-import io.legado.app.help.permission.Permissions
-import io.legado.app.help.permission.PermissionsCompat
+import io.legado.app.constant.Permissions
 import io.legado.app.lib.dialogs.alert
 
 @Suppress("unused")
@@ -20,7 +19,6 @@ object FilePicker {
         otherActions: List<String>? = null,
         otherFun: ((action: String) -> Unit)? = null
     ) {
-        if(openFilePickerDialog(activity,requestCode))  return
         val selectList = arrayListOf(activity.getString(R.string.sys_folder_picker))
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
             selectList.add(activity.getString(R.string.app_folder_picker))
@@ -71,7 +69,6 @@ object FilePicker {
         otherActions: List<String>? = null,
         otherFun: ((action: String) -> Unit)? = null
     ) {
-        if(openFilePickerDialog(fragment,requestCode))  return
         val selectList = arrayListOf(fragment.getString(R.string.sys_folder_picker))
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
             selectList.add(fragment.getString(R.string.app_folder_picker))
@@ -250,23 +247,15 @@ object FilePicker {
     }
 
     private fun checkPermissions(fragment: Fragment, success: (() -> Unit)? = null) {
-        PermissionsCompat.Builder(fragment)
-            .addPermissions(*Permissions.Group.STORAGE)
-            .rationale(R.string.tip_perm_request_storage)
-            .onGranted {
-                success?.invoke()
-            }
-            .request()
+        fragment.registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+            success?.invoke()
+        }.launch(Permissions.Group.STORAGE)
     }
 
     fun checkPermissions(activity: AppCompatActivity, success: (() -> Unit)? = null) {
-        PermissionsCompat.Builder(activity)
-            .addPermissions(*Permissions.Group.STORAGE)
-            .rationale(R.string.tip_perm_request_storage)
-            .onGranted {
-                success?.invoke()
-            }
-            .request()
+        activity.registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+            success?.invoke()
+        }.launch(Permissions.Group.STORAGE)
     }
 
     private fun typesOfExtensions(allowExtensions: Array<String>): Array<String> {
@@ -283,26 +272,5 @@ object FilePicker {
             }
         }
         return types.toTypedArray()
-    }
-
-    private fun openFilePickerDialog(activity: AppCompatActivity, requestCode: Int):Boolean{
-        checkPermissions(activity) {
-            FilePickerDialog.show(
-                    activity.supportFragmentManager,
-                    requestCode,
-                    mode = FilePickerDialog.DIRECTORY
-            )
-        }
-        return true
-    }
-    private fun openFilePickerDialog(fragment: Fragment, requestCode: Int):Boolean {
-        checkPermissions(fragment) {
-            FilePickerDialog.show(
-                    fragment.childFragmentManager,
-                    requestCode,
-                    mode = FilePickerDialog.DIRECTORY
-            )
-        }
-        return true
     }
 }

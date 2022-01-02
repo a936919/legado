@@ -10,10 +10,10 @@ import androidx.activity.viewModels
 import androidx.core.view.isVisible
 import io.legado.app.R
 import io.legado.app.base.VMBaseActivity
+import io.legado.app.constant.AppConst.charsets
 import io.legado.app.constant.PreferKey
-import io.legado.app.constant.charsets
-import io.legado.app.data.entities.BookProgress
 import io.legado.app.data.appDb
+import io.legado.app.data.entities.BookProgress
 import io.legado.app.data.entities.Bookmark
 import io.legado.app.databinding.*
 import io.legado.app.help.AppConfig
