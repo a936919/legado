@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
@@ -18,6 +19,7 @@ import io.legado.app.R
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.TopPath
 import io.legado.app.databinding.DialogFileChooserBinding
+import io.legado.app.help.permission.Permissions
 import io.legado.app.lib.theme.primaryColor
 import io.legado.app.ui.filepicker.adapter.FileAdapter
 import io.legado.app.ui.filepicker.adapter.PathAdapter
@@ -73,7 +75,19 @@ class FilePickerDialog : DialogFragment(),
     override var isShowHomeDir: Boolean = false
     override var isShowUpDir: Boolean = true
     override var isShowHideDir: Boolean = false
-
+    private val queryPermission =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+            var hasPermission = true
+            it.forEach { (t, u) ->
+                if (!u) {
+                    hasPermission = false
+                    toastOnUi(t)
+                }
+            }
+            if (hasPermission) {
+                refreshCurrentDirPath(initPath)
+            }
+        }
     private var requestCode: Int = 0
     var title: String? = null
     private var initPath = FileUtils.getSdCardPath()
@@ -122,7 +136,7 @@ class FilePickerDialog : DialogFragment(),
         }
         initMenu()
         initContentView()
-        refreshCurrentDirPath(initPath)
+        queryPermission.launch(Permissions.Group.STORAGE)
     }
 
     private fun initMenu() {
