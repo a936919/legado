@@ -1,5 +1,6 @@
 package io.legado.app.help
 
+import android.net.Uri
 import io.legado.app.constant.AppPattern
 import io.legado.app.constant.EventBus
 import io.legado.app.data.appDb
@@ -55,6 +56,28 @@ object BookHelp {
         }
     }
 
+    fun getEpubFile(book: Book,): File {
+        val file = FileUtils.getFile(
+            downloadDir,
+            cacheFolderName,
+            book.getFolderName(),
+            "index.epubx"
+        )
+        if(!file.exists()){
+            val input = if (book.bookUrl.isContentScheme()) {
+                val uri = Uri.parse(book.bookUrl)
+                appCtx.contentResolver.openInputStream(uri)
+            } else {
+                File(book.bookUrl).inputStream()
+            }
+            if (input != null) {
+                FileUtils.writeInputStream(file, input)
+            }
+
+        }
+        return file
+    }
+
     suspend fun saveContent(book: Book, bookChapter: BookChapter, content: String) {
         if (content.isEmpty()) return
         //保存文本
@@ -75,31 +98,6 @@ object BookHelp {
             }
         }
         postEvent(EventBus.SAVE_CONTENT, bookChapter)
-    }
-
-    @Suppress("unused")
-    fun saveFont(book: Book, bookChapter: BookChapter, font: ByteArray) {
-        FileUtils.createFileIfNotExist(
-            downloadDir,
-            cacheFolderName,
-            book.getFolderName(),
-            "font",
-            bookChapter.getFontName()
-        ).writeBytes(font)
-    }
-
-    fun getFontPath(book: Book, bookChapter: BookChapter): String? {
-        val fontFile = FileUtils.getFile(
-            downloadDir,
-            cacheFolderName,
-            book.getFolderName(),
-            "font",
-            bookChapter.getFontName()
-        )
-        if (fontFile.exists()) {
-            return fontFile.absolutePath
-        }
-        return null
     }
 
     suspend fun saveImage(book: Book, src: String) {
@@ -138,7 +136,7 @@ object BookHelp {
         )
     }
 
-    private fun getImageSuffix(src: String): String {
+    fun getImageSuffix(src: String): String {
         var suffix = src.substringAfterLast(".").substringBefore(",")
         if (suffix.length > 5) {
             suffix = ".jpg"
@@ -172,6 +170,24 @@ object BookHelp {
                 bookChapter.getFileName()
             )
         }
+    }
+
+    fun hasImageContent(book: Book, bookChapter: BookChapter): Boolean {
+        if (!hasContent(book, bookChapter)) {
+            return false
+        }
+        getContent(book, bookChapter)?.let {
+            val matcher = AppPattern.imgPattern.matcher(it)
+            while (matcher.find()) {
+                matcher.group(1)?.let { src ->
+                    val image = getImage(book, src)
+                    if (!image.exists()) {
+                        return false
+                    }
+                }
+            }
+        }
+        return true
     }
 
     fun getContent(book: Book, bookChapter: BookChapter): String? {

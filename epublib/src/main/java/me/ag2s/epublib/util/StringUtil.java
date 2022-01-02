@@ -3,6 +3,8 @@ package me.ag2s.epublib.util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Various String utility functions.
@@ -271,4 +273,25 @@ public class StringUtil {
         }
         return text.substring(cPos + 1);
     }
+    // 移除字符串首尾空字符的高效方法(利用ASCII值判断,包括全角空格)
+    public static String FixTrim(String s) {
+        if (s == null || s.isEmpty()) {
+            return "";
+        }
+        int start = 0;
+        int len = s.length();
+        int end = len - 1;
+        while (start < end && (s.charAt(start) <= 0x20 || s.charAt(start) == '　')) {
+            ++start;
+        }
+        while (start < end && (s.charAt(end) <= 0x20 || s.charAt(end) == '　')) {
+            --end;
+        }
+        if (end < len) {
+            ++end;
+        }
+        return (start > 0 || end < len) ? s.substring(start, end) : s;
+
+    }
+
 }

@@ -27,13 +27,28 @@ import me.ag2s.epublib.epub.EpubProcessorSupport;
  * @author paul
  */
 public class ResourceUtil {
-
+    /**
+     * 快速创建HTML类型的Resource
+     *
+     * @param title  章节的标题
+     * @param string 章节的正文
+     * @return 返回Resource
+     */
     public static Resource createHTMLResource(String title, String string) {
         String html = createHtml(title, string);
         MediaType mediaTypeProperty = MediaTypes.XHTML;
         byte[] data = html.getBytes();
         return new Resource(data, mediaTypeProperty);
     }
+
+    /**
+     * 快速创建HTML类型的Resource
+     *
+     * @param title  章节的标题
+     * @param string 章节的正文
+     * @param href   Resource的href
+     * @return 返回Resource
+     */
 
     @SuppressWarnings("unused")
     public static Resource createHTMLResource(String title, String string, String href) {
@@ -47,23 +62,37 @@ public class ResourceUtil {
     private static String createHtml(String title, String txt) {
         StringBuilder body = new StringBuilder();
         for (String s : txt.split("\\r?\\n")) {
-            s = s.trim();
+            //移除多余的开头结尾的空白字符，节省epub的体积
+            s = StringUtil.FixTrim(s);
             if (s.length() != 0) {
-                body.append("<p>").append(s).append("</p>");
+                if (s.contains("<img")) {
+                    //加上div的话多看能点看大图，但掌阅的图会因为排版变得非常小。
+                    body.append("<div class=\"duokan-image-single img-note\">").append(s).append("</div>");
+                } else {
+                    body.append("<p>").append(s).append("</p>");
+                }
+
             }
 
         }
-        String html = "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
-        html += "<html xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:epub=\"http://www.idpf.org/2007/ops\">";
-        html += "<head><title>" + title + "</title>" +
+
+        return "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
+                "<html xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:epub=\"http://www.idpf.org/2007/ops\">" +
+                "<head><title>" + title + "</title>" +
                 "<link rel=\"stylesheet\" type=\"text/css\" href=\"css/style.css\"/>" +
-                "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/></head>";
-        html += "<body><h1>" + title + "</h1>" +
+                "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/></head>" +
+                "<body><h2>" + title + "</h2>" +
                 body +
                 "</body></html>";
-
-        return html;
     }
+
+    /**
+     * 快速从File创建Resource
+     *
+     * @param file File
+     * @return Resource
+     * @throws IOException IOException
+     */
 
     @SuppressWarnings("unused")
     public static Resource createResource(File file) throws IOException {
@@ -77,7 +106,7 @@ public class ResourceUtil {
 
 
     /**
-     * Creates a resource with as contents a html page with the given title.
+     * 创建一个只带标题的HTMl类型的Resource,常用于封面页，大卷页
      *
      * @param title v
      * @param href  v
