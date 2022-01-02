@@ -237,15 +237,7 @@ class PageView(context: Context) : FrameLayout(context) {
     }
 
     fun scroll(offset: Int) {
-        if (offset > 0) {
-            for (i in 1..offset) {
-                binding.contentTextView.scroll(1)
-            }
-        } else {
-            for (i in offset..-1) {
-                binding.contentTextView.scroll(-1)
-            }
-        }
+        binding.contentTextView.scroll(offset)
     }
 
     fun upSelectAble(selectAble: Boolean) {

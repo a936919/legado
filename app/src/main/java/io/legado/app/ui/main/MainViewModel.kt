@@ -84,9 +84,7 @@ class MainViewModel(application: Application) : BaseViewModel(application) {
                         appDb.bookDao.update(book)
                         appDb.bookChapterDao.delByBook(book.bookUrl)
                         appDb.bookChapterDao.insert(*toc.toTypedArray())
-                        if (AppConfig.preDownload) {
-                            cacheBook(webBook, book)
-                        }
+                        cacheBook(webBook, book)
                     }.onError {
                         it.printStackTrace()
                     }.onFinally {
@@ -114,17 +112,18 @@ class MainViewModel(application: Application) : BaseViewModel(application) {
     private fun cacheBook(webBook: WebBook, book: Book) {
         execute {
             if (book.totalChapterNum > book.durChapterIndex) {
-                val downloadToIndex = min(book.totalChapterNum, book.durChapterIndex.plus(10))
+                val downloadToIndex =
+                    min(book.totalChapterNum, book.durChapterIndex.plus(AppConfig.preDownloadNum))
                 for (i in book.durChapterIndex until downloadToIndex) {
                     appDb.bookChapterDao.getChapter(book.bookUrl, i)?.let { chapter ->
                         if (!BookHelp.hasContent(book, chapter)) {
                             var addToCache = false
                             while (!addToCache) {
-                                if (CacheBook.downloadCount() < 5) {
+                                if (CacheBook.downloadCount() < 10) {
                                     CacheBook.download(this, webBook, book, chapter)
                                     addToCache = true
                                 } else {
-                                    delay(1000)
+                                    delay(100)
                                 }
                             }
                         }

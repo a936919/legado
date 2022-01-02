@@ -72,6 +72,12 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
             }
         }
 
+    var showUnread: Boolean
+        get() = appCtx.getPrefBoolean(PreferKey.showUnread, true)
+        set(value) {
+            appCtx.putPrefBoolean(PreferKey.showUnread, value)
+        }
+
     val isTransparentStatusBar: Boolean
         get() = appCtx.getPrefBoolean(PreferKey.transparentStatusBar, true)
 
@@ -184,14 +190,18 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
 
     val syncBookProgress get() = appCtx.getPrefBoolean(PreferKey.syncBookProgress, true)
 
-    val preDownload get() = appCtx.getPrefBoolean(PreferKey.preDownload, true)
+    var preDownloadNum
+        get() = appCtx.getPrefInt(PreferKey.preDownloadNum, 10)
+        set(value) {
+            appCtx.putPrefInt(PreferKey.preDownloadNum, value)
+        }
 
     val mediaButtonOnExit get() = appCtx.getPrefBoolean("mediaButtonOnExit", true)
 
     val replaceEnableDefault get() = appCtx.getPrefBoolean(PreferKey.replaceEnableDefault, true)
 
     val fullScreenGesturesSupport: Boolean
-        get () = appCtx.getPrefBoolean(PreferKey.fullScreenGesturesSupport, false)
+        get() = appCtx.getPrefBoolean(PreferKey.fullScreenGesturesSupport, false)
 
     private fun getPrefUserAgent(): String {
         val ua = appCtx.getPrefString(PreferKey.userAgent)

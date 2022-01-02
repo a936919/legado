@@ -26,6 +26,8 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import splitties.init.appCtx
+import kotlin.math.max
+import kotlin.math.min
 
 @Suppress("MemberVisibilityCanBePrivate")
 object ReadBook {
@@ -215,12 +217,12 @@ object ReadBook {
                     callBack?.upContent()
                 }
                 loadContent(durChapterIndex.plus(1), upContent, false)
-                if (AppConfig.preDownload) {
-                    GlobalScope.launch(Dispatchers.IO) {
-                        for (i in 2..9) {
-                            delay(1000)
-                            download(durChapterIndex + i)
-                        }
+                GlobalScope.launch(Dispatchers.IO) {
+                    val maxChapterIndex =
+                        min(chapterSize - 1, durChapterIndex + AppConfig.preDownloadNum)
+                    for (i in durChapterIndex.plus(2)..maxChapterIndex) {
+                        delay(1000)
+                        download(i)
                     }
                 }
             }
@@ -247,12 +249,11 @@ object ReadBook {
                     callBack?.upContent()
                 }
                 loadContent(durChapterIndex.minus(1), upContent, false)
-                if (AppConfig.preDownload) {
-                    GlobalScope.launch(Dispatchers.IO) {
-                        for (i in 2..9) {
-                            delay(1000)
-                            download(durChapterIndex - i)
-                        }
+                GlobalScope.launch(Dispatchers.IO) {
+                    val minChapterIndex = max(0, durChapterIndex - 5)
+                    for (i in durChapterIndex.minus(2) downTo minChapterIndex) {
+                        delay(1000)
+                        download(i)
                     }
                 }
             }

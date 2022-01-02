@@ -25,6 +25,10 @@ import io.legado.app.ui.book.read.page.provider.TextPageFactory
 import io.legado.app.ui.main.bookshelf.books.BooksFragment
 import io.legado.app.ui.widget.dialog.PhotoDialog
 import io.legado.app.utils.*
+import io.legado.app.utils.activity
+import io.legado.app.utils.getCompatColor
+import io.legado.app.utils.getPrefBoolean
+import io.legado.app.utils.toastOnUi
 import kotlinx.coroutines.CoroutineScope
 import kotlin.math.min
 
@@ -182,7 +186,11 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
                         val div = (lineBottom - lineTop - h) / 2
                         RectF(textChar.start, lineTop + div, textChar.end, lineBottom - div)
                     }
-                    canvas.drawBitmap(it, null, rectF, null)
+                    kotlin.runCatching {
+                        canvas.drawBitmap(it, null, rectF, null)
+                    }.onFailure { e ->
+                        context.toastOnUi(e.localizedMessage)
+                    }
                 }
         }
     }
