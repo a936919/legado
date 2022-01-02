@@ -87,6 +87,7 @@ class ReadBookActivity : ReadBookBaseActivity(),
         }
     private val sourceEditActivity =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            it ?: return@registerForActivityResult
             if (it.resultCode == RESULT_OK) {
                 viewModel.upBookSource {
                     upView()
@@ -95,12 +96,14 @@ class ReadBookActivity : ReadBookBaseActivity(),
         }
     private val replaceActivity =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            it ?: return@registerForActivityResult
             if (it.resultCode == RESULT_OK) {
                 viewModel.replaceRuleChanged()
             }
         }
     private val searchContentActivity =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            it ?: return@registerForActivityResult
             it.data?.let { data ->
                 data.getIntExtra("index", ReadBook.durChapterIndex).let { index ->
                     viewModel.searchContentQuery = data.getStringExtra("query") ?: ""

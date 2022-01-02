@@ -15,9 +15,13 @@ import io.legado.app.constant.EventBus
 import io.legado.app.databinding.DialogEditTextBinding
 import io.legado.app.databinding.DialogReadBgTextBinding
 import io.legado.app.databinding.ItemBgImageBinding
+import io.legado.app.help.DefaultData
 import io.legado.app.help.ReadBookConfig
+import io.legado.app.help.http.newCall
+import io.legado.app.help.http.okHttpClient
 import io.legado.app.lib.dialogs.alert
 import io.legado.app.lib.theme.*
+import io.legado.app.lib.dialogs.selector
 import io.legado.app.lib.permission.Permissions
 import io.legado.app.lib.permission.PermissionsCompat
 import io.legado.app.lib.theme.bottomBackground
@@ -28,8 +32,6 @@ import io.legado.app.ui.document.FilePicker
 import io.legado.app.ui.document.FilePickerParam
 import io.legado.app.utils.*
 import io.legado.app.utils.viewbindingdelegate.viewBinding
-import rxhttp.wrapper.param.RxHttp
-import rxhttp.wrapper.param.toByteArray
 import java.io.File
 
 class BgTextConfigDialog : BaseDialogFragment() {
@@ -97,25 +99,23 @@ class BgTextConfigDialog : BaseDialogFragment() {
         (activity as ReadBookActivity).bottomDialog--
     }
 
-    private fun initView() {
+    private fun initView() = with(binding) {
         val bg = requireContext().readCfgBottomBg
         val isLight = ColorUtils.isColorLight(bg)
         primaryTextColor = requireContext().readCfgBottomText
         secondaryTextColor = requireContext().getSecondaryTextColor(isLight)
-        binding.rootView.setBackgroundColor(bg)
-        binding.swDarkStatusIcon.setTextColor(primaryTextColor)
-        binding.ivImport.setColorFilter(primaryTextColor)
-        binding.ivExport.setColorFilter(primaryTextColor)
-        binding.ivDelete.setColorFilter(primaryTextColor)
-        binding.tvBgImage.setTextColor(primaryTextColor)
-    }
-
-    @SuppressLint("InflateParams")
-    private fun initData() = with(ReadBookConfig.durConfig) {
-        binding.tvName.text = name.ifBlank { "文字" }
-        binding.swDarkStatusIcon.isChecked = curStatusIconDark()
+        rootView.setBackgroundColor(bg)
+        tvNameTitle.setTextColor(primaryTextColor)
+        tvName.setTextColor(secondaryTextColor)
+        ivEdit.setColorFilter(secondaryTextColor)
+        tvRestore.setTextColor(primaryTextColor)
+        swDarkStatusIcon.setTextColor(primaryTextColor)
+        ivImport.setColorFilter(primaryTextColor)
+        ivExport.setColorFilter(primaryTextColor)
+        ivDelete.setColorFilter(primaryTextColor)
+        tvBgImage.setTextColor(primaryTextColor)
         adapter = BgAdapter(requireContext(), secondaryTextColor)
-        binding.recyclerView.adapter = adapter
+        recyclerView.adapter = adapter
         adapter.addHeaderView {
             ItemBgImageBinding.inflate(layoutInflater, it, false).apply {
                 tvName.setTextColor(secondaryTextColor)
@@ -130,6 +130,12 @@ class BgTextConfigDialog : BaseDialogFragment() {
         requireContext().assets.list("bg")?.let {
             adapter.setItems(it.toList())
         }
+    }
+
+    @SuppressLint("InflateParams")
+    private fun initData() = with(ReadBookConfig.durConfig) {
+        binding.tvName.text = name.ifBlank { "文字" }
+        binding.swDarkStatusIcon.isChecked = curStatusIconDark()
     }
 
     @SuppressLint("InflateParams")
@@ -148,6 +154,17 @@ class BgTextConfigDialog : BaseDialogFragment() {
                 }
                 cancelButton()
             }.show()
+        }
+        binding.tvRestore.setOnClickListener {
+            val defaultConfigs = DefaultData.readConfigs
+            val layoutNames = defaultConfigs.map { it.name }
+            selector("选择预设布局", layoutNames) { _, i ->
+                if (i >= 0) {
+                    ReadBookConfig.durConfig = defaultConfigs[i]
+                    initData()
+                    postEvent(EventBus.UP_CONFIG, true)
+                }
+            }
         }
         binding.swDarkStatusIcon.setOnCheckedChangeListener { _, isChecked ->
             setCurStatusIconDark(isChecked)
@@ -292,7 +309,9 @@ class BgTextConfigDialog : BaseDialogFragment() {
 
     private fun importNetConfig(url: String) {
         execute {
-            RxHttp.get(url).toByteArray().await().let {
+            okHttpClient.newCall {
+                url(url)
+            }.bytes().let {
                 importConfig(it)
             }
         }.onError {
