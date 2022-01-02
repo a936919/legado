@@ -2,8 +2,7 @@ package io.legado.app.data.entities
 
 import android.annotation.SuppressLint
 import androidx.room.Entity
-import io.legado.app.App
-import io.legado.app.constant.androidIdInfo
+import io.legado.app.constant.AppConst
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -12,7 +11,7 @@ import java.util.*
     primaryKeys = ["androidId","bookName","author", "date"],
 )
 data class TimeRecord (
-    var androidId: String = androidIdInfo,
+    var androidId: String = AppConst.androidId,
     var bookName:String = "",
     var author:String = "",
     var date:Long = 0L,

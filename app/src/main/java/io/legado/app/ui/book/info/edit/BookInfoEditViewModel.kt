@@ -3,7 +3,7 @@ package io.legado.app.ui.book.info.edit
 import android.app.Application
 import androidx.lifecycle.MutableLiveData
 import io.legado.app.base.BaseViewModel
-import io.legado.app.constant.androidId
+import io.legado.app.constant.AppConst.androidId
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.TimeRecord

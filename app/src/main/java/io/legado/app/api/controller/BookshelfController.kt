@@ -1,12 +1,11 @@
 package io.legado.app.api.controller
 
 import io.legado.app.api.ReturnData
+import io.legado.app.constant.AppConst.androidId
 import io.legado.app.constant.PreferKey
-import io.legado.app.constant.androidId
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.Bookmark
-import io.legado.app.data.entities.ReplaceRule
 import io.legado.app.data.entities.TimeRecord
 import io.legado.app.help.BookHelp
 import io.legado.app.help.ContentProcessor

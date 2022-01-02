@@ -2,8 +2,8 @@ package io.legado.app.service.help
 
 import androidx.lifecycle.MutableLiveData
 import com.github.liuyueyi.quick.transfer.ChineseUtils
+import io.legado.app.constant.AppConst.androidId
 import io.legado.app.constant.BookType
-import io.legado.app.constant.androidId
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.*
 import io.legado.app.data.entities.TimeRecord

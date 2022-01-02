@@ -9,7 +9,7 @@ import io.legado.app.R
 import io.legado.app.base.BaseActivity
 import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.base.adapter.RecyclerAdapter
-import io.legado.app.constant.androidId
+import io.legado.app.constant.AppConst.androidId
 import io.legado.app.data.entities.Book
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.ReadRecordShow
