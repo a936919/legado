@@ -29,6 +29,9 @@ import io.legado.app.ui.widget.recycler.VerticalDivider
 import io.legado.app.utils.*
 import io.legado.app.utils.cnCompare
 import io.legado.app.utils.getPrefInt
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 class ArrangeBookActivity : VMBaseActivity<ActivityArrangeBookBinding, ArrangeBookViewModel>(),
@@ -55,7 +58,12 @@ class ArrangeBookActivity : VMBaseActivity<ActivityArrangeBookBinding, ArrangeBo
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         groupId = intent.getLongExtra("groupId", -1)
         position = intent.getIntExtra("position", -1)
-        binding.titleBar.subtitle = intent.getStringExtra("groupName") ?: getString(R.string.all)
+        launch {
+            binding.titleBar.subtitle = withContext(IO) {
+                appDb.bookGroupDao.getByID(groupId)?.groupName
+                    ?: getString(R.string.no_group)
+            }
+        }
         initView()
         initGroupData()
         initBookData()
