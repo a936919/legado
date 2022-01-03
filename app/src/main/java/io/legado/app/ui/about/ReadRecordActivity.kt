@@ -98,7 +98,7 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
     }
 
     private fun initView() = binding.run {
-        readRecord.tvBookName.setText(R.string.all_read_time)
+        tvBookName.setText(R.string.all_read_time)
         adapter = RecordAdapter(this@ReadRecordActivity)
         recyclerView.adapter = adapter
 /*
