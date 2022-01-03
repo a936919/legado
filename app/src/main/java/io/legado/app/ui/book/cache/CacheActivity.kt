@@ -28,6 +28,7 @@ import io.legado.app.ui.document.FilePicker
 import io.legado.app.ui.document.FilePickerParam
 import io.legado.app.ui.widget.dialog.TextListDialog
 import io.legado.app.utils.*
+import io.legado.app.utils.viewbindingdelegate.viewBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
@@ -37,6 +38,18 @@ import java.util.concurrent.CopyOnWriteArraySet
 
 class CacheActivity : VMBaseActivity<ActivityCacheBookBinding, CacheViewModel>(),
     CacheAdapter.CallBack {
+
+    override val binding by viewBinding(ActivityCacheBookBinding::inflate)
+    override val viewModel by viewModels<CacheViewModel>()
+
+    private val exportBookPathKey = "exportBookPath"
+    lateinit var adapter: CacheAdapter
+    private var groupLiveData: LiveData<List<BookGroup>>? = null
+    private var booksLiveData: LiveData<List<Book>>? = null
+    private var menu: Menu? = null
+    private var exportPosition = -1
+    private val groupList: ArrayList<BookGroup> = arrayListOf()
+    private var groupId: Long = -1
 
     private val exportDir = registerForActivityResult(FilePicker()) { uri ->
         uri ?: return@registerForActivityResult
@@ -49,20 +62,6 @@ class CacheActivity : VMBaseActivity<ActivityCacheBookBinding, CacheViewModel>()
                 startExport(path)
             }
         }
-    }
-    private val exportBookPathKey = "exportBookPath"
-    lateinit var adapter: CacheAdapter
-    private var groupLiveData: LiveData<List<BookGroup>>? = null
-    private var booksLiveData: LiveData<List<Book>>? = null
-    private var menu: Menu? = null
-    private var exportPosition = -1
-    private val groupList: ArrayList<BookGroup> = arrayListOf()
-    private var groupId: Long = -1
-
-    override val viewModel: CacheViewModel by viewModels()
-
-    override fun getViewBinding(): ActivityCacheBookBinding {
-        return ActivityCacheBookBinding.inflate(layoutInflater)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {

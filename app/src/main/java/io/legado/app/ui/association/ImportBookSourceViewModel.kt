@@ -61,6 +61,9 @@ class ImportBookSourceViewModel(app: Application) : BaseViewModel(app) {
                             source.customOrder = it.customOrder
                         }
                     }
+                    if (groupName != null) {
+                        source.bookSourceGroup = groupName
+                    }
                     selectSource.add(source)
                 }
             }

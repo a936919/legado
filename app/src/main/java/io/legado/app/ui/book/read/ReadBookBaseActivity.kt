@@ -35,6 +35,7 @@ import kotlin.math.max
 import kotlin.math.min
 import io.legado.app.utils.getPrefString
 import io.legado.app.utils.requestInputMethod
+import io.legado.app.utils.viewbindingdelegate.viewBinding
 
 /**
  * 阅读界面
@@ -42,13 +43,9 @@ import io.legado.app.utils.requestInputMethod
 abstract class ReadBookBaseActivity :
     VMBaseActivity<ActivityBookReadBinding, ReadBookViewModel>(imageBg = false) {
 
-    override val viewModel: ReadBookViewModel
-            by viewModels()
+    override val binding by viewBinding(ActivityBookReadBinding::inflate)
+    override val viewModel by viewModels<ReadBookViewModel>()
     var bottomDialog = 0
-
-    override fun getViewBinding(): ActivityBookReadBinding {
-        return ActivityBookReadBinding.inflate(layoutInflater)
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         ReadBook.msg = null

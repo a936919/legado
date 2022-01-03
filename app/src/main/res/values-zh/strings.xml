@@ -767,8 +767,8 @@
     <string name="import_str">导入</string>
     <string name="export_str">导出</string>
     <string name="save_theme_config">保存主题配置</string>
-    <string name="save_day_theme_summary">保存白天主题配置以共调用和分享</string>
-    <string name="save_night_theme_summary">保存夜间主题配置以共调用和分享</string>
+    <string name="save_day_theme_summary">保存白天主题配置以供调用和分享</string>
+    <string name="save_night_theme_summary">保存夜间主题配置以供调用和分享</string>
     <string name="theme_list">主题列表</string>
     <string name="theme_list_summary">使用保存主题,导入,分享主题</string>
     <string name="select_theme">切换默认主题</string>
@@ -784,6 +784,7 @@
     <string name="style_name">样式名称:</string>
     <string name="empty_msg_import_book">点击右上角文件夹图标,选择文件夹</string>
     <string name="scan_folder">智能扫描</string>
+    <string name="import_file_name">导入文件名</string>
     <string name="copy_book_url">拷贝书籍URL</string>
     <string name="copy_toc_url">拷贝目录URL</string>
     <string name="no_book">没有书籍</string>
@@ -845,6 +846,9 @@
     <string name="style">样式</string>
     <string name="group_style">分组样式</string>
     <string name="export_file_name">导出文件名</string>
+    <string name="reset">重置</string>
+    <string name="null_url">url为空</string>
+    <string name="dict">字典</string>
 
 
 </resources>

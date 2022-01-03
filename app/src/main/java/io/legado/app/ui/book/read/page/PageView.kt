@@ -56,7 +56,7 @@ class PageView(context: Context) : FrameLayout(context) {
         }
     }
 
-    fun upStyle() = with(binding) {
+    fun upStyle() = binding.run {
         upTipStyle()
         ReadBookConfig.let {
             val tipColor = with(ReadTipConfig) {
@@ -103,7 +103,7 @@ class PageView(context: Context) : FrameLayout(context) {
             ReadBookConfig.hideStatusBar || (activity as? BaseActivity<*>)?.isInMultiWindow == true
     }
 
-    private fun upTipStyle() = with(binding) {
+    private fun upTipStyle() = binding.run {
         ReadTipConfig.apply {
             tvHeaderLeft.isInvisible = tipHeaderLeft != chapterTitle
             bvHeaderLeft.isInvisible =
@@ -174,7 +174,7 @@ class PageView(context: Context) : FrameLayout(context) {
         }
     }
 
-    private fun getTipView(tip: Int): BatteryView? = with(binding) {
+    private fun getTipView(tip: Int): BatteryView? = binding.run {
         return when (tip) {
             ReadTipConfig.tipHeaderLeft ->
                 if (tip == ReadTipConfig.chapterTitle) tvHeaderLeft else bvHeaderLeft

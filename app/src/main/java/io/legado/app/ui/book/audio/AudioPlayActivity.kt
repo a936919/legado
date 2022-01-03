@@ -1,4 +1,4 @@
-package io.legado.app.ui.audio
+package io.legado.app.ui.book.audio
 
 import android.app.Activity
 import android.graphics.drawable.Drawable
@@ -28,6 +28,7 @@ import io.legado.app.ui.book.toc.TocActivityResult
 import io.legado.app.ui.widget.image.CoverImageView
 import io.legado.app.ui.widget.seekbar.SeekBarChangeListener
 import io.legado.app.utils.*
+import io.legado.app.utils.viewbindingdelegate.viewBinding
 import splitties.views.onLongClick
 import java.util.*
 
@@ -38,8 +39,8 @@ class AudioPlayActivity :
     VMBaseActivity<ActivityAudioPlayBinding, AudioPlayViewModel>(toolBarTheme = Theme.Dark),
     ChangeSourceDialog.CallBack {
 
-    override val viewModel: AudioPlayViewModel
-            by viewModels()
+    override val binding by viewBinding(ActivityAudioPlayBinding::inflate)
+    override val viewModel by viewModels<AudioPlayViewModel>()
 
     private var adjustProgress = false
     private val progressTimeFormat by lazy {
@@ -57,14 +58,14 @@ class AudioPlayActivity :
         }
     }
 
-    override fun getViewBinding(): ActivityAudioPlayBinding {
-        return ActivityAudioPlayBinding.inflate(layoutInflater)
-    }
-
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         binding.titleBar.transparent()
-        AudioPlay.titleData.observe(this, { binding.titleBar.title = it })
-        AudioPlay.coverData.observe(this, { upCover(it) })
+        AudioPlay.titleData.observe(this) {
+            binding.titleBar.title = it
+        }
+        AudioPlay.coverData.observe(this) {
+            upCover(it)
+        }
         viewModel.initData(intent)
         initView()
     }

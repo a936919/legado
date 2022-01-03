@@ -38,10 +38,8 @@ class RssArticlesFragment : VMBaseFragment<RssArticlesViewModel>(R.layout.fragme
     }
 
     private val binding by viewBinding(FragmentRssArticlesBinding::bind)
-    private val activityViewModel: RssSortViewModel
-            by activityViewModels()
-    override val viewModel: RssArticlesViewModel
-            by viewModels()
+    private val activityViewModel by activityViewModels<RssSortViewModel>()
+    override val viewModel by viewModels<RssArticlesViewModel>()
     lateinit var adapter: BaseRssArticlesAdapter<*>
     private lateinit var loadMoreView: LoadMoreView
     private var rssArticlesData: LiveData<List<RssArticle>>? = null
@@ -55,7 +53,7 @@ class RssArticlesFragment : VMBaseFragment<RssArticlesViewModel>(R.layout.fragme
         initData()
     }
 
-    private fun initView() = with(binding) {
+    private fun initView() = binding.run {
         refreshLayout.setColorSchemeColors(accentColor)
         ATH.applyEdgeEffectColor(recyclerView)
         recyclerView.layoutManager = if (activityViewModel.isGridLayout) {

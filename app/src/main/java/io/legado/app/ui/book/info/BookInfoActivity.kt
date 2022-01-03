@@ -30,7 +30,7 @@ import io.legado.app.lib.dialogs.alert
 import io.legado.app.lib.theme.backgroundColor
 import io.legado.app.lib.theme.bottomBackground
 import io.legado.app.lib.theme.getPrimaryTextColor
-import io.legado.app.ui.audio.AudioPlayActivity
+import io.legado.app.ui.book.audio.AudioPlayActivity
 import io.legado.app.ui.book.changecover.ChangeCoverDialog
 import io.legado.app.ui.book.changesource.ChangeSourceDialog
 import io.legado.app.ui.book.group.GroupSelectDialog
@@ -41,6 +41,7 @@ import io.legado.app.ui.book.source.edit.BookSourceEditActivity
 import io.legado.app.ui.book.toc.TocActivityResult
 import io.legado.app.ui.widget.image.CoverImageView
 import io.legado.app.utils.*
+import io.legado.app.utils.viewbindingdelegate.viewBinding
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -49,7 +50,6 @@ import kotlinx.coroutines.withContext
 class BookInfoActivity :
     VMBaseActivity<ActivityBookInfoBinding, BookInfoViewModel>(toolBarTheme = Theme.Dark),
     GroupSelectDialog.CallBack,
-    ChapterListAdapter.CallBack,
     ChangeSourceDialog.CallBack,
     ChangeCoverDialog.CallBack {
 
@@ -93,12 +93,8 @@ class BookInfoActivity :
         }
     }
 
-
-    override val viewModel: BookInfoViewModel by viewModels()
-
-    override fun getViewBinding(): ActivityBookInfoBinding {
-        return ActivityBookInfoBinding.inflate(layoutInflater)
-    }
+    override val binding by viewBinding(ActivityBookInfoBinding::inflate)
+    override val viewModel by viewModels<BookInfoViewModel>()
 
     @SuppressLint("PrivateResource")
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -194,7 +190,7 @@ class BookInfoActivity :
         return super.onCompatOptionsItemSelected(item)
     }
 
-    private fun showBook(book: Book) = with(binding) {
+    private fun showBook(book: Book) = binding.run {
         showCover(book)
         tvName.text = book.name
         tvAuthor.text = getString(R.string.author_show, book.getRealAuthor())
@@ -265,7 +261,7 @@ class BookInfoActivity :
         }
     }
 
-    private fun initOnClick() = with(binding) {
+    private fun initOnClick() = binding.run {
         ivCover.setOnClickListener {
             viewModel.bookData.value?.let {
                 ChangeCoverDialog.show(supportFragmentManager, it.name, it.author)
@@ -441,20 +437,6 @@ class BookInfoActivity :
             viewModel.saveBook()
             showCover(it)
         }
-    }
-
-    override fun openChapter(chapter: BookChapter) {
-        if (chapter.index != viewModel.durChapterIndex) {
-            viewModel.bookData.value?.let {
-                it.durChapterIndex = chapter.index
-                it.durChapterPos = 0
-                readBook(it)
-            }
-        }
-    }
-
-    override fun durChapterIndex(): Int {
-        return viewModel.durChapterIndex
     }
 
     override fun upGroup(requestCode: Int, groupId: Long) {

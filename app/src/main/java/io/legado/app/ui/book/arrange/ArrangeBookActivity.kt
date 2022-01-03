@@ -29,6 +29,7 @@ import io.legado.app.ui.widget.recycler.VerticalDivider
 import io.legado.app.utils.*
 import io.legado.app.utils.cnCompare
 import io.legado.app.utils.getPrefInt
+import io.legado.app.utils.viewbindingdelegate.viewBinding
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -39,8 +40,9 @@ class ArrangeBookActivity : VMBaseActivity<ActivityArrangeBookBinding, ArrangeBo
     SelectActionBar.CallBack,
     ArrangeBookAdapter.CallBack,
     GroupSelectDialog.CallBack {
-    override val viewModel: ArrangeBookViewModel
-            by viewModels()
+
+    override val binding by viewBinding(ActivityArrangeBookBinding::inflate)
+    override val viewModel by viewModels<ArrangeBookViewModel>()
     override val groupList: ArrayList<BookGroup> = arrayListOf()
     private val groupRequestCode = 22
     private val addToGroupRequestCode = 34
@@ -50,10 +52,6 @@ class ArrangeBookActivity : VMBaseActivity<ActivityArrangeBookBinding, ArrangeBo
     private var menu: Menu? = null
     private var groupId: Long = -1
     private var position: Int = 0
-
-    override fun getViewBinding(): ActivityArrangeBookBinding {
-        return ActivityArrangeBookBinding.inflate(layoutInflater)
-    }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         groupId = intent.getLongExtra("groupId", -1)

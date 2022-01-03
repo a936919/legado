@@ -15,13 +15,16 @@ import io.legado.app.R
 import io.legado.app.base.VMBaseActivity
 import io.legado.app.data.appDb
 import io.legado.app.databinding.ActivityImportBookBinding
+import io.legado.app.databinding.DialogEditTextBinding
 import io.legado.app.help.AppConfig
+import io.legado.app.lib.dialogs.alert
 import io.legado.app.lib.permission.Permissions
 import io.legado.app.lib.permission.PermissionsCompat
 import io.legado.app.lib.theme.backgroundColor
 import io.legado.app.ui.document.FilePicker
 import io.legado.app.ui.widget.SelectActionBar
 import io.legado.app.utils.*
+import io.legado.app.utils.viewbindingdelegate.viewBinding
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
@@ -36,6 +39,10 @@ class ImportBookActivity : VMBaseActivity<ActivityImportBookBinding, ImportBookV
     PopupMenu.OnMenuItemClickListener,
     ImportBookAdapter.CallBack,
     SelectActionBar.CallBack {
+
+    override val binding by viewBinding(ActivityImportBookBinding::inflate)
+    override val viewModel by viewModels<ImportBookViewModel>()
+
     private var rootDoc: DocumentFile? = null
     private val subDocs = arrayListOf<DocumentFile>()
     private lateinit var adapter: ImportBookAdapter
@@ -55,13 +62,6 @@ class ImportBookActivity : VMBaseActivity<ActivityImportBookBinding, ImportBookV
         }
     }
 
-    override val viewModel: ImportBookViewModel
-            by viewModels()
-
-    override fun getViewBinding(): ActivityImportBookBinding {
-        return ActivityImportBookBinding.inflate(layoutInflater)
-    }
-
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         initView()
         initEvent()
@@ -78,6 +78,7 @@ class ImportBookActivity : VMBaseActivity<ActivityImportBookBinding, ImportBookV
         when (item.itemId) {
             R.id.menu_select_folder -> selectFolder.launch(null)
             R.id.menu_scan_folder -> scanFolder()
+            R.id.menu_import_file_name -> alertImportFileName()
         }
         return super.onCompatOptionsItemSelected(item)
     }
@@ -196,6 +197,7 @@ class ImportBookActivity : VMBaseActivity<ActivityImportBookBinding, ImportBookV
                 } else if (!item.isDir
                     && !item.name.endsWith(".txt", true)
                     && !item.name.endsWith(".epub", true)
+                    && !item.name.endsWith(".umd", true)
                 ) {
                     docList.removeAt(i)
                 }
@@ -225,6 +227,7 @@ class ImportBookActivity : VMBaseActivity<ActivityImportBookBinding, ImportBookV
                     )
             } else if (it.name.endsWith(".txt", true)
                 || it.name.endsWith(".epub", true)
+                || it.name.endsWith(".umd", true)
             ) {
                 docList.add(
                     DocItem(
@@ -273,6 +276,19 @@ class ImportBookActivity : VMBaseActivity<ActivityImportBookBinding, ImportBookV
                 }
             }
         }
+    }
+
+    private fun alertImportFileName() {
+        alert(R.string.import_file_name) {
+            val alertBinding = DialogEditTextBinding.inflate(layoutInflater).apply {
+                editView.setText(AppConfig.bookImportFileName)
+            }
+            customView { alertBinding.root }
+            okButton {
+                AppConfig.bookImportFileName = alertBinding.editView.text?.toString()
+            }
+            cancelButton()
+        }.show()
     }
 
     private val find: (docItem: DocItem) -> Unit = {

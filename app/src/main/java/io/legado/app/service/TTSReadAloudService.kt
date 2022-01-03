@@ -1,7 +1,6 @@
 package io.legado.app.service
 
 import android.app.PendingIntent
-import android.content.Intent
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import io.legado.app.R
@@ -14,7 +13,6 @@ import io.legado.app.service.help.ReadBook
 import io.legado.app.utils.getPrefBoolean
 import io.legado.app.utils.postEvent
 import io.legado.app.utils.toastOnUi
-import kotlinx.coroutines.launch
 import java.util.*
 
 class TTSReadAloudService : BaseReadAloudService(), TextToSpeech.OnInitListener {
@@ -27,12 +25,6 @@ class TTSReadAloudService : BaseReadAloudService(), TextToSpeech.OnInitListener 
         super.onCreate()
         initTts()
         upSpeechRate()
-    }
-
-    override fun onTaskRemoved(rootIntent: Intent?) {
-        super.onTaskRemoved(rootIntent)
-        clearTTS()
-        stopSelf()
     }
 
     override fun onDestroy() {
@@ -63,9 +55,7 @@ class TTSReadAloudService : BaseReadAloudService(), TextToSpeech.OnInitListener 
                 play()
             }
         } else {
-            launch {
-                toastOnUi(R.string.tts_init_failed)
-            }
+            toastOnUi(R.string.tts_init_failed)
         }
     }
 

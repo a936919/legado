@@ -74,6 +74,9 @@ data class Book(
     fun isEpub(): Boolean {
         return originName.endsWith(".epub", true)
     }
+    fun isUmd(): Boolean {
+        return originName.endsWith(".umd", true)
+    }
 
     fun isOnLineTxt(): Boolean {
         return !isLocalBook() && type == 0
@@ -119,6 +122,12 @@ data class Book(
     fun getDisplayCover() = if (customCoverUrl.isNullOrEmpty()) coverUrl else customCoverUrl
 
     fun getDisplayIntro() = if (customIntro.isNullOrEmpty()) intro else customIntro
+
+    //自定义简介有自动更新的需求时，可通过更新intro再调用upCustomIntro()完成
+    @Suppress("unused")
+    fun upCustomIntro() {
+        customIntro = intro
+    }
 
     fun fileCharset(): Charset {
         return charset(charset ?: "UTF-8")
@@ -262,6 +271,14 @@ data class Book(
             bookName = name,
             bookAuthor = author,
         )
+    }
+
+    fun save() {
+        if (appDb.bookDao.has(bookUrl) == true) {
+            appDb.bookDao.update(this)
+        } else {
+            appDb.bookDao.insert(this)
+        }
     }
 
     companion object {

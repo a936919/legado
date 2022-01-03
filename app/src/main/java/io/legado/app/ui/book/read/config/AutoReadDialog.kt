@@ -56,21 +56,21 @@ class AutoReadDialog : BaseDialogFragment() {
         return inflater.inflate(R.layout.dialog_auto_read, container)
     }
 
-    override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onFragmentCreated(view: View, savedInstanceState: Bundle?)= binding.run {
         val bg = requireContext().readCfgBottomBg
         val textColor = requireContext().readCfgBottomText
         val secondtextColor = ColorUtils.withAlpha(textColor,0.5f)
-        binding.root.setBackgroundColor(bg)
-        binding.tvReadSpeedTitle.setTextColor(textColor)
-        binding.tvReadSpeed.setTextColor(textColor)
-        binding.ivCatalog.setColorFilter(textColor)
-        binding.tvCatalog.setTextColor(secondtextColor)
-        binding.ivMainMenu.setColorFilter(textColor)
-        binding.tvMainMenu.setTextColor(secondtextColor)
-        binding.ivAutoPageStop.setColorFilter(textColor)
-        binding.tvAutoPageStop.setTextColor(secondtextColor)
-        binding.ivSetting.setColorFilter(textColor)
-        binding.tvSetting.setTextColor(secondtextColor)
+        root.setBackgroundColor(bg)
+        tvReadSpeedTitle.setTextColor(textColor)
+        tvReadSpeed.setTextColor(textColor)
+        ivCatalog.setColorFilter(textColor)
+        tvCatalog.setTextColor(secondtextColor)
+        ivMainMenu.setColorFilter(textColor)
+        tvMainMenu.setTextColor(secondtextColor)
+        ivAutoPageStop.setColorFilter(textColor)
+        tvAutoPageStop.setTextColor(secondtextColor)
+        ivSetting.setColorFilter(textColor)
+        tvSetting.setTextColor(secondtextColor)
         initOnChange()
         initData()
         initEvent()

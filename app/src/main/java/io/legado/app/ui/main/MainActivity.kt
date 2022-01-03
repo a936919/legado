@@ -40,12 +40,15 @@ import io.legado.app.ui.main.rss.RssFragment
 import io.legado.app.ui.widget.dialog.TextDialog
 import io.legado.app.utils.observeEvent
 import io.legado.app.utils.toastOnUi
+import io.legado.app.utils.viewbindingdelegate.viewBinding
 
 
 class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
     BottomNavigationView.OnNavigationItemSelectedListener,
     BottomNavigationView.OnNavigationItemReselectedListener {
-    override val viewModel: MainViewModel by viewModels()
+
+    override val binding by viewBinding(ActivityMainBinding::inflate)
+    override val viewModel by viewModels<MainViewModel>()
     private var exitTime: Long = 0
     private var bookshelfReselected: Long = 0
     private var exploreReselected: Long = 0
@@ -63,7 +66,8 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
             }
             .request()
     }
-    override fun getViewBinding(): ActivityMainBinding {
+
+    fun getViewBinding(): ActivityMainBinding {
         return ActivityMainBinding.inflate(layoutInflater)
     }
 
@@ -96,7 +100,7 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
         }, 3000)
     }
 
-    override fun onNavigationItemSelected(item: MenuItem): Boolean = with(binding) {
+    override fun onNavigationItemSelected(item: MenuItem): Boolean = binding.run {
         when (item.itemId) {
             R.id.menu_bookshelf -> viewPagerMain.setCurrentItem(0, false)
             R.id.menu_discovery -> viewPagerMain.setCurrentItem(1, false)
@@ -175,11 +179,13 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
         observeEvent<String>(EventBus.RECREATE) {
             recreate()
         }
-        observeEvent<String>(EventBus.NOTIFY_MAIN) {
+        observeEvent<Boolean>(EventBus.NOTIFY_MAIN) {
             binding.apply {
                 upBottomMenu()
                 viewPagerMain.adapter?.notifyDataSetChanged()
-                viewPagerMain.setCurrentItem(bottomMenuCount - 1, false)
+                if (it) {
+                    viewPagerMain.setCurrentItem(bottomMenuCount - 1, false)
+                }
             }
         }
         observeEvent<String>(PreferKey.threadCount) {

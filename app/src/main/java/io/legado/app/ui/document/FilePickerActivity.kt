@@ -14,6 +14,7 @@ import io.legado.app.lib.dialogs.alert
 import io.legado.app.lib.permission.Permissions
 import io.legado.app.lib.permission.PermissionsCompat
 import io.legado.app.utils.isContentScheme
+import io.legado.app.utils.viewbindingdelegate.viewBinding
 import java.io.File
 
 class FilePickerActivity :
@@ -21,9 +22,14 @@ class FilePickerActivity :
         theme = Theme.Transparent
     ), FilePickerDialog.CallBack {
 
+    override val binding by viewBinding(ActivityTranslucenceBinding::inflate)
+
     private val selectDocTree =
         registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) {
-            it ?: return@registerForActivityResult
+            it ?: let {
+                finish()
+                return@registerForActivityResult
+            }
             if (it.isContentScheme()) {
                 contentResolver.takePersistableUriPermission(
                     it,
@@ -36,10 +42,6 @@ class FilePickerActivity :
     private val selectDoc = registerForActivityResult(ActivityResultContracts.OpenDocument()) {
         it ?: return@registerForActivityResult
         onResult(Intent().setData(it))
-    }
-
-    override fun getViewBinding(): ActivityTranslucenceBinding {
-        return ActivityTranslucenceBinding.inflate(layoutInflater)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {

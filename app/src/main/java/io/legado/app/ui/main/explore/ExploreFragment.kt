@@ -33,7 +33,7 @@ import io.legado.app.utils.viewbindingdelegate.viewBinding
  */
 class ExploreFragment : VMBaseFragment<ExploreViewModel>(R.layout.fragment_explore),
     ExploreAdapter.CallBack {
-    override val viewModel: ExploreViewModel by viewModels()
+    override val viewModel by viewModels<ExploreViewModel>()
     private val binding by viewBinding(FragmentExploreBinding::bind)
     private lateinit var adapter: ExploreAdapter
     private lateinit var linearLayoutManager: LinearLayoutManager
@@ -150,11 +150,16 @@ class ExploreFragment : VMBaseFragment<ExploreViewModel>(R.layout.fragment_explo
         }
     }
 
+    override fun refreshData() {
+        initExploreData(searchView.query?.toString())
+    }
+
     override fun scrollTo(pos: Int) {
         (binding.rvFind.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(pos, 0)
     }
 
-    override fun openExplore(sourceUrl: String, title: String, exploreUrl: String) {
+    override fun openExplore(sourceUrl: String, title: String, exploreUrl: String?) {
+        if (exploreUrl.isNullOrBlank()) return
         startActivity<ExploreShowActivity> {
             putExtra("exploreName", title)
             putExtra("sourceUrl", sourceUrl)

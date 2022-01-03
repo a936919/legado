@@ -33,8 +33,8 @@ class TextActionMenu(private val context: Context, private val callBack: CallBac
     TextToSpeech.OnInitListener {
     private val binding = PopupActionMenuBinding.inflate(LayoutInflater.from(context))
     private val adapter = Adapter(context)
-    private val menu = MenuBuilder(context)
-    private val moreMenu = MenuBuilder(context)
+    private val visibleMenuItems: List<MenuItemImpl>
+    private val moreMenuItems: List<MenuItemImpl>
     private val ttsListener by lazy {
         TTSUtteranceListener()
     }
@@ -47,11 +47,20 @@ class TextActionMenu(private val context: Context, private val callBack: CallBac
         isOutsideTouchable = false
         isFocusable = false
 
+        val myMenu = MenuBuilder(context)
+        val otherMenu = MenuBuilder(context)
+        SupportMenuInflater(context).inflate(R.menu.content_select_action, myMenu)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            onInitializeMenu(otherMenu)
+        }
+        visibleMenuItems = myMenu.visibleItems.subList(0, 5)
+        moreMenuItems =
+            myMenu.visibleItems.subList(5, myMenu.visibleItems.lastIndex) + otherMenu.visibleItems
         initRecyclerView()
         setOnDismissListener {
             binding.ivMenuMore.setImageResource(R.drawable.ic_more_vert)
             binding.recyclerViewMore.gone()
-            adapter.setItems(menu.visibleItems)
+            adapter.setItems(visibleMenuItems)
             binding.recyclerView.visible()
         }
     }
@@ -59,24 +68,18 @@ class TextActionMenu(private val context: Context, private val callBack: CallBac
     private fun initRecyclerView() = with(binding) {
         recyclerView.adapter = adapter
         recyclerViewMore.adapter = adapter
-        SupportMenuInflater(context).inflate(R.menu.content_select_action, menu)
-        adapter.setItems(menu.visibleItems)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            onInitializeMenu(moreMenu)
-        }
-        if (moreMenu.size() > 0) {
-            ivMenuMore.visible()
-        }
+        adapter.setItems(visibleMenuItems)
+        ivMenuMore.visible()
         ivMenuMore.setOnClickListener {
             if (recyclerView.isVisible) {
                 ivMenuMore.setImageResource(R.drawable.ic_arrow_back)
-                adapter.setItems(moreMenu.visibleItems)
+                adapter.setItems(moreMenuItems)
                 recyclerView.gone()
                 recyclerViewMore.visible()
             } else {
                 ivMenuMore.setImageResource(R.drawable.ic_more_vert)
                 recyclerViewMore.gone()
-                adapter.setItems(menu.visibleItems)
+                adapter.setItems(visibleMenuItems)
                 recyclerView.visible()
             }
         }
@@ -164,17 +167,22 @@ class TextActionMenu(private val context: Context, private val callBack: CallBac
         }
         if (!ttsInitFinish) return
         if (text == "") return
-        if (textToSpeech?.isSpeaking == true)
+        if (textToSpeech?.isSpeaking == true) {
             textToSpeech?.stop()
+        }
         textToSpeech?.speak(text, TextToSpeech.QUEUE_ADD, null, "select_text")
         lastText = ""
     }
 
     @Synchronized
     override fun onInit(status: Int) {
-        textToSpeech?.language = Locale.CHINA
-        ttsInitFinish = true
-        readAloud(lastText)
+        if (status == TextToSpeech.SUCCESS) {
+            textToSpeech?.language = Locale.CHINA
+            ttsInitFinish = true
+            readAloud(lastText)
+        } else {
+            context.toastOnUi(R.string.tts_init_failed)
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.M)

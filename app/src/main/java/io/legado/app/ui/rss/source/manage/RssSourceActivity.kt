@@ -34,6 +34,7 @@ import io.legado.app.ui.widget.recycler.DragSelectTouchHelper
 import io.legado.app.ui.widget.recycler.ItemTouchCallback
 import io.legado.app.ui.widget.recycler.VerticalDivider
 import io.legado.app.utils.*
+import io.legado.app.utils.viewbindingdelegate.viewBinding
 import java.io.File
 
 /**
@@ -44,8 +45,8 @@ class RssSourceActivity : VMBaseActivity<ActivityRssSourceBinding, RssSourceView
     SelectActionBar.CallBack,
     RssSourceAdapter.CallBack {
 
-    override val viewModel: RssSourceViewModel
-            by viewModels()
+    override val binding by viewBinding(ActivityRssSourceBinding::inflate)
+    override val viewModel by viewModels<RssSourceViewModel>()
     private val importRecordKey = "rssSourceRecordKey"
     private lateinit var adapter: RssSourceAdapter
     private var sourceLiveData: LiveData<List<RssSource>>? = null
@@ -80,10 +81,6 @@ class RssSourceActivity : VMBaseActivity<ActivityRssSourceBinding, RssSourceView
                 viewModel.exportSelection(adapter.getSelection(), File(it))
             }
         }
-    }
-
-    override fun getViewBinding(): ActivityRssSourceBinding {
-        return ActivityRssSourceBinding.inflate(layoutInflater)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {

@@ -10,18 +10,15 @@ import io.legado.app.help.IntentDataHelp
 import io.legado.app.lib.dialogs.alert
 
 import io.legado.app.utils.toastOnUi
+import io.legado.app.utils.viewbindingdelegate.viewBinding
 
 class ImportRssSourceActivity :
     VMBaseActivity<ActivityTranslucenceBinding, ImportRssSourceViewModel>(
         theme = Theme.Transparent
     ) {
 
-    override fun getViewBinding(): ActivityTranslucenceBinding {
-        return ActivityTranslucenceBinding.inflate(layoutInflater)
-    }
-
-    override val viewModel: ImportRssSourceViewModel
-            by viewModels()
+    override val binding by viewBinding(ActivityTranslucenceBinding::inflate)
+    override val viewModel by viewModels<ImportRssSourceViewModel>()
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         binding.rotateLoading.show()

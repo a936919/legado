@@ -1,5 +1,6 @@
 package io.legado.app.ui.book.search
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
@@ -27,6 +28,7 @@ import io.legado.app.ui.book.info.BookInfoActivity
 import io.legado.app.ui.book.source.manage.BookSourceActivity
 import io.legado.app.ui.widget.recycler.LoadMoreView
 import io.legado.app.utils.*
+import io.legado.app.utils.viewbindingdelegate.viewBinding
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -36,8 +38,8 @@ class SearchActivity : VMBaseActivity<ActivityBookSearchBinding, SearchViewModel
     HistoryKeyAdapter.CallBack,
     SearchAdapter.CallBack {
 
-    override val viewModel: SearchViewModel
-            by viewModels()
+    override val binding by viewBinding(ActivityBookSearchBinding::inflate)
+    override val viewModel by viewModels<SearchViewModel>()
 
     lateinit var adapter: SearchAdapter
     private lateinit var bookAdapter: BookAdapter
@@ -49,10 +51,6 @@ class SearchActivity : VMBaseActivity<ActivityBookSearchBinding, SearchViewModel
     private var menu: Menu? = null
     private var precisionSearchMenuItem: MenuItem? = null
     private var groups = linkedSetOf<String>()
-
-    override fun getViewBinding(): ActivityBookSearchBinding {
-        return ActivityBookSearchBinding.inflate(layoutInflater)
-    }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         binding.llHistory.setBackgroundColor(backgroundColor)
@@ -212,11 +210,12 @@ class SearchActivity : VMBaseActivity<ActivityBookSearchBinding, SearchViewModel
     }
 
     private fun receiptIntent(intent: Intent? = null) {
-        intent?.getStringExtra("key")?.let {
-            searchView.setQuery(it, true)
-        } ?: let {
+        val key = intent?.getStringExtra("key")
+        if (key.isNullOrBlank()) {
             searchView.findViewById<TextView>(androidx.appcompat.R.id.search_src_text)
                 .requestFocus()
+        } else {
+            searchView.setQuery(key, true)
         }
     }
 
@@ -368,5 +367,19 @@ class SearchActivity : VMBaseActivity<ActivityBookSearchBinding, SearchViewModel
                 }
             }
         }
+    }
+
+    override fun deleteHistory(searchKeyword: SearchKeyword) {
+        viewModel.deleteHistory(searchKeyword)
+    }
+
+    companion object {
+
+        fun start(context: Context, key: String?) {
+            context.startActivity<SearchActivity> {
+                putExtra("key", key)
+            }
+        }
+
     }
 }

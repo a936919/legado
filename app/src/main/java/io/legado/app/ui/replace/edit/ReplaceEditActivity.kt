@@ -21,6 +21,7 @@ import io.legado.app.ui.widget.KeyboardToolPop
 import io.legado.app.ui.widget.dialog.TextDialog
 import io.legado.app.utils.getSize
 import io.legado.app.utils.toastOnUi
+import io.legado.app.utils.viewbindingdelegate.viewBinding
 import kotlin.math.abs
 
 /**
@@ -50,12 +51,8 @@ class ReplaceEditActivity :
 
     }
 
-    override fun getViewBinding(): ActivityReplaceEditBinding {
-        return ActivityReplaceEditBinding.inflate(layoutInflater)
-    }
-
-    override val viewModel: ReplaceEditViewModel
-            by viewModels()
+    override val binding by viewBinding(ActivityReplaceEditBinding::inflate)
+    override val viewModel by viewModels<ReplaceEditViewModel>()
 
     private var mSoftKeyboardTool: PopupWindow? = null
     private var mIsSoftKeyBoardShowing = false
@@ -93,7 +90,7 @@ class ReplaceEditActivity :
         return true
     }
 
-    private fun upReplaceView(replaceRule: ReplaceRule) = with(binding) {
+    private fun upReplaceView(replaceRule: ReplaceRule) = binding.run {
         etName.setText(replaceRule.name)
         etGroup.setText(replaceRule.group)
         etReplaceRule.setText(replaceRule.pattern)
@@ -102,7 +99,7 @@ class ReplaceEditActivity :
         etScope.setText(replaceRule.scope)
     }
 
-    private fun getReplaceRule(): ReplaceRule = with(binding) {
+    private fun getReplaceRule(): ReplaceRule = binding.run {
         val replaceRule: ReplaceRule = viewModel.replaceRule ?: ReplaceRule()
         replaceRule.name = etName.text.toString()
         replaceRule.group = etGroup.text.toString()

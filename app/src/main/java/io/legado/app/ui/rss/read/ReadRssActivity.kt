@@ -12,6 +12,8 @@ import android.view.*
 import android.webkit.*
 import androidx.activity.viewModels
 import androidx.core.view.size
+import androidx.webkit.WebSettingsCompat
+import androidx.webkit.WebViewFeature
 import io.legado.app.R
 import io.legado.app.base.VMBaseActivity
 import io.legado.app.constant.AppConst
@@ -26,6 +28,7 @@ import io.legado.app.ui.association.ImportRssSourceActivity
 import io.legado.app.ui.document.FilePicker
 import io.legado.app.ui.document.FilePickerParam
 import io.legado.app.utils.*
+import io.legado.app.utils.viewbindingdelegate.viewBinding
 import kotlinx.coroutines.launch
 import org.apache.commons.text.StringEscapeUtils
 import org.jsoup.Jsoup
@@ -35,8 +38,8 @@ import splitties.systemservices.downloadManager
 class ReadRssActivity : VMBaseActivity<ActivityRssReadBinding, ReadRssViewModel>(false),
     ReadRssViewModel.CallBack {
 
-    override val viewModel: ReadRssViewModel
-            by viewModels()
+    override val binding by viewBinding(ActivityRssReadBinding::inflate)
+    override val viewModel by viewModels<ReadRssViewModel>()
     private val imagePathKey = ""
     private var starMenuItem: MenuItem? = null
     private var ttsMenuItem: MenuItem? = null
@@ -45,10 +48,6 @@ class ReadRssActivity : VMBaseActivity<ActivityRssReadBinding, ReadRssViewModel>
     private val saveImage = registerForActivityResult(FilePicker()) {
         ACache.get(this).put(imagePathKey, it.toString())
         viewModel.saveImage(webPic, it.toString())
-    }
-
-    override fun getViewBinding(): ActivityRssReadBinding {
-        return ActivityRssReadBinding.inflate(layoutInflater)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -92,10 +91,15 @@ class ReadRssActivity : VMBaseActivity<ActivityRssReadBinding, ReadRssViewModel>
             R.id.menu_rss_star -> viewModel.favorite()
             R.id.menu_share_it -> viewModel.rssArticle?.let {
                 share(it.link)
-            }
+            } ?: toastOnUi(R.string.null_url)
             R.id.menu_aloud -> readAloud()
         }
         return super.onCompatOptionsItemSelected(item)
+    }
+
+    @JavascriptInterface
+    fun isNightTheme(): Boolean {
+        return AppConfig.isNightTheme(this)
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -108,6 +112,7 @@ class ReadRssActivity : VMBaseActivity<ActivityRssReadBinding, ReadRssViewModel>
             allowContentAccess = true
             //javaScriptEnabled = true
         }
+        binding.webView.addJavascriptInterface(this, "app")
         upWebViewTheme()
         binding.webView.setOnLongClickListener {
             val hitTestResult = binding.webView.hitTestResult
@@ -196,8 +201,21 @@ class ReadRssActivity : VMBaseActivity<ActivityRssReadBinding, ReadRssViewModel>
 
     private fun upWebViewTheme() {
         if (AppConfig.isNightTheme) {
-            binding.webView
-                .evaluateJavascript(AppConst.darkWebViewJs, null)
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK_STRATEGY)) {
+                WebSettingsCompat.setForceDarkStrategy(
+                    binding.webView.settings,
+                    WebSettingsCompat.DARK_STRATEGY_PREFER_WEB_THEME_OVER_USER_AGENT_DARKENING
+                )
+            }
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
+                WebSettingsCompat.setForceDark(
+                    binding.webView.settings,
+                    WebSettingsCompat.FORCE_DARK_ON
+                )
+            } else {
+                binding.webView
+                    .evaluateJavascript(AppConst.darkWebViewJs, null)
+            }
         }
     }
 

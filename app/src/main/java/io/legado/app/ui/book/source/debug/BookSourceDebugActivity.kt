@@ -14,12 +14,13 @@ import io.legado.app.lib.theme.accentColor
 import io.legado.app.ui.qrcode.QrCodeResult
 import io.legado.app.ui.widget.dialog.TextDialog
 import io.legado.app.utils.toastOnUi
+import io.legado.app.utils.viewbindingdelegate.viewBinding
 import kotlinx.coroutines.launch
 
 class BookSourceDebugActivity : VMBaseActivity<ActivitySourceDebugBinding, BookSourceDebugModel>() {
 
-    override val viewModel: BookSourceDebugModel
-            by viewModels()
+    override val binding by viewBinding(ActivitySourceDebugBinding::inflate)
+    override val viewModel by viewModels<BookSourceDebugModel>()
 
     private lateinit var adapter: BookSourceDebugAdapter
     private lateinit var searchView: SearchView
@@ -27,10 +28,6 @@ class BookSourceDebugActivity : VMBaseActivity<ActivitySourceDebugBinding, BookS
         it?.let {
             startSearch(it)
         }
-    }
-
-    override fun getViewBinding(): ActivitySourceDebugBinding {
-        return ActivitySourceDebugBinding.inflate(layoutInflater)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
