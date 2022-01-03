@@ -7,22 +7,18 @@ import android.graphics.RectF
 import android.util.AttributeSet
 import android.util.Log
 import android.view.View
-import io.legado.app.App
 import io.legado.app.R
 import io.legado.app.constant.PreferKey
-import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.Bookmark
 import io.legado.app.help.ReadBookConfig
 import io.legado.app.lib.theme.accentColor
 import io.legado.app.service.help.ReadBook
-import io.legado.app.ui.book.info.BookInfoActivity
 import io.legado.app.ui.book.read.page.entities.TextChar
 import io.legado.app.ui.book.read.page.entities.TextLine
 import io.legado.app.ui.book.read.page.entities.TextPage
 import io.legado.app.ui.book.read.page.provider.ChapterProvider
 import io.legado.app.ui.book.read.page.provider.ImageProvider
 import io.legado.app.ui.book.read.page.provider.TextPageFactory
-import io.legado.app.ui.main.bookshelf.books.BooksFragment
 import io.legado.app.ui.widget.dialog.PhotoDialog
 import io.legado.app.utils.*
 import io.legado.app.utils.activity
@@ -542,11 +538,11 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
     }
 
     private fun processComicMode(): Boolean {
-        var readConfigChage: Boolean
-        if (callBack.intentIsComic) {
-            selectAble = false
+        val readConfigChage: Boolean
+        selectAble = if (callBack.intentIsComic) {
+            false
         } else {
-            selectAble = context.getPrefBoolean(PreferKey.textSelectAble, true)
+            context.getPrefBoolean(PreferKey.textSelectAble, true)
         }
         if (ReadBookConfig.isComicMod != callBack.intentIsComic) {
             ReadBookConfig.isComicMod = callBack.intentIsComic
