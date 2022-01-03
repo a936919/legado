@@ -139,12 +139,15 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
         } else {
             ChapterProvider.contentPaint
         }
-        textPaint.color =
-            if (isReadAloud) context.accentColor else ReadBookConfig.textColor
+        val textColor = if (isReadAloud) context.accentColor else ReadBookConfig.textColor
         textChars.forEach {
             if (it.isImage) {
                 drawImage(canvas, it, lineTop, lineBottom, isImageLine)
             } else {
+                textPaint.color = textColor
+                if(it.isSearchResult) {
+                    textPaint.color = context.accentColor
+                }
                 canvas.drawText(it.charData, it.start, lineBase, textPaint)
             }
             if (it.selected) {
@@ -313,7 +316,7 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
             }
             val textPage = relativePage(relativePos)
             for ((lineIndex, textLine) in textPage.textLines.withIndex()) {
-                if (textLine.isTouch(y, relativeOffset)) {
+                if (textLine.isTouch(x, y, relativeOffset)) {
                     for ((charIndex, textChar) in textLine.textChars.withIndex()) {
                         if (textChar.isTouch(x)) {
                             touched.invoke(
@@ -392,6 +395,7 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
                             relativePos in selectStart[0] + 1 until selectEnd[0]
                         }
                     }
+                    textChar.isSearchResult = textChar.selected && callBack.isSelectingSearchResult
                 }
             }
         }
@@ -539,5 +543,6 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
         val headerHeight: Int
         val pageFactory: TextPageFactory
         val isScroll: Boolean
+        var isSelectingSearchResult: Boolean
     }
 }

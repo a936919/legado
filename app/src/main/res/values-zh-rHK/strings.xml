@@ -688,6 +688,7 @@
     <string name="information">信息</string>
     <string name="switchLayout">切換佈局</string>
     <string name="full_screen_gestures_support">全面屏手勢優化</string>
+    <string name="disable_return_key">禁用返回鍵</string>
 
     <!--color-->
     <string name="primary">主色調</string>
@@ -897,6 +898,7 @@
     <string name="open_fun">打開方式</string>
     <string name="use_browser_open">是否使用外部瀏覽器打開?</string>
     <string name="see">查看</string>
+    <string name="search_content_size">搜索結果</string>
     <string name="open">打開</string>
     <string name="del_login_header">刪除登錄頭</string>
     <string name="show_login_header">查看登錄頭</string>

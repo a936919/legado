@@ -85,12 +85,12 @@ object PreferKey {
     const val exportCharset = "exportCharset"
     const val exportUseReplace = "exportUseReplace"
     const val useZhLayout = "useZhLayout"
-    const val fullScreenGesturesSupport = "fullScreenGesturesSupport"
     const val brightness = "brightness"
     const val nightBrightness = "nightBrightness"
     const val expandTextMenu = "expandTextMenu"
     const val doublePageHorizontal = "doublePageHorizontal"
     const val readUrlOpenInBrowser = "readUrlInBrowser"
+    const val defaultBookTreeUri = "defaultBookTreeUri"
 
     const val cPrimary = "colorPrimary"
     const val cAccent = "colorAccent"

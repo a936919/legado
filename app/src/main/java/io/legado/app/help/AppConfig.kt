@@ -133,6 +133,16 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
             }
         }
 
+    var defaultBookTreeUri: String?
+        get() = appCtx.getPrefString(PreferKey.defaultBookTreeUri)
+        set(value) {
+            if (value.isNullOrEmpty()) {
+                appCtx.removePref(PreferKey.defaultBookTreeUri)
+            } else {
+                appCtx.putPrefString(PreferKey.defaultBookTreeUri, value)
+            }
+        }
+
     val showDiscovery: Boolean
         get() = appCtx.getPrefBoolean(PreferKey.showDiscovery, true)
 
@@ -254,9 +264,6 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
     val mediaButtonOnExit get() = appCtx.getPrefBoolean("mediaButtonOnExit", true)
 
     val replaceEnableDefault get() = appCtx.getPrefBoolean(PreferKey.replaceEnableDefault, true)
-
-    val fullScreenGesturesSupport: Boolean
-        get() = appCtx.getPrefBoolean(PreferKey.fullScreenGesturesSupport, false)
 
     val doublePageHorizontal: Boolean
         get() = appCtx.getPrefBoolean(PreferKey.doublePageHorizontal, true)

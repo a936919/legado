@@ -1,6 +1,5 @@
 package io.legado.app.help
 
-import android.net.Uri
 import io.legado.app.constant.AppPattern
 import io.legado.app.constant.EventBus
 import io.legado.app.data.appDb
@@ -11,6 +10,9 @@ import io.legado.app.help.coroutine.Coroutine
 import io.legado.app.model.analyzeRule.AnalyzeUrl
 import io.legado.app.model.localBook.LocalBook
 import io.legado.app.utils.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import org.apache.commons.text.similarity.JaccardSimilarity
 import splitties.init.appCtx
@@ -24,9 +26,9 @@ import kotlin.math.min
 
 @Suppress("unused")
 object BookHelp {
-    private const val cacheFolderName = "book_cache"
+    val downloadDir: File = appCtx.externalFiles
+    const val cacheFolderName = "book_cache"
     private const val cacheImageFolderName = "images"
-    private val downloadDir: File = appCtx.externalFiles
     private val downloadImages = CopyOnWriteArraySet<String>()
 
     fun clearCache() {
@@ -58,25 +60,19 @@ object BookHelp {
         }
     }
 
-    fun getEpubFile(book: Book): File {
-        val file = downloadDir.getFile(cacheFolderName, book.getFolderName(), "index.epubx")
-        if (!file.exists()) {
-            val input = if (book.bookUrl.isContentScheme()) {
-                val uri = Uri.parse(book.bookUrl)
-                appCtx.contentResolver.openInputStream(uri)
-            } else {
-                File(book.bookUrl).inputStream()
-            }
-            if (input != null) {
-                FileUtils.writeInputStream(file, input)
-            }
-
-        }
-        return file
+    suspend fun saveContent(
+        scope: CoroutineScope,
+        bookSource: BookSource,
+        book: Book,
+        bookChapter: BookChapter,
+        content: String
+    ) {
+        saveText(book, bookChapter, content)
+        saveImages(scope, bookSource, book, bookChapter, content)
+        postEvent(EventBus.SAVE_CONTENT, bookChapter)
     }
 
-    suspend fun saveContent(
-        bookSource: BookSource,
+    private fun saveText(
         book: Book,
         bookChapter: BookChapter,
         content: String
@@ -89,17 +85,30 @@ object BookHelp {
             book.getFolderName(),
             bookChapter.getFileName(),
         ).writeText(content)
-        //保存图片
+    }
+
+    private suspend fun saveImages(
+        scope: CoroutineScope,
+        bookSource: BookSource,
+        book: Book,
+        bookChapter: BookChapter,
+        content: String
+    ) {
+        val awaitList = arrayListOf<Deferred<Unit>>()
         content.split("\n").forEach {
             val matcher = AppPattern.imgPattern.matcher(it)
             if (matcher.find()) {
                 matcher.group(1)?.let { src ->
                     val mSrc = NetworkUtils.getAbsoluteURL(bookChapter.url, src)
-                    saveImage(bookSource, book, mSrc)
+                    awaitList.add(scope.async {
+                        saveImage(bookSource, book, mSrc)
+                    })
                 }
             }
         }
-        postEvent(EventBus.SAVE_CONTENT, bookChapter)
+        awaitList.forEach {
+            it.await()
+        }
     }
 
     suspend fun saveImage(bookSource: BookSource?, book: Book, src: String) {
@@ -200,16 +209,11 @@ object BookHelp {
      */
     fun getContent(book: Book, bookChapter: BookChapter): String? {
         if (book.isLocalTxt() || book.isUmd()) {
-            return LocalBook.getContext(book, bookChapter)
+            return LocalBook.getContent(book, bookChapter)
         } else if (book.isEpub() && !hasContent(book, bookChapter)) {
-            val string = LocalBook.getContext(book, bookChapter)
+            val string = LocalBook.getContent(book, bookChapter)
             string?.let {
-                FileUtils.createFileIfNotExist(
-                    downloadDir,
-                    cacheFolderName,
-                    book.getFolderName(),
-                    bookChapter.getFileName(),
-                ).writeText(it)
+                saveText(book, bookChapter, it)
             }
             return string
         } else {

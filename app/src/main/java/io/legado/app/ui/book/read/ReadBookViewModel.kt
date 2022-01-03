@@ -2,6 +2,7 @@ package io.legado.app.ui.book.read
 
 import android.app.Application
 import android.content.Intent
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import io.legado.app.R
 import io.legado.app.base.BaseViewModel
@@ -21,7 +22,8 @@ import io.legado.app.model.ReadBook
 import io.legado.app.model.localBook.LocalBook
 import io.legado.app.model.webBook.WebBook
 import io.legado.app.service.BaseReadAloudService
-import io.legado.app.ui.book.read.page.entities.TextPage
+import io.legado.app.ui.book.read.page.entities.TextChapter
+import io.legado.app.ui.book.searchContent.SearchResult
 import io.legado.app.utils.msg
 import io.legado.app.utils.postEvent
 import io.legado.app.utils.toastOnUi
@@ -29,9 +31,10 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.ensureActive
 
 class ReadBookViewModel(application: Application) : BaseViewModel(application) {
+    val permissionDenialLiveData = MutableLiveData<Int>()
     var isInitFinish = false
     var searchContentQuery = ""
-    var changeSourceCoroutine: Coroutine<*>? = null
+    private var changeSourceCoroutine: Coroutine<*>? = null
 
     fun initData(intent: Intent) {
         execute {
@@ -120,7 +123,12 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
                     ReadBook.loadContent(resetPageOffset = true)
                 }
             }.onError {
-                ReadBook.upMsg("LoadTocError:${it.localizedMessage}")
+                when (it) {
+                    is SecurityException -> {
+                        permissionDenialLiveData.postValue(1)
+                    }
+                    else -> ReadBook.upMsg("LoadTocError:${it.localizedMessage}")
+                }
             }
         } else {
             ReadBook.bookSource?.let {
@@ -262,17 +270,16 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
      * 内容搜索跳转
      */
     fun searchResultPositions(
-        pages: List<TextPage>,
-        indexWithinChapter: Int
+        textChapter: TextChapter,
+        searchResult: SearchResult
     ): Array<Int> {
         // calculate search result's pageIndex
-        var content = ""
-        pages.map {
-            content += it.text
-        }
-        var count = 1
+        val pages = textChapter.pages
+        val content = textChapter.getContent()
+
+        var count = 0
         var index = content.indexOf(searchContentQuery)
-        while (count != indexWithinChapter) {
+        while (count != searchResult.resultCountWithinChapter) {
             index = content.indexOf(searchContentQuery, index + 1)
             count += 1
         }

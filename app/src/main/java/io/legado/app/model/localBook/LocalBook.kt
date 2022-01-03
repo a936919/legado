@@ -13,15 +13,29 @@ import io.legado.app.help.BookHelp
 import io.legado.app.model.TocEmptyException
 import io.legado.app.utils.*
 import splitties.init.appCtx
+import timber.log.Timber
 import java.io.File
+import java.io.FileInputStream
+import java.io.FileNotFoundException
+import java.io.InputStream
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 import javax.script.SimpleBindings
 
 object LocalBook {
+
     private const val folderName = "bookTxt"
     val cacheFolder: File by lazy {
         FileUtils.createFolderIfNotExist(appCtx.externalFiles, folderName)
+    }
+
+    @Throws(FileNotFoundException::class, SecurityException::class)
+    fun getBookInputStream(book: Book): InputStream {
+        if (book.bookUrl.isContentScheme()) {
+            val uri = Uri.parse(book.bookUrl)
+            return appCtx.contentResolver.openInputStream(uri)!!
+        }
+        return FileInputStream(File(book.bookUrl))
     }
 
     @Throws(Exception::class)
@@ -34,7 +48,7 @@ object LocalBook {
                 UmdFile.getChapterList(book)
             }
             else -> {
-                TextFile().analyze(book)
+                TextFile.getChapterList(book)
             }
         }
         if (chapters.isEmpty()) {
@@ -43,39 +57,39 @@ object LocalBook {
         return chapters
     }
 
-    fun getContext(book: Book, chapter: BookChapter): String? {
-        return when {
-            book.isEpub() -> {
-                EpubFile.getContent(book, chapter)
+    fun getContent(book: Book, chapter: BookChapter): String? {
+        return try {
+            when {
+                book.isEpub() -> {
+                    EpubFile.getContent(book, chapter)
+                }
+                book.isUmd() -> {
+                    UmdFile.getContent(book, chapter)
+                }
+                else -> {
+                    TextFile.getContent(book, chapter)
+                }
             }
-            book.isUmd() -> {
-                UmdFile.getContent(book, chapter)
-            }
-            else -> {
-                TextFile.getContent(book, chapter)
-            }
+        } catch (e: Exception) {
+            Timber.e(e)
+            e.localizedMessage
         }
     }
 
     fun importFile(uri: Uri): Book {
         val path: String
+        val updateTime: Long
         //这个变量不要修改,否则会导致读取不到缓存
         val fileName = (if (uri.isContentScheme()) {
             path = uri.toString()
-            val doc = DocumentFile.fromSingleUri(appCtx, uri)
-            doc?.let {
-                val bookFile = cacheFolder.getFile(it.name!!)
-                if (!bookFile.exists()) {
-                    bookFile.createNewFile()
-                    doc.readBytes(appCtx).let { bytes ->
-                        bookFile.writeBytes(bytes)
-                    }
-                }
-            }
-            doc?.name!!
+            val doc = DocumentFile.fromSingleUri(appCtx, uri)!!
+            updateTime = doc.lastModified()
+            doc.name!!
         } else {
             path = uri.path!!
-            File(path).name
+            val file = File(path)
+            updateTime = file.lastModified()
+            file.name
         })
         var book = appDb.bookDao.getBook(path)
         if (book == null) {
@@ -89,7 +103,8 @@ object LocalBook {
                     appCtx.externalFiles,
                     "covers",
                     "${MD5Utils.md5Encode16(path)}.jpg"
-                )
+                ),
+                latestChapterTime = updateTime
             )
             if (book.isEpub()) EpubFile.upBookInfo(book)
             if (book.isUmd()) UmdFile.upBookInfo(book)
@@ -147,15 +162,12 @@ object LocalBook {
     fun deleteBook(book: Book, deleteOriginal: Boolean) {
         kotlin.runCatching {
             if (book.isLocalTxt() || book.isUmd()) {
-                val bookFile = cacheFolder.getFile(book.originName)
-                bookFile.delete()
+                cacheFolder.getFile(book.originName).delete()
             }
             if (book.isEpub()) {
-                val bookFile = BookHelp.getEpubFile(book).parentFile
-                if (bookFile != null && bookFile.exists()) {
-                    FileUtils.delete(bookFile, true)
-                }
-
+                FileUtils.delete(
+                    cacheFolder.getFile(book.getFolderName())
+                )
             }
 
             if (deleteOriginal) {
