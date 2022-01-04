@@ -65,10 +65,6 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
             .request()
     }
 
-    fun getViewBinding(): ActivityMainBinding {
-        return ActivityMainBinding.inflate(layoutInflater)
-    }
-
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         upBottomMenu()
         binding.apply {
@@ -138,7 +134,6 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
             } else if (!BuildConfig.DEBUG) {
                 val log = String(assets.open("updateLog.md").readBytes())
                 showDialogFragment(TextDialog(log, TextDialog.Mode.MD))
-
             }
             viewModel.upVersion()
         }
@@ -152,7 +147,6 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
                         binding.viewPagerMain.currentItem = 0
                         return true
                     }
-
                     (fragmentMap[getFragmentId(0)] as? BookshelfFragment2)?.let {
                         if (it.back()) {
                             return true

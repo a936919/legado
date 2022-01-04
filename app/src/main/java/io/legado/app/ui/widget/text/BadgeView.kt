@@ -101,7 +101,7 @@ class BadgeView @JvmOverloads constructor(
 
         // default values
         isHideOnNull = true
-        setBadgeCount(0)
+        //setBadgeCount(0)
         minWidth = dip2Px(16f)
         minHeight = dip2Px(16f)
     }
