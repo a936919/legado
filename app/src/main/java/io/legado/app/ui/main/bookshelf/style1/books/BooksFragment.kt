@@ -2,7 +2,6 @@ package io.legado.app.ui.main.bookshelf.style1.books
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import androidx.core.view.isGone
 import androidx.fragment.app.activityViewModels
@@ -39,11 +38,10 @@ import kotlin.math.max
 class BooksFragment() : BaseFragment(R.layout.fragment_books),
     BaseBooksAdapter.CallBack {
 
-    constructor(position: Int, groupId: Long,groupName:String) : this() {
+    constructor(position: Int, groupId: Long) : this() {
         val bundle = Bundle()
         bundle.putInt("position", position)
         bundle.putLong("groupId", groupId)
-        bundle.putString("groupName", groupName)
         arguments = bundle
     }
 
@@ -62,13 +60,11 @@ class BooksFragment() : BaseFragment(R.layout.fragment_books),
     private var booksFlowJob: Job? = null
     private var position = 0
     private var groupId = -1L
-    private var groupName = ""
 
     override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) {
         arguments?.let {
             position = it.getInt("position", 0)
             groupId = it.getLong("groupId", -1)
-            groupName = it.getString("groupName", null)
         }
         initRecyclerView()
         upRecyclerData()
@@ -168,7 +164,6 @@ class BooksFragment() : BaseFragment(R.layout.fragment_books),
     override fun openArrangeBook(layoutPosition: Int) {
         startActivity<ArrangeBookActivity>{
             putExtra("groupId", groupId)
-            putExtra("groupName", groupName)
             putExtra("position", layoutPosition)
         }
     }
