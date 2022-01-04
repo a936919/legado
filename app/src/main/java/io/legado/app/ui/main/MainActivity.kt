@@ -9,8 +9,6 @@ import android.view.ViewGroup
 import androidx.activity.viewModels
 import androidx.fragment.app.Fragment
 import androidx.multidex.BuildConfig
-import androidx.viewpager2.adapter.FragmentStateAdapter
-import androidx.viewpager2.widget.ViewPager2
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentStatePagerAdapter
 import androidx.viewpager.widget.ViewPager
@@ -29,7 +27,6 @@ import io.legado.app.lib.permission.Permissions
 import io.legado.app.lib.permission.PermissionsCompat
 import io.legado.app.lib.theme.elevation
 import io.legado.app.lib.theme.primaryColor
-import io.legado.app.service.BaseReadAloudService
 import io.legado.app.ui.main.bookshelf.BaseBookshelfFragment
 import io.legado.app.ui.main.bookshelf.style1.BookshelfFragment1
 import io.legado.app.ui.main.bookshelf.style2.BookshelfFragment2
@@ -155,6 +152,13 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
                         binding.viewPagerMain.currentItem = 0
                         return true
                     }
+
+                    (fragmentMap[getFragmentId(0)] as? BookshelfFragment2)?.let {
+                        if (it.back()) {
+                            return true
+                        }
+                    }
+
                     moveTaskToBack(true)
                     return true
                 }
@@ -220,7 +224,6 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
             realPositions[2] = 3
         }
     }
-
 
     private fun getFragmentId(position: Int): Int {
         val p = realPositions[position]
