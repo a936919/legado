@@ -558,7 +558,6 @@ object ReadBook : CoroutineScope by MainScope() {
             success: (() -> Unit)? = null
         )
 
-        fun upView()
         fun pageChanged()
         fun contentLoadFinish()
         fun upPageAnim()

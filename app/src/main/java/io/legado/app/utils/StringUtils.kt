@@ -40,9 +40,16 @@ object StringUtils {
             return map
         }
 
-    /**
-     * 将日期转换成昨天、今天、明天
-     */
+    //将时间转换成日期
+    fun dateConvert(time: Long, pattern: String): String {
+        val date = Date(time)
+
+        @SuppressLint("SimpleDateFormat")
+        val format = SimpleDateFormat(pattern)
+        return format.format(date)
+    }
+
+    //将日期转换成昨天、今天、明天
     fun dateConvert(source: String, pattern: String): String {
         @SuppressLint("SimpleDateFormat")
         val format = SimpleDateFormat(pattern)

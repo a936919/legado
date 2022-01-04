@@ -3,6 +3,7 @@ package io.legado.app.ui.book.read.page.provider
 import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
+import android.text.StaticLayout
 import android.text.TextPaint
 import io.legado.app.constant.AppPattern
 import io.legado.app.constant.EventBus
@@ -29,7 +30,6 @@ object ChapterProvider {
 
     @JvmStatic
     var viewWidth = 0
-
         private set
 
     @JvmStatic
@@ -115,13 +115,12 @@ object ChapterProvider {
         textPages.add(TextPage())
         contents.forEachIndexed { index, content ->
             if (book.getImageStyle() == Book.imgStyleText) {
-                var text = content.replace(srcReplaceChar, "画")
+                var text = content.replace(srcReplaceChar, "▣")
                 val srcList = LinkedList<String>()
                 val sb = StringBuffer()
                 val matcher = AppPattern.imgPattern.matcher(text)
                 while (matcher.find()) {
-                    matcher.group(1)?.let { it ->
-                        val src = NetworkUtils.getAbsoluteURL(bookChapter.url, it)
+                    matcher.group(1)?.let { src ->
                         srcList.add(src)
                         ImageProvider.getImage(book, bookChapter.index, src, ReadBook.bookSource)
                         matcher.appendReplacement(sb, srcReplaceChar)
@@ -309,6 +308,7 @@ object ChapterProvider {
                 //第一行
                 textLine.text = words
                 addCharsToLineFirst(
+                    absStartX,
                     textLine,
                     words.toStringArray(),
                     textPaint,
@@ -320,14 +320,15 @@ object ChapterProvider {
                 //最后一行
                 textLine.text = "$words\n"
                 isLastLine = true
-                val x = if (isTitle && ReadBookConfig.titleMode == 1)
+                val startX = if (isTitle && ReadBookConfig.titleMode == 1)
                     (visibleWidth - layout.getLineWidth(lineIndex)) / 2
                 else 0f
-                addCharsToLineLast(textLine, words.toStringArray(), x, lineIndex, layout, srcList)
+                addCharsToLineLast(absStartX,textLine, words.toStringArray(), startX, lineIndex, layout, srcList)
             } else {
                 //中间行
                 textLine.text = words
                 addCharsToLineMiddle(
+                    absStartX,
                     textLine,
                     words.toStringArray(),
                     0f,
@@ -336,20 +337,11 @@ object ChapterProvider {
                     srcList
                 )
             }
-            if (durY + textPaint.textHeight > visibleHeight) {
-                //当前页面结束,设置各种值
-                textPages.last().text = stringBuilder.toString()
-                textPages.last().height = durY
-                //新建页面
-                textPages.add(TextPage())
-                stringBuilder.clear()
-                durY = 0f
-            }
             stringBuilder.append(words)
             if (isLastLine) stringBuilder.append("\n")
             textPages.last().textLines.add(textLine)
             textLine.upTopBottom(durY, textPaint)
-            durY += textPaint.textHeight * lineSpacingExtra / 10f
+            durY += textPaint.textHeight * lineSpacingExtra
             textPages.last().height = durY
         }
         if (isTitle) durY += titleBottomSpacing
@@ -361,6 +353,7 @@ object ChapterProvider {
      * 有缩进,两端对齐
      */
     private fun addCharsToLineFirst(
+        absStartX:Int,
         textLine: TextLine,
         words: Array<String>,
         textPaint: TextPaint,
@@ -370,40 +363,31 @@ object ChapterProvider {
     ) {
         var x = 0f
         if (!ReadBookConfig.textFullJustify) {
-            addCharsToLineLast(textLine, words, x, line, layout, srcList)
+            addCharsToLineLast(absStartX,textLine, words, x, line, layout, srcList)
             return
         }
         val bodyIndent = ReadBookConfig.paragraphIndent
-        val icw = layout.getDesiredWidth(bodyIndent, textPaint) / bodyIndent.length
-        val d = getDefInterval(layout)
-        bodyIndent.toStringArray().forEach {
-            val x1 = x + icw + d
-            if (srcList != null && it == srcReplaceChar) {
-                textLine.textChars.add(
-                    TextChar(
-                        srcList.removeFirst(),
-                        start = paddingLeft + x,
-                        end = paddingLeft + x1,
-                        isImage = true
-                    )
+        val icw = StaticLayout.getDesiredWidth(bodyIndent, textPaint) / bodyIndent.length
+        bodyIndent.toStringArray().forEach { char ->
+            val x1 = x + icw
+            textLine.textChars.add(
+                TextChar(
+                    charData = char,
+                    start = absStartX + x,
+                    end = absStartX + x1
                 )
-            } else {
-                textLine.textChars.add(
-                    TextChar(
-                        it, start = paddingLeft + x, end = paddingLeft + x1
-                    )
-                )
-            }
+            )
             x = x1
         }
         val words1 = words.copyOfRange(bodyIndent.length, words.size)
-        addCharsToLineMiddle(textLine, words1, x, line, layout, srcList)
+        addCharsToLineMiddle(absStartX,textLine, words1, x, line, layout, srcList)
     }
 
     /**
      * 无缩进,两端对齐
      */
     private fun addCharsToLineMiddle(
+        absStartX: Int,
         textLine: TextLine,
         words: Array<String>,
         startX: Float,
@@ -412,22 +396,23 @@ object ChapterProvider {
         srcList: LinkedList<String>?
     ) {
         if (!ReadBookConfig.textFullJustify) {
-            addCharsToLineLast(textLine, words, startX, line, layout, srcList)
+            addCharsToLineLast(absStartX,textLine, words, startX, line, layout, srcList)
             return
         }
         val interval = layout.getInterval(line, words, visibleWidth)
         /*间隔太大左对齐*/
         if (interval.total > (visibleWidth / 6)) {
-            addCharsToLineLast(textLine, words, startX, line, layout, srcList)
+            addCharsToLineLast(absStartX,textLine, words, startX, line, layout, srcList)
             return
         }
-        wordsProcess(textLine, words, startX, line, layout, interval.single, srcList);
+        wordsProcess(absStartX,textLine, words, startX, line, layout, interval.single, srcList);
     }
 
     /**
      * 最后一行,自然排列
      */
     private fun addCharsToLineLast(
+        absStartX: Int,
         textLine: TextLine,
         words: Array<String>,
         startX: Float,
@@ -439,10 +424,11 @@ object ChapterProvider {
         /*目前改的不算严格意义的左对齐。会根据设置行宽做间隔叠加，保证上下行效果和两边间隔一致*/
         /*存在半角字符情况下依靠中文算出的默认间隔会越界*/
         val d = min((interval.single), (getDefInterval(layout)))
-        wordsProcess(textLine, words, startX, line, layout, d, srcList);
+        wordsProcess(absStartX,textLine, words, startX, line, layout, d, srcList);
     }
 
     private fun wordsProcess(
+        absStartX: Int,
         textLine: TextLine,
         words: Array<String>,
         startX: Float,
@@ -459,15 +445,15 @@ object ChapterProvider {
                 textLine.textChars.add(
                     TextChar(
                         srcList.removeFirst(),
-                        start = paddingLeft + locate.start,
-                        end = paddingLeft + locate.end,
+                        start = absStartX + locate.start,
+                        end = absStartX + locate.end,
                         isImage = true
                     )
                 )
             } else {
                 textLine.textChars.add(
                     TextChar(
-                        s, start = paddingLeft + locate.start, end = paddingLeft + locate.end
+                        s, start = absStartX + locate.start, end = absStartX + locate.end
                     )
                 )
             }

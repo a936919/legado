@@ -141,7 +141,6 @@ class ReadBookActivity : BaseReadBookActivity(),
     @SuppressLint("ClickableViewAccessibility")
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-
         binding.cursorLeft.setColorFilter(accentColor)
         binding.cursorRight.setColorFilter(accentColor)
         binding.cursorLeft.setOnTouchListener(this)
@@ -186,8 +185,10 @@ class ReadBookActivity : BaseReadBookActivity(),
             timeBatteryReceiver = null
         }
         upSystemUiVisibility()
-        ReadBook.uploadProgress()
-        Backup.autoBack(this)
+        if (!BuildConfig.DEBUG) {
+            ReadBook.uploadProgress()
+            Backup.autoBack(this)
+        }
     }
 
     override fun onCompatCreateOptionsMenu(menu: Menu): Boolean {
@@ -616,52 +617,6 @@ class ReadBookActivity : BaseReadBookActivity(),
         return false
     }
 
-    private fun processBookProgress(book: Book, webDavProgress: BookProgress?) {
-        val history = ReadBook.historyRecord
-        val web = if (book.webChapterIndex == 0 && book.webChapterPos == 0) null
-        else BookProgress(
-            book.name,
-            book.author,
-            book.webChapterIndex,
-            book.webChapterPos,
-            book.webDurChapterTime,
-            null
-        )
-        showSelectRecord(history, web, webDavProgress)
-    }
-
-    override fun synProgress(book: Book) {
-        viewModel.getWebDavProgress(book) { progress ->
-            ReadBook.historyRecord?.let {
-                if (it.durChapterTime < book.webDurChapterTime || it.durChapterTime < progress.durChapterTime) {
-                    processBookProgress(book, progress)
-                }
-            }
-        }
-    }
-
-    override fun synProgress() {
-        ReadBook.book?.let {
-            viewModel.getWebDavProgress(it) { progress ->
-                appDb.bookDao.getBook(it.bookUrl)?.let { newBook ->
-                    processBookProgress(newBook, progress)
-                }
-            }
-        }
-    }
-
-    override fun refreshBook() {
-        ReadBook.book?.let {
-            ReadBook.curTextChapter = null
-            binding.readView.upContent()
-            viewModel.refreshContent(it)
-        }
-    }
-
-    override fun downloadBook() {
-        showDownloadDialog()
-    }
-
     override fun upMenuView() {
         launch {
             upMenu()
@@ -862,10 +817,6 @@ class ReadBookActivity : BaseReadBookActivity(),
      */
     override fun showReadStyle() {
         showDialogFragment<ReadStyleDialog>()
-    }
-
-    override fun showBookOtherInfo() {
-        BookOtherInfoDialog().show(supportFragmentManager, "bookOtherInfo")
     }
 
     /**
@@ -1156,18 +1107,68 @@ class ReadBookActivity : BaseReadBookActivity(),
         }
     }
 
+    override fun showBookOtherInfo() {
+        BookOtherInfoDialog().show(supportFragmentManager, "bookOtherInfo")
+    }
     private fun getIntent(intent: Intent): Book? {
         var intentBook: Book? = null
         ReadBook.inBookshelf = intent.getBooleanExtra("inBookshelf", true)
-        IntentDataHelp.getData<Book>(intent.getStringExtra("key"))?.let {
-            intentBook = it
-        } ?: intent.getStringExtra("bookUrl")?.let {
-            appDb.bookDao.getBook(it)?.let { book ->
-                intentBook = book
-            }
-        } ?: appDb.bookDao.lastReadBook?.let {
-            intentBook = it
+        val bookUrl = intent.getStringExtra("bookUrl")
+        val book = when {
+            bookUrl.isNullOrEmpty() -> appDb.bookDao.lastReadBook
+            else -> appDb.bookDao.getBook(bookUrl)
+        } ?: ReadBook.book
+        when {
+            book != null -> intentBook = book
         }
         return intentBook
     }
+
+    private fun processBookProgress(book: Book, webDavProgress: BookProgress?) {
+        val history = ReadBook.historyRecord
+        val web = if (book.webChapterIndex == 0 && book.webChapterPos == 0) null
+        else BookProgress(
+            book.name,
+            book.author,
+            book.webChapterIndex,
+            book.webChapterPos,
+            book.webDurChapterTime,
+            null
+        )
+        showSelectRecord(history, web, webDavProgress)
+    }
+
+    override fun synProgress(book: Book) {
+        viewModel.getWebDavProgress(book) { progress ->
+            ReadBook.historyRecord?.let {
+                if (it.durChapterTime < book.webDurChapterTime || it.durChapterTime < progress.durChapterTime) {
+                    processBookProgress(book, progress)
+                }
+            }
+        }
+    }
+
+    override fun synProgress() {
+        ReadBook.book?.let {
+            viewModel.getWebDavProgress(it) { progress ->
+                appDb.bookDao.getBook(it.bookUrl)?.let { newBook ->
+                    processBookProgress(newBook, progress)
+                }
+            }
+        }
+    }
+
+    override fun refreshBook() {
+        ReadBook.book?.let {
+            ReadBook.curTextChapter = null
+            binding.readView.upContent()
+            viewModel.refreshContent(it)
+        }
+    }
+
+    override fun downloadBook() {
+        showDownloadDialog()
+    }
+
+
 }

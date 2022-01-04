@@ -16,7 +16,7 @@ import io.legado.app.data.entities.TimeRecord
 import io.legado.app.databinding.DialogReadBookOtherInfoBinding
 import io.legado.app.lib.theme.readCfgBottomBg
 import io.legado.app.lib.theme.readCfgBottomText
-import io.legado.app.service.help.ReadBook
+import io.legado.app.model.ReadBook
 import io.legado.app.ui.book.info.BookInfoActivity
 import io.legado.app.ui.book.info.BookInfoViewModel
 import io.legado.app.ui.book.read.ReadBookActivity
@@ -24,7 +24,7 @@ import io.legado.app.ui.book.search.SearchActivity
 import io.legado.app.utils.*
 import io.legado.app.utils.viewbindingdelegate.viewBinding
 
-class BookOtherInfoDialog : BaseDialogFragment()  {
+class BookOtherInfoDialog : BaseDialogFragment(R.layout.dialog_read_book_other_info)  {
     private var callBack: CallBack? = null
     private val binding by viewBinding(DialogReadBookOtherInfoBinding::bind)
     val viewModel: BookInfoViewModel

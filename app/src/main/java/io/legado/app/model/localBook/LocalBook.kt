@@ -54,6 +54,7 @@ object LocalBook {
         if (chapters.isEmpty()) {
             throw TocEmptyException(appCtx.getString(R.string.chapter_list_empty))
         }
+        mqLog.d("size is ${chapters.size}")
         return chapters
     }
 
@@ -157,7 +158,6 @@ object LocalBook {
 
         }
         return Pair(name, author)
-
     }
 
     fun deleteBook(book: Book, deleteOriginal: Boolean) {

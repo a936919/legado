@@ -15,6 +15,7 @@ import android.view.animation.Animation
 import android.widget.FrameLayout
 import android.widget.SeekBar
 import androidx.appcompat.widget.PopupMenu
+import androidx.core.view.get
 import androidx.core.view.isVisible
 import androidx.core.view.size
 import io.legado.app.R
