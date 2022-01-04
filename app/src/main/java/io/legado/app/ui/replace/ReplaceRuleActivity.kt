@@ -10,8 +10,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.widget.PopupMenu
 import androidx.appcompat.widget.SearchView
-import androidx.documentfile.provider.DocumentFile
-import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import io.legado.app.R
@@ -21,15 +19,14 @@ import io.legado.app.data.appDb
 import io.legado.app.data.entities.ReplaceRule
 import io.legado.app.databinding.ActivityReplaceRuleBinding
 import io.legado.app.databinding.DialogEditTextBinding
-import io.legado.app.help.IntentDataHelp
+import io.legado.app.help.ContentProcessor
+import io.legado.app.help.DirectLinkUpload
 import io.legado.app.help.coroutine.Coroutine
 import io.legado.app.lib.dialogs.alert
-import io.legado.app.lib.theme.ATH
+import io.legado.app.lib.theme.primaryColor
 import io.legado.app.lib.theme.primaryTextColor
-import io.legado.app.service.help.ReadBook
-import io.legado.app.ui.association.ImportReplaceRuleActivity
-import io.legado.app.ui.document.FilePicker
-import io.legado.app.ui.document.FilePickerParam
+import io.legado.app.ui.association.ImportReplaceRuleDialog
+import io.legado.app.ui.document.HandleFileContract
 import io.legado.app.ui.qrcode.QrCodeResult
 import io.legado.app.ui.replace.edit.ReplaceEditActivity
 import io.legado.app.ui.widget.SelectActionBar
@@ -39,7 +36,9 @@ import io.legado.app.ui.widget.recycler.ItemTouchCallback
 import io.legado.app.ui.widget.recycler.VerticalDivider
 import io.legado.app.utils.*
 import io.legado.app.utils.viewbindingdelegate.viewBinding
-import java.io.File
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 /**
  * 替换规则管理
@@ -52,17 +51,19 @@ class ReplaceRuleActivity : VMBaseActivity<ActivityReplaceRuleBinding, ReplaceRu
     override val binding by viewBinding(ActivityReplaceRuleBinding::inflate)
     override val viewModel by viewModels<ReplaceRuleViewModel>()
     private val importRecordKey = "replaceRuleRecordKey"
-    private lateinit var adapter: ReplaceRuleAdapter
-    private lateinit var searchView: SearchView
+    private val adapter by lazy { ReplaceRuleAdapter(this, this) }
+    private val searchView: SearchView by lazy {
+        binding.titleBar.findViewById(R.id.search_view)
+    }
     private var groups = hashSetOf<String>()
     private var groupMenu: SubMenu? = null
-    private var replaceRuleLiveData: LiveData<List<ReplaceRule>>? = null
+    private var replaceRuleFlowJob: Job? = null
     private var dataInit = false
     private val qrCodeResult = registerForActivityResult(QrCodeResult()) {
         it ?: return@registerForActivityResult
-        startActivity<ImportReplaceRuleActivity> {
-            putExtra("source", it)
-        }
+        showDialogFragment(
+            ImportReplaceRuleDialog(it)
+        )
     }
     private val editActivity =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -70,33 +71,38 @@ class ReplaceRuleActivity : VMBaseActivity<ActivityReplaceRuleBinding, ReplaceRu
                 setResult(RESULT_OK)
             }
         }
-    private val importDoc = registerForActivityResult(FilePicker()) { uri ->
+    private val importDoc = registerForActivityResult(HandleFileContract()) {
         kotlin.runCatching {
-            uri?.readText(this)?.let {
-                val dataKey = IntentDataHelp.putData(it)
-                startActivity<ImportReplaceRuleActivity> {
-                    putExtra("dataKey", dataKey)
-                }
+            it.uri?.readText(this)?.let {
+                showDialogFragment(
+                    ImportReplaceRuleDialog(it)
+                )
             }
         }.onFailure {
             toastOnUi("readTextError:${it.localizedMessage}")
         }
     }
-    private val exportDir = registerForActivityResult(FilePicker()) { uri ->
-        uri ?: return@registerForActivityResult
-        if (uri.isContentScheme()) {
-            DocumentFile.fromTreeUri(this, uri)?.let {
-                viewModel.exportSelection(adapter.getSelection(), it)
-            }
-        } else {
-            uri.path?.let {
-                viewModel.exportSelection(adapter.getSelection(), File(it))
+    private val exportResult = registerForActivityResult(HandleFileContract()) {
+        it.uri?.let { uri ->
+            alert(R.string.export_success) {
+                if (uri.toString().isAbsUrl()) {
+                    DirectLinkUpload.getSummary()?.let { summary ->
+                        setMessage(summary)
+                    }
+                }
+                val alertBinding = DialogEditTextBinding.inflate(layoutInflater).apply {
+                    editView.hint = getString(R.string.path)
+                    editView.setText(uri.toString())
+                }
+                customView { alertBinding.root }
+                okButton {
+                    sendToClip(uri.toString())
+                }
             }
         }
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
-        searchView = binding.titleBar.findViewById(R.id.search_view)
         val scope = intent.getStringExtra("scope") ?: ""
         initRecyclerView()
         initSearchView()
@@ -117,9 +123,8 @@ class ReplaceRuleActivity : VMBaseActivity<ActivityReplaceRuleBinding, ReplaceRu
     }
 
     private fun initRecyclerView() {
-        ATH.applyEdgeEffectColor(binding.recyclerView)
+        binding.recyclerView.setEdgeEffectColor(primaryColor)
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
-        adapter = ReplaceRuleAdapter(this, this)
         binding.recyclerView.adapter = adapter
         binding.recyclerView.addItemDecoration(VerticalDivider(this))
         val itemTouchCallback = ItemTouchCallback(adapter)
@@ -135,7 +140,7 @@ class ReplaceRuleActivity : VMBaseActivity<ActivityReplaceRuleBinding, ReplaceRu
     }
 
     private fun initSearchView() {
-        ATH.setTint(searchView, primaryTextColor)
+        searchView.applyTint(primaryTextColor)
         searchView.onActionViewExpanded()
         searchView.queryHint = getString(R.string.replace_purify_search)
         searchView.clearFocus()
@@ -154,7 +159,7 @@ class ReplaceRuleActivity : VMBaseActivity<ActivityReplaceRuleBinding, ReplaceRu
         adapter.revertSelection()
     }
 
-    override fun onClickMainAction() {
+    override fun onClickSelectBarMainAction() {
         delSourceDialog()
     }
 
@@ -167,32 +172,35 @@ class ReplaceRuleActivity : VMBaseActivity<ActivityReplaceRuleBinding, ReplaceRu
 
     private fun delSourceDialog() {
         alert(titleResource = R.string.draw, messageResource = R.string.sure_del) {
-            okButton { viewModel.delSelection(adapter.getSelection()) }
+            okButton { viewModel.delSelection(adapter.selection) }
             noButton()
-        }.show()
+        }
     }
 
     private fun observeReplaceRuleData(searchKey: String? = null) {
         dataInit = false
-        var scope: String? = null
-        replaceRuleLiveData?.removeObservers(this)
-        replaceRuleLiveData = when {
-            searchKey.isNullOrEmpty() -> {
-                appDb.replaceRuleDao.liveDataAll()
-            }
-            searchKey.startsWith("group:") -> {
-                val key = searchKey.substringAfter("group:")
-                appDb.replaceRuleDao.liveDataGroupSearch("%$key%")
-            }
-            searchKey.startsWith("scope:") -> {
-                scope = searchKey.substringAfter("scope:")
-                appDb.replaceRuleDao.liveDataAll()
-            }
-            else -> {
-                appDb.replaceRuleDao.liveDataSearch("%$searchKey%")
-            }
-        }.apply {
-            observe(this@ReplaceRuleActivity, {
+
+                var scope: String? = null
+
+                replaceRuleFlowJob?.cancel()
+        replaceRuleFlowJob = launch {
+            when {
+                searchKey.isNullOrEmpty() -> {
+                    appDb.replaceRuleDao.flowAll()
+                }
+                searchKey.startsWith("group:") -> {
+                    val key = searchKey.substringAfter("group:")
+                    appDb.replaceRuleDao.flowGroupSearch("%$key%")
+                }
+                searchKey.startsWith("scope:") -> {
+                    scope = searchKey.substringAfter("scope:")
+                    appDb.replaceRuleDao.flowAll()
+                }
+                else -> {
+                    appDb.replaceRuleDao.flowSearch("%$searchKey%")
+                }
+            }.collect {
+
                 if (dataInit) {
                     setResult(Activity.RESULT_OK)
                 }
@@ -204,36 +212,34 @@ class ReplaceRuleActivity : VMBaseActivity<ActivityReplaceRuleBinding, ReplaceRu
                 }
                 adapter.setItems(list, adapter.diffItemCallBack)
                 dataInit = true
-            })
+            }
         }
     }
 
     private fun observeGroupData() {
-        appDb.replaceRuleDao.liveGroup().observe(this, {
-            groups.clear()
-            it.map { group ->
-                groups.addAll(group.splitNotBlank(AppPattern.splitGroupRegex))
+        launch {
+            appDb.replaceRuleDao.flowGroup().collect {
+                groups.clear()
+                it.map { group ->
+                    groups.addAll(group.splitNotBlank(AppPattern.splitGroupRegex))
+                }
+                upGroupMenu()
             }
-            upGroupMenu()
-        })
+        }
     }
 
     override fun onCompatOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.menu_add_replace_rule ->
                 editActivity.launch(ReplaceEditActivity.startIntent(this))
-            R.id.menu_group_manage ->
-                GroupManageDialog().show(supportFragmentManager, "groupManage")
-
-            R.id.menu_del_selection -> viewModel.delSelection(adapter.getSelection())
+            R.id.menu_group_manage -> showDialogFragment<GroupManageDialog>()
+            R.id.menu_del_selection -> viewModel.delSelection(adapter.selection)
             R.id.menu_import_onLine -> showImportDialog()
-            R.id.menu_import_local -> importDoc.launch(
-                FilePickerParam(
-                    mode = FilePicker.FILE,
-                    allowExtensions = arrayOf("txt", "json")
-                )
-            )
-            R.id.menu_import_qr -> qrCodeResult.launch(null)
+            R.id.menu_import_local -> importDoc.launch {
+                mode = HandleFileContract.FILE
+                allowExtensions = arrayOf("txt", "json")
+            }
+            R.id.menu_import_qr -> qrCodeResult.launch()
             R.id.menu_help -> showHelp()
             else -> if (item.groupId == R.id.replace_group) {
                 searchView.setQuery("group:${item.title}", true)
@@ -244,9 +250,18 @@ class ReplaceRuleActivity : VMBaseActivity<ActivityReplaceRuleBinding, ReplaceRu
 
     override fun onMenuItemClick(item: MenuItem?): Boolean {
         when (item?.itemId) {
-            R.id.menu_enable_selection -> viewModel.enableSelection(adapter.getSelection())
-            R.id.menu_disable_selection -> viewModel.disableSelection(adapter.getSelection())
-            R.id.menu_export_selection -> exportDir.launch(null)
+            R.id.menu_enable_selection -> viewModel.enableSelection(adapter.selection)
+            R.id.menu_disable_selection -> viewModel.disableSelection(adapter.selection)
+            R.id.menu_top_sel -> viewModel.topSelect(adapter.selection)
+            R.id.menu_bottom_sel -> viewModel.bottomSelect(adapter.selection)
+            R.id.menu_export_selection -> exportResult.launch {
+                mode = HandleFileContract.EXPORT
+                fileData = Triple(
+                    "exportReplaceRule.json",
+                    GSON.toJson(adapter.selection).toByteArray(),
+                    "application/json"
+                )
+            }
         }
         return false
     }
@@ -267,6 +282,7 @@ class ReplaceRuleActivity : VMBaseActivity<ActivityReplaceRuleBinding, ReplaceRu
             ?.toMutableList() ?: mutableListOf()
         alert(titleResource = R.string.import_replace_rule_on_line) {
             val alertBinding = DialogEditTextBinding.inflate(layoutInflater).apply {
+                editView.hint = "url"
                 editView.setFilterValues(cacheUrls)
                 editView.delCallBack = {
                     cacheUrls.remove(it)
@@ -281,18 +297,18 @@ class ReplaceRuleActivity : VMBaseActivity<ActivityReplaceRuleBinding, ReplaceRu
                         cacheUrls.add(0, it)
                         aCache.put(importRecordKey, cacheUrls.joinToString(","))
                     }
-                    startActivity<ImportReplaceRuleActivity> {
-                        putExtra("source", it)
-                    }
+                    showDialogFragment(
+                        ImportReplaceRuleDialog(it)
+                    )
                 }
             }
             cancelButton()
-        }.show()
+        }
     }
 
     private fun showHelp() {
         val text = String(assets.open("help/replaceRuleHelp.md").readBytes())
-        TextDialog.show(supportFragmentManager, text, TextDialog.MD)
+        showDialogFragment(TextDialog(text, TextDialog.Mode.MD))
     }
 
     override fun onQueryTextChange(newText: String?): Boolean {
@@ -306,12 +322,12 @@ class ReplaceRuleActivity : VMBaseActivity<ActivityReplaceRuleBinding, ReplaceRu
 
     override fun onDestroy() {
         super.onDestroy()
-        Coroutine.async { ReadBook.contentProcessor?.upReplaceRules() }
+        Coroutine.async { ContentProcessor.upReplaceRules() }
     }
 
     override fun upCountView() {
         binding.selectActionBar.upCountView(
-            adapter.getSelection().size,
+            adapter.selection.size,
             adapter.itemCount
         )
     }

@@ -2,6 +2,7 @@ package io.legado.app.base
 
 import android.content.Context
 import android.content.res.Configuration
+import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import android.os.Bundle
 import android.util.AttributeSet
@@ -12,14 +13,12 @@ import android.view.View
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewbinding.ViewBinding
-import io.legado.app.App
 import io.legado.app.R
 import io.legado.app.constant.AppConst
-import io.legado.app.constant.PreferKey
+import io.legado.app.constant.AppLog
 import io.legado.app.constant.Theme
 import io.legado.app.help.AppConfig
 import io.legado.app.help.ThemeConfig
-import io.legado.app.lib.theme.ATH
 import io.legado.app.lib.theme.ThemeStore
 import io.legado.app.lib.theme.backgroundColor
 import io.legado.app.lib.theme.primaryColor
@@ -36,8 +35,7 @@ abstract class BaseActivity<VB : ViewBinding>(
     private val toolBarTheme: Theme = Theme.Auto,
     private val transparent: Boolean = false,
     private val imageBg: Boolean = true
-) : AppCompatActivity(),
-    CoroutineScope by MainScope() {
+) : AppCompatActivity(), CoroutineScope by MainScope() {
 
     protected abstract val binding: VB
 
@@ -51,7 +49,7 @@ abstract class BaseActivity<VB : ViewBinding>(
         }
 
     override fun attachBaseContext(newBase: Context) {
-        super.attachBaseContext(LanguageUtils.setConfiguration(newBase))
+        super.attachBaseContext(AppContextWrapper.wrap(newBase))
     }
 
     override fun onCreateView(
@@ -67,26 +65,6 @@ abstract class BaseActivity<VB : ViewBinding>(
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-            getPrefBoolean(PreferKey.highBrush)
-        ) {
-            /**
-             * 添加高刷新率支持
-             */
-            // 获取系统window支持的模式
-            @Suppress("DEPRECATION")
-            val modes = window.windowManager.defaultDisplay.supportedModes
-            // 对获取的模式，基于刷新率的大小进行排序，从小到大排序
-            modes.sortBy {
-                it.refreshRate
-            }
-            window.let {
-                val lp = it.attributes
-                // 取出最大的那一个刷新率，直接设置给window
-                lp.preferredDisplayModeId = modes.last().modeId
-                it.attributes = lp
-            }
-        }
         window.decorView.disableAutoFill()
         initTheme()
         super.onCreate(savedInstanceState)
@@ -99,13 +77,6 @@ abstract class BaseActivity<VB : ViewBinding>(
         //todo 追踪当前是哪个Activity Log.d("mq-1",javaClass.simpleName)
         onActivityCreated(savedInstanceState)
         observeLiveBus()
-    }
-
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-        if (hasFocus) {
-            App.navigationBarHeight = navigationBarHeight
-        }
     }
 
     override fun onMultiWindowModeChanged(isInMultiWindowMode: Boolean, newConfig: Configuration?) {
@@ -129,12 +100,12 @@ abstract class BaseActivity<VB : ViewBinding>(
 
     abstract fun onActivityCreated(savedInstanceState: Bundle?)
 
-    final override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        return menu?.let {
+    final override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        return menu.let {
             val bool = onCompatCreateOptionsMenu(it)
             it.applyTint(this, toolBarTheme)
             bool
-        } ?: super.onCreateOptionsMenu(menu)
+        }
     }
 
     override fun onMenuOpened(featureId: Int, menu: Menu): Boolean {
@@ -159,11 +130,11 @@ abstract class BaseActivity<VB : ViewBinding>(
             Theme.Transparent -> setTheme(R.style.AppTheme_Transparent)
             Theme.Dark -> {
                 setTheme(R.style.AppTheme_Dark)
-                ATH.applyBackgroundTint(window.decorView)
+                window.decorView.applyBackgroundTint(backgroundColor)
             }
             Theme.Light -> {
                 setTheme(R.style.AppTheme_Light)
-                ATH.applyBackgroundTint(window.decorView)
+                window.decorView.applyBackgroundTint(backgroundColor)
             }
             else -> {
                 if (ColorUtils.isColorLight(primaryColor)) {
@@ -171,41 +142,43 @@ abstract class BaseActivity<VB : ViewBinding>(
                 } else {
                     setTheme(R.style.AppTheme_Dark)
                 }
-                ATH.applyBackgroundTint(window.decorView)
+                window.decorView.applyBackgroundTint(backgroundColor)
             }
         }
         if (imageBg) {
             try {
-                ThemeConfig.getBgImage(this)?.let {
-                    window.decorView.background = it
+                ThemeConfig.getBgImage(this, windowSize)?.let {
+                    window.decorView.background = BitmapDrawable(resources, it)
                 }
             } catch (e: OutOfMemoryError) {
-                toastOnUi(e.localizedMessage)
+                toastOnUi("背景图片太大,内存溢出")
             } catch (e: Exception) {
-                toastOnUi(e.localizedMessage)
+                AppLog.put("加载背景出错\n${e.localizedMessage}", e)
             }
         }
     }
 
     private fun setupSystemBar() {
         if (fullScreen && !isInMultiWindow) {
-            ATH.fullScreen(this)
+            fullScreen()
         }
-        ATH.setStatusBarColorAuto(this, fullScreen)
+        val isTransparentStatusBar = AppConfig.isTransparentStatusBar
+        val statusBarColor = ThemeStore.statusBarColor(this, isTransparentStatusBar)
+        setStatusBarColorAuto(statusBarColor, isTransparentStatusBar, fullScreen)
         if (toolBarTheme == Theme.Dark) {
-            ATH.setLightStatusBar(this, false)
+            setLightStatusBar(false)
         } else if (toolBarTheme == Theme.Light) {
-            ATH.setLightStatusBar(this, true)
+            setLightStatusBar(true)
         }
         upNavigationBarColor()
     }
 
     open fun upNavigationBarColor() {
         if (AppConfig.immNavigationBar) {
-            ATH.setNavigationBarColorAuto(this, ThemeStore.navigationBarColor(this))
+            setNavigationBarColorAuto(ThemeStore.navigationBarColor(this))
         } else {
             val nbColor = ColorUtils.darkenColor(ThemeStore.navigationBarColor(this))
-            ATH.setNavigationBarColorAuto(this, nbColor)
+            setNavigationBarColorAuto(nbColor)
         }
     }
 

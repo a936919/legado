@@ -5,17 +5,19 @@ import androidx.lifecycle.MutableLiveData
 import com.jayway.jsonpath.JsonPath
 import io.legado.app.R
 import io.legado.app.base.BaseViewModel
+import io.legado.app.constant.AppPattern
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.RssSource
 import io.legado.app.help.AppConfig
 import io.legado.app.help.SourceHelp
-import io.legado.app.help.http.newCall
+import io.legado.app.help.http.newCallResponseBody
 import io.legado.app.help.http.okHttpClient
 import io.legado.app.help.http.text
-import io.legado.app.help.storage.Restore
+import io.legado.app.model.NoStackTraceException
 import io.legado.app.utils.*
 
 class ImportRssSourceViewModel(app: Application) : BaseViewModel(app) {
+    var isAddGroup = false
     var groupName: String? = null
     val errorLiveData = MutableLiveData<String>()
     val successLiveData = MutableLiveData<Int>()
@@ -24,27 +26,30 @@ class ImportRssSourceViewModel(app: Application) : BaseViewModel(app) {
     val checkSources = arrayListOf<RssSource?>()
     val selectStatus = arrayListOf<Boolean>()
 
-    fun isSelectAll(): Boolean {
-        selectStatus.forEach {
-            if (!it) {
-                return false
+    val isSelectAll: Boolean
+        get() {
+            selectStatus.forEach {
+                if (!it) {
+                    return false
+                }
             }
+            return true
         }
-        return true
-    }
 
-    fun selectCount(): Int {
-        var count = 0
-        selectStatus.forEach {
-            if (it) {
-                count++
+    val selectCount: Int
+        get() {
+            var count = 0
+            selectStatus.forEach {
+                if (it) {
+                    count++
+                }
             }
+            return count
         }
-        return count
-    }
 
     fun importSelect(finally: () -> Unit) {
         execute {
+            val group = groupName?.trim()
             val keepName = AppConfig.importKeepName
             val selectSource = arrayListOf<RssSource>()
             selectStatus.forEachIndexed { index, b ->
@@ -57,8 +62,17 @@ class ImportRssSourceViewModel(app: Application) : BaseViewModel(app) {
                             source.customOrder = it.customOrder
                         }
                     }
-                    if (groupName != null) {
-                        source.sourceGroup = groupName
+                    if (!group.isNullOrEmpty()) {
+                        if (isAddGroup) {
+                            val groups = linkedSetOf<String>()
+                            source.sourceGroup?.splitNotBlank(AppPattern.splitGroupRegex)?.let {
+                                groups.addAll(it)
+                            }
+                            groups.add(group)
+                            source.sourceGroup = groups.joinToString(",")
+                        } else {
+                            source.sourceGroup = group
+                        }
                     }
                     selectSource.add(source)
                 }
@@ -81,16 +95,16 @@ class ImportRssSourceViewModel(app: Application) : BaseViewModel(app) {
                             importSourceUrl(it)
                         }
                     } else {
-                        GSON.fromJsonArray<RssSource>(mText)?.let {
+                        RssSource.fromJsonArray(mText).let {
                             allSources.addAll(it)
                         }
                     }
                 }
                 mText.isJsonArray() -> {
-                    val items: List<Map<String, Any>> = Restore.jsonPath.parse(mText).read("$")
+                    val items: List<Map<String, Any>> = jsonPath.parse(mText).read("$")
                     for (item in items) {
-                        val jsonItem = Restore.jsonPath.parse(item)
-                        GSON.fromJsonObject<RssSource>(jsonItem.jsonString())?.let {
+                        val jsonItem = jsonPath.parse(item)
+                        RssSource.fromJsonDoc(jsonItem)?.let {
                             allSources.add(it)
                         }
                     }
@@ -98,7 +112,7 @@ class ImportRssSourceViewModel(app: Application) : BaseViewModel(app) {
                 mText.isAbsUrl() -> {
                     importSourceUrl(mText)
                 }
-                else -> throw Exception(context.getString(R.string.wrong_format))
+                else -> throw NoStackTraceException(context.getString(R.string.wrong_format))
             }
         }.onError {
             errorLiveData.postValue("ImportError:${it.localizedMessage}")
@@ -108,13 +122,13 @@ class ImportRssSourceViewModel(app: Application) : BaseViewModel(app) {
     }
 
     private suspend fun importSourceUrl(url: String) {
-        okHttpClient.newCall {
+        okHttpClient.newCallResponseBody {
             url(url)
         }.text("utf-8").let { body ->
-            val items: List<Map<String, Any>> = Restore.jsonPath.parse(body).read("$")
+            val items: List<Map<String, Any>> = jsonPath.parse(body).read("$")
             for (item in items) {
-                val jsonItem = Restore.jsonPath.parse(item)
-                GSON.fromJsonObject<RssSource>(jsonItem.jsonString())?.let { source ->
+                val jsonItem = jsonPath.parse(item)
+                RssSource.fromJson(jsonItem.jsonString())?.let { source ->
                     allSources.add(source)
                 }
             }

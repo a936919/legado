@@ -2,14 +2,13 @@ package io.legado.app.utils
 
 import android.annotation.SuppressLint
 import android.text.TextUtils.isEmpty
+import timber.log.Timber
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 import kotlin.math.abs
-import kotlin.math.log10
-import kotlin.math.pow
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
 object StringUtils {
@@ -41,16 +40,9 @@ object StringUtils {
             return map
         }
 
-    //将时间转换成日期
-    fun dateConvert(time: Long, pattern: String): String {
-        val date = Date(time)
-
-        @SuppressLint("SimpleDateFormat")
-        val format = SimpleDateFormat(pattern)
-        return format.format(date)
-    }
-
-    //将日期转换成昨天、今天、明天
+    /**
+     * 将日期转换成昨天、今天、明天
+     */
     fun dateConvert(source: String, pattern: String): String {
         @SuppressLint("SimpleDateFormat")
         val format = SimpleDateFormat(pattern)
@@ -69,12 +61,8 @@ object StringUtils {
             if (oldHour == 0) {
                 //比日期:昨天今天和明天
                 return when {
-                    difDate == 0L -> {
-                        "今天"
-                    }
-                    difDate < DAY_OF_YESTERDAY -> {
-                        "昨天"
-                    }
+                    difDate == 0L -> "今天"
+                    difDate < DAY_OF_YESTERDAY -> "昨天"
                     else -> {
                         @SuppressLint("SimpleDateFormat")
                         val convertFormat = SimpleDateFormat("yyyy-MM-dd")
@@ -95,23 +83,14 @@ object StringUtils {
                 }
             }
         }.onFailure {
-            it.printStackTrace()
+            Timber.e(it)
         }
-
         return ""
     }
 
-    fun toSize(length: Long): String {
-        if (length <= 0) return "0"
-        val units = arrayOf("b", "kb", "M", "G", "T")
-        //计算单位的，原理是利用lg,公式是 lg(1024^n) = nlg(1024)，最后 nlg(1024)/lg(1024) = n。
-        val digitGroups =
-            (log10(length.toDouble()) / log10(1024.0)).toInt()
-        //计算原理是，size/单位值。单位值指的是:比如说b = 1024,KB = 1024^2
-        return DecimalFormat("#,##0.##")
-            .format(length / 1024.0.pow(digitGroups.toDouble())) + " " + units[digitGroups]
-    }
-
+    /**
+     * 首字母大写
+     */
     @SuppressLint("DefaultLocale")
     fun toFirstCapital(str: String): String {
         return str.substring(0, 1).uppercase(Locale.getDefault()) + str.substring(1)
@@ -140,7 +119,9 @@ object StringUtils {
         return String(c)
     }
 
-    //功能：字符串全角转换为半角
+    /**
+     * 字符串全角转换为半角
+     */
     fun fullToHalf(input: String): String {
         val c = input.toCharArray()
         for (i in c.indices) {
@@ -157,6 +138,9 @@ object StringUtils {
         return String(c)
     }
 
+    /**
+     * 中文大写数字转数字
+     */
     fun chineseNumToInt(chNum: String): Int {
         var result = 0
         var tmp = 0
@@ -207,6 +191,9 @@ object StringUtils {
         }.getOrDefault(-1)
     }
 
+    /**
+     * 字符串转数字
+     */
     fun stringToInt(str: String?): Int {
         if (str != null) {
             val num = fullToHalf(str).replace("\\s+".toRegex(), "")
@@ -219,14 +206,20 @@ object StringUtils {
         return -1
     }
 
+    /**
+     * 是否包含数字
+     */
     fun isContainNumber(company: String): Boolean {
         val p = Pattern.compile("[0-9]+")
         val m = p.matcher(company)
         return m.find()
     }
 
+    /**
+     * 是否数字
+     */
     fun isNumeric(str: String): Boolean {
-        val pattern = Pattern.compile("[0-9]+")
+        val pattern = Pattern.compile("-?[0-9]+")
         val isNum = pattern.matcher(str)
         return isNum.matches()
     }
@@ -249,7 +242,9 @@ object StringUtils {
         return wordsS
     }
 
-    // 移除字符串首尾空字符的高效方法(利用ASCII值判断,包括全角空格)
+    /**
+     * 移除字符串首尾空字符的高效方法(利用ASCII值判断,包括全角空格)
+     */
     fun trim(s: String): String {
         if (isEmpty(s)) return ""
         var start = 0
@@ -265,6 +260,9 @@ object StringUtils {
         return if (start > 0 || end < len) s.substring(start, end) else s
     }
 
+    /**
+     * 重复字符串
+     */
     fun repeat(str: String, n: Int): String {
         val stringBuilder = StringBuilder()
         for (i in 0 until n) {
@@ -273,6 +271,9 @@ object StringUtils {
         return stringBuilder.toString()
     }
 
+    /**
+     * 移除UTF头
+     */
     fun removeUTFCharacters(data: String?): String? {
         if (data == null) return null
         val p = Pattern.compile("\\\\u(\\p{XDigit}{4})")

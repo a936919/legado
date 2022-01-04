@@ -12,15 +12,14 @@ import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.base.adapter.RecyclerAdapter
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.BookSource
-import io.legado.app.data.entities.ExploreKind
+import io.legado.app.data.entities.rule.ExploreKind
 import io.legado.app.databinding.ItemFilletTextBinding
 import io.legado.app.databinding.ItemFindBookBinding
 import io.legado.app.help.coroutine.Coroutine
 import io.legado.app.lib.theme.accentColor
-import io.legado.app.utils.ACache
-import io.legado.app.utils.dp
-import io.legado.app.utils.gone
-import io.legado.app.utils.visible
+import io.legado.app.ui.login.SourceLoginActivity
+import io.legado.app.ui.widget.dialog.TextDialog
+import io.legado.app.utils.*
 import kotlinx.coroutines.CoroutineScope
 import splitties.views.onLongClick
 
@@ -93,8 +92,16 @@ class ExploreAdapter(context: Context, private val scope: CoroutineScope, val ca
                     lp.flexBasisPercent = style.layout_flexBasisPercent
                     lp.isWrapBefore = style.layout_wrapBefore
                 }
-                tv.setOnClickListener {
-                    callBack.openExplore(sourceUrl, kind.title, kind.url)
+                if (kind.url.isNullOrBlank()) {
+                    tv.setOnClickListener(null)
+                } else {
+                    tv.setOnClickListener {
+                        if (kind.title.startsWith("ERROR:")) {
+                            it.activity?.showDialogFragment(TextDialog(kind.url))
+                        } else {
+                            callBack.openExplore(sourceUrl, kind.title, kind.url)
+                        }
+                    }
                 }
             }
         }
@@ -151,10 +158,15 @@ class ExploreAdapter(context: Context, private val scope: CoroutineScope, val ca
         val source = getItem(position) ?: return true
         val popupMenu = PopupMenu(context, view)
         popupMenu.inflate(R.menu.explore_item)
+        popupMenu.menu.findItem(R.id.menu_login).isVisible = !source.loginUrl.isNullOrBlank()
         popupMenu.setOnMenuItemClickListener {
             when (it.itemId) {
                 R.id.menu_edit -> callBack.editSource(source.bookSourceUrl)
                 R.id.menu_top -> callBack.toTop(source)
+                R.id.menu_login -> context.startActivity<SourceLoginActivity> {
+                    putExtra("type", "bookSource")
+                    putExtra("key", source.bookSourceUrl)
+                }
                 R.id.menu_refresh -> Coroutine.async(scope) {
                     ACache.get(context, "explore").remove(source.bookSourceUrl)
                 }.onSuccess {

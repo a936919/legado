@@ -11,6 +11,7 @@ import io.legado.app.utils.ACache
 import io.legado.app.utils.longToastOnUi
 import io.legado.app.utils.openUrl
 import io.legado.app.utils.sendToClip
+import timber.log.Timber
 
 class DonateFragment : PreferenceFragmentCompat() {
 
@@ -49,7 +50,7 @@ class DonateFragment : PreferenceFragmentCompat() {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(intent)
         } catch (e: Exception) {
-            e.printStackTrace()
+            Timber.e(e)
         } finally {
             ACache.get(requireContext(), cacheDir = false)
                 .put("proTime", System.currentTimeMillis())

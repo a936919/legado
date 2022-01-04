@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import me.ag2s.epublib.BuildConfig;
 import me.ag2s.epublib.Constants;
 import me.ag2s.epublib.domain.EpubBook;
 import me.ag2s.epublib.domain.Guide;
@@ -51,7 +52,9 @@ public class PackageDocumentWriter extends PackageDocumentBase {
             serializer.endDocument();
             serializer.flush();
         } catch (IOException e) {
-            e.printStackTrace();
+            if (BuildConfig.DEBUG) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -149,22 +152,16 @@ public class PackageDocumentWriter extends PackageDocumentBase {
             return;
         }
         if (StringUtil.isBlank(resource.getId())) {
-//      log.error("resource id must not be empty (href: " + resource.getHref()
-//          + ", mediatype:" + resource.getMediaType() + ")");
             Log.e(TAG, "resource id must not be empty (href: " + resource.getHref()
                     + ", mediatype:" + resource.getMediaType() + ")");
             return;
         }
         if (StringUtil.isBlank(resource.getHref())) {
-//      log.error("resource href must not be empty (id: " + resource.getId()
-//          + ", mediatype:" + resource.getMediaType() + ")");
             Log.e(TAG, "resource href must not be empty (id: " + resource.getId()
                     + ", mediatype:" + resource.getMediaType() + ")");
             return;
         }
         if (resource.getMediaType() == null) {
-//      log.error("resource mediatype must not be empty (id: " + resource.getId()
-//          + ", href:" + resource.getHref() + ")");
             Log.e(TAG, "resource mediatype must not be empty (id: " + resource.getId()
                     + ", href:" + resource.getHref() + ")");
             return;

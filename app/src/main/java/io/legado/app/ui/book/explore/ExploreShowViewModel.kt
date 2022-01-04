@@ -3,13 +3,16 @@ package io.legado.app.ui.book.explore
 import android.app.Application
 import android.content.Intent
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import io.legado.app.base.BaseViewModel
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.BookSource
 import io.legado.app.data.entities.SearchBook
 import io.legado.app.model.webBook.WebBook
 import io.legado.app.utils.msg
+
 import kotlinx.coroutines.Dispatchers.IO
+import timber.log.Timber
 
 class ExploreShowViewModel(application: Application) : BaseViewModel(application) {
 
@@ -34,14 +37,14 @@ class ExploreShowViewModel(application: Application) : BaseViewModel(application
         val source = bookSource
         val url = exploreUrl
         if (source != null && url != null) {
-            WebBook(source).exploreBook(this, url, page)
+            WebBook.exploreBook(viewModelScope, source, url, page)
                 .timeout(30000L)
                 .onSuccess(IO) { searchBooks ->
                     booksData.postValue(searchBooks)
                     appDb.searchBookDao.insert(*searchBooks.toTypedArray())
                     page++
                 }.onError {
-                    it.printStackTrace()
+                    Timber.e(it)
                     errorLiveData.postValue(it.msg)
                 }
         }

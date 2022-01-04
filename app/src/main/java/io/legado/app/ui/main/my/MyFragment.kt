@@ -14,14 +14,15 @@ import io.legado.app.constant.PreferKey
 import io.legado.app.databinding.FragmentMyConfigBinding
 import io.legado.app.help.AppConfig
 import io.legado.app.help.ThemeConfig
-import io.legado.app.lib.theme.ATH
+import io.legado.app.lib.dialogs.selector
+import io.legado.app.lib.theme.primaryColor
 import io.legado.app.service.WebService
 import io.legado.app.ui.about.AboutActivity
 import io.legado.app.ui.about.DonateActivity
 import io.legado.app.ui.about.ReadRecordActivity
 import io.legado.app.ui.book.source.manage.BookSourceActivity
 import io.legado.app.ui.config.ConfigActivity
-import io.legado.app.ui.config.ConfigViewModel
+import io.legado.app.ui.config.ConfigTag
 import io.legado.app.ui.replace.ReplaceRuleActivity
 import io.legado.app.ui.widget.dialog.TextDialog
 import io.legado.app.ui.widget.prefs.NameListPreference
@@ -51,7 +52,7 @@ class MyFragment : BaseFragment(R.layout.fragment_my_config) {
         when (item.itemId) {
             R.id.menu_help -> {
                 val text = String(requireContext().assets.open("help/appHelp.md").readBytes())
-                TextDialog.show(childFragmentManager, text, TextDialog.MD)
+                showDialogFragment(TextDialog(text, TextDialog.Mode.MD))
             }
             R.id.menu_debug -> mqLog.debug()
         }
@@ -64,15 +65,22 @@ class MyFragment : BaseFragment(R.layout.fragment_my_config) {
         SharedPreferences.OnSharedPreferenceChangeListener {
 
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-            if (WebService.isRun) {
-                putPrefBoolean(PreferKey.webService, true)
-            } else {
-                putPrefBoolean(PreferKey.webService, false)
-            }
+            putPrefBoolean(PreferKey.webService, WebService.isRun)
             addPreferencesFromResource(R.xml.pref_main)
-            val webServicePre = findPreference<SwitchPreference>(PreferKey.webService)
+            findPreference<SwitchPreference>("webService")?.onLongClick {
+                if (!WebService.isRun) {
+                    return@onLongClick false
+                }
+                context?.selector(arrayListOf("复制地址", "浏览器打开")) { _, i ->
+                    when (i) {
+                        0 -> context?.sendToClip(it.summary.toString())
+                        1 -> context?.openUrl(it.summary.toString())
+                    }
+                }
+                true
+            }
             observeEventSticky<String>(EventBus.WEB_SERVICE) {
-                webServicePre?.let {
+                findPreference<SwitchPreference>(PreferKey.webService)?.let {
                     it.isChecked = WebService.isRun
                     it.summary = if (WebService.isRun) {
                         WebService.hostAddress
@@ -91,7 +99,7 @@ class MyFragment : BaseFragment(R.layout.fragment_my_config) {
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
-            ATH.applyEdgeEffectColor(listView)
+            listView.setEdgeEffectColor(primaryColor)
         }
 
         override fun onResume() {
@@ -125,13 +133,13 @@ class MyFragment : BaseFragment(R.layout.fragment_my_config) {
                 "bookSourceManage" -> startActivity<BookSourceActivity>()
                 "replaceManage" -> startActivity<ReplaceRuleActivity>()
                 "setting" -> startActivity<ConfigActivity> {
-                    putExtra("configType", ConfigViewModel.TYPE_CONFIG)
+                    putExtra("configTag", ConfigTag.OTHER_CONFIG)
                 }
                 "web_dav_setting" -> startActivity<ConfigActivity> {
-                    putExtra("configType", ConfigViewModel.TYPE_WEB_DAV_CONFIG)
+                    putExtra("configTag", ConfigTag.BACKUP_CONFIG)
                 }
                 "theme_setting" -> startActivity<ConfigActivity> {
-                    putExtra("configType", ConfigViewModel.TYPE_THEME_CONFIG)
+                    putExtra("configTag", ConfigTag.THEME_CONFIG)
                 }
                 "readRecord" -> startActivity<ReadRecordActivity>()
                 "donate" -> startActivity<DonateActivity>()
@@ -139,6 +147,7 @@ class MyFragment : BaseFragment(R.layout.fragment_my_config) {
             }
             return super.onPreferenceTreeClick(preference)
         }
+
 
     }
 }

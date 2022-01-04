@@ -222,7 +222,7 @@
         android:paddingLeft="10dp"
         android:paddingRight="10dp">
 
-        <io.legado.app.lib.theme.view.ATERadioNoButton
+        <io.legado.app.lib.theme.view.ThemeRadioNoButton
             android:id="@+id/rb_anim0"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -235,7 +235,7 @@
             android:text="@string/page_anim_cover"
             app:isBottomBackground="true" />
 
-        <io.legado.app.lib.theme.view.ATERadioNoButton
+        <io.legado.app.lib.theme.view.ThemeRadioNoButton
             android:id="@+id/rb_anim1"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -248,7 +248,7 @@
             android:text="@string/page_anim_slide"
             app:isBottomBackground="true" />
 
-        <io.legado.app.lib.theme.view.ATERadioNoButton
+        <io.legado.app.lib.theme.view.ThemeRadioNoButton
             android:id="@+id/rb_simulation_anim"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -261,7 +261,7 @@
             android:text="@string/page_anim_simulation"
             app:isBottomBackground="true" />
 
-        <io.legado.app.lib.theme.view.ATERadioNoButton
+        <io.legado.app.lib.theme.view.ThemeRadioNoButton
             android:id="@+id/rb_scroll_anim"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -274,7 +274,7 @@
             android:text="@string/page_anim_scroll"
             app:isBottomBackground="true" />
 
-        <io.legado.app.lib.theme.view.ATERadioNoButton
+        <io.legado.app.lib.theme.view.ThemeRadioNoButton
             android:id="@+id/rb_no_anim"
             android:layout_width="0dp"
             android:layout_height="wrap_content"

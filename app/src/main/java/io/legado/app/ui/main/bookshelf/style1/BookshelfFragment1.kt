@@ -3,14 +3,12 @@
 package io.legado.app.ui.main.bookshelf.style1
 
 import android.os.Bundle
-import android.view.Menu
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentStatePagerAdapter
-import androidx.lifecycle.LiveData
 import com.google.android.material.tabs.TabLayout
 import io.legado.app.R
 import io.legado.app.constant.AppConst
@@ -19,13 +17,14 @@ import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookGroup
 import io.legado.app.databinding.FragmentBookshelfBinding
-import io.legado.app.lib.theme.ATH
 import io.legado.app.lib.theme.accentColor
+import io.legado.app.lib.theme.primaryColor
 import io.legado.app.ui.book.search.SearchActivity
 import io.legado.app.ui.main.bookshelf.BaseBookshelfFragment
 import io.legado.app.ui.main.bookshelf.style1.books.BooksFragment
 import io.legado.app.utils.getPrefInt
 import io.legado.app.utils.putPrefInt
+import io.legado.app.utils.setEdgeEffectColor
 import io.legado.app.utils.toastOnUi
 import io.legado.app.utils.viewbindingdelegate.viewBinding
 
@@ -37,53 +36,37 @@ class BookshelfFragment1 : BaseBookshelfFragment(R.layout.fragment_bookshelf),
     SearchView.OnQueryTextListener {
 
     private val binding by viewBinding(FragmentBookshelfBinding::bind)
-    private lateinit var adapter: FragmentStatePagerAdapter
-    private lateinit var tabLayout: TabLayout
-    private var bookGroupLiveData: LiveData<List<BookGroup>>? = null
+    private val adapter by lazy { TabFragmentPageAdapter(childFragmentManager) }
+    private val tabLayout: TabLayout by lazy {
+        binding.titleBar.findViewById(R.id.tab_layout)
+    }
     private val bookGroups = mutableListOf<BookGroup>()
     private val fragmentMap = hashMapOf<Long, BooksFragment>()
-
-    override val groupId: Long get() = selectedGroup.groupId
+    override val groupId: Long get() = selectedGroup?.groupId ?: 0
 
     override val books: List<Book>
         get() {
-            val fragment = fragmentMap[selectedGroup.groupId]
+            val fragment = fragmentMap[groupId]
             return fragment?.getBooks() ?: emptyList()
         }
 
     override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) {
-        tabLayout = binding.titleBar.findViewById(R.id.tab_layout)
         setSupportToolbar(binding.titleBar.toolbar)
         initView()
         initBookGroupData()
     }
 
-    override fun onCompatCreateOptionsMenu(menu: Menu) {
-        menuInflater.inflate(R.menu.main_bookshelf, menu)
-    }
-
-    private val selectedGroup: BookGroup
-        get() = bookGroups[tabLayout.selectedTabPosition]
+    private val selectedGroup: BookGroup?
+        get() = bookGroups.getOrNull(tabLayout.selectedTabPosition)
 
     private fun initView() {
-        ATH.applyEdgeEffectColor(binding.viewPagerBookshelf)
+        binding.viewPagerBookshelf.setEdgeEffectColor(primaryColor)
         tabLayout.isTabIndicatorFullWidth = false
         tabLayout.tabMode = TabLayout.MODE_SCROLLABLE
         tabLayout.setSelectedTabIndicatorColor(requireContext().accentColor)
         tabLayout.setupWithViewPager(binding.viewPagerBookshelf)
         binding.viewPagerBookshelf.offscreenPageLimit = 1
-        adapter = TabFragmentPageAdapter(childFragmentManager)
         binding.viewPagerBookshelf.adapter = adapter
-    }
-
-    private fun initBookGroupData() {
-        bookGroupLiveData?.removeObservers(viewLifecycleOwner)
-        bookGroupLiveData = appDb.bookGroupDao.liveDataShow().apply {
-            observe(viewLifecycleOwner) {
-                viewModel.checkGroup(it)
-                upGroup(it)
-            }
-        }
     }
 
     override fun onQueryTextSubmit(query: String?): Boolean {
@@ -96,7 +79,7 @@ class BookshelfFragment1 : BaseBookshelfFragment(R.layout.fragment_bookshelf),
     }
 
     @Synchronized
-    private fun upGroup(data: List<BookGroup>) {
+    override fun upGroup(data: List<BookGroup>) {
         if (data.isEmpty()) {
             appDb.bookGroupDao.enableGroup(AppConst.bookGroupAllId)
         } else {
@@ -117,8 +100,10 @@ class BookshelfFragment1 : BaseBookshelfFragment(R.layout.fragment_bookshelf),
     }
 
     override fun onTabReselected(tab: TabLayout.Tab) {
-        fragmentMap[selectedGroup.groupId]?.let {
-            toastOnUi("${selectedGroup.groupName}(${it.getBooksCount()})")
+        selectedGroup?.let { group ->
+            fragmentMap[group.groupId]?.let {
+                toastOnUi("${group.groupName}(${it.getBooksCount()})")
+            }
         }
     }
 
@@ -129,7 +114,7 @@ class BookshelfFragment1 : BaseBookshelfFragment(R.layout.fragment_bookshelf),
     }
 
     override fun gotoTop() {
-        fragmentMap[selectedGroup.groupId]?.gotoTop()
+        fragmentMap[groupId]?.gotoTop()
     }
 
     private inner class TabFragmentPageAdapter(fm: FragmentManager) :
@@ -145,7 +130,8 @@ class BookshelfFragment1 : BaseBookshelfFragment(R.layout.fragment_bookshelf),
 
         override fun getItem(position: Int): Fragment {
             val group = bookGroups[position]
-            return BooksFragment.newInstance(position, group.groupId, group.groupName)
+            return BooksFragment(position, group.groupId, group.groupName)
+
         }
 
         override fun getCount(): Int {

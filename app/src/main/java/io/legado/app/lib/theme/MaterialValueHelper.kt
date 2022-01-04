@@ -2,8 +2,8 @@
 
 package io.legado.app.lib.theme
 
-import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.drawable.GradientDrawable
 import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -11,11 +11,11 @@ import io.legado.app.R
 import io.legado.app.help.ReadBookConfig
 import io.legado.app.utils.ColorUtils
 import io.legado.app.utils.getCompatColor
+import io.legado.app.utils.dp
 
 /**
  * @author Karim Abou Zeid (kabouzeid)
  */
-@SuppressLint("PrivateResource")
 @ColorInt
 fun Context.getPrimaryTextColor(dark: Boolean): Int {
     return if (dark) {
@@ -23,28 +23,31 @@ fun Context.getPrimaryTextColor(dark: Boolean): Int {
     } else ContextCompat.getColor(this, R.color.primary_text_default_material_dark)
 }
 
-@SuppressLint("PrivateResource")
 @ColorInt
 fun Context.getSecondaryTextColor(dark: Boolean): Int {
     return if (dark) {
         ContextCompat.getColor(this, R.color.secondary_text_default_material_light)
-    } else ContextCompat.getColor(this, R.color.secondary_text_default_material_dark)
+    } else {
+        ContextCompat.getColor(this, R.color.secondary_text_default_material_dark)
+    }
 }
 
-@SuppressLint("PrivateResource")
 @ColorInt
 fun Context.getPrimaryDisabledTextColor(dark: Boolean): Int {
     return if (dark) {
         ContextCompat.getColor(this, R.color.primary_text_disabled_material_light)
-    } else ContextCompat.getColor(this, R.color.primary_text_disabled_material_dark)
+    } else {
+        ContextCompat.getColor(this, R.color.primary_text_disabled_material_dark)
+    }
 }
 
-@SuppressLint("PrivateResource")
 @ColorInt
 fun Context.getSecondaryDisabledTextColor(dark: Boolean): Int {
     return if (dark) {
         ContextCompat.getColor(this, R.color.secondary_text_disabled_material_light)
-    } else ContextCompat.getColor(this, R.color.secondary_text_disabled_material_dark)
+    } else {
+        ContextCompat.getColor(this, R.color.secondary_text_disabled_material_dark)
+    }
 }
 
 val Context.primaryColor: Int
@@ -117,9 +120,6 @@ val Fragment.isDarkTheme: Boolean
 val Context.elevation: Float
     get() = ThemeStore.elevation(this)
 
-
-@SuppressLint("PrivateResource")
-@ColorInt
 fun Context.getReadCfgTextColor(Bg: Int) = if(ColorUtils.isColorLight(Bg)) this.getCompatColor(R.color.readCfgTextDark) else this.getCompatColor(R.color.readCfgText)
 
 val Context.readCfgTopBg: Int
@@ -133,3 +133,10 @@ val Context.readCfgBottomBg: Int
 
 val Context.readCfgBottomText: Int
     get() = this.readCfgTopText
+val Context.filletBackground: GradientDrawable
+    get() {
+        val background = GradientDrawable()
+        background.cornerRadius = 3F.dp
+        background.setColor(backgroundColor)
+        return background
+    }

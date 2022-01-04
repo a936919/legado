@@ -12,7 +12,8 @@ import io.legado.app.lib.theme.accentColor
 import io.legado.app.ui.widget.text.StrokeTextView
 
 
-class TextFontWeightConverter(context: Context, attrs: AttributeSet?) : StrokeTextView(context, attrs) {
+class TextFontWeightConverter(context: Context, attrs: AttributeSet?) :
+    StrokeTextView(context, attrs) {
 
     private val spannableString = SpannableString("中/粗/细")
     private var enabledSpan: ForegroundColorSpan = ForegroundColorSpan(context.accentColor)
@@ -28,7 +29,8 @@ class TextFontWeightConverter(context: Context, attrs: AttributeSet?) : StrokeTe
         }
     }
 
-    private fun upUi(type: Int) {
+    @Suppress("MemberVisibilityCanBePrivate")
+    fun upUi(type: Int) {
         spannableString.removeSpan(enabledSpan)
         when (type) {
             0 -> spannableString.setSpan(enabledSpan, 0, 1, Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
@@ -45,7 +47,7 @@ class TextFontWeightConverter(context: Context, attrs: AttributeSet?) : StrokeTe
                 upUi(i)
                 onChanged?.invoke()
             }
-        }.show()
+        }
     }
 
     fun onChanged(unit: () -> Unit) {

@@ -7,7 +7,7 @@ import io.legado.app.constant.AppPattern
 import io.legado.app.constant.BookType
 import io.legado.app.data.appDb
 import io.legado.app.help.AppConfig
-import io.legado.app.service.help.ReadBook
+import io.legado.app.model.ReadBook
 import io.legado.app.utils.GSON
 import io.legado.app.utils.MD5Utils
 import io.legado.app.utils.fromJsonObject
@@ -74,6 +74,7 @@ data class Book(
     fun isEpub(): Boolean {
         return originName.endsWith(".epub", true)
     }
+
     fun isUmd(): Boolean {
         return originName.endsWith(".umd", true)
     }
@@ -100,8 +101,12 @@ data class Book(
         GSON.fromJsonObject<HashMap<String, String>>(variable) ?: HashMap()
     }
 
-    override fun putVariable(key: String, value: String) {
-        variableMap[key] = value
+    override fun putVariable(key: String, value: String?) {
+        if (value != null) {
+            variableMap[key] = value
+        } else {
+            variableMap.remove(key)
+        }
         variable = GSON.toJson(variableMap)
     }
 

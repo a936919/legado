@@ -5,6 +5,10 @@ import android.os.Build
 import android.os.Bundle
 import android.view.*
 import androidx.annotation.RequiresApi
+import android.view.Gravity
+import android.view.View
+import android.view.ViewGroup
+import android.view.WindowManager
 import androidx.core.view.get
 import io.legado.app.R
 import io.legado.app.base.BaseDialogFragment
@@ -18,16 +22,20 @@ import io.legado.app.lib.dialogs.selector
 import io.legado.app.lib.theme.accentColor
 import io.legado.app.lib.theme.readCfgBottomBg
 import io.legado.app.lib.theme.readCfgBottomText
-import io.legado.app.service.help.ReadBook
 import io.legado.app.ui.book.read.ReadBookActivity
-import io.legado.app.ui.widget.font.FontSelectDialog
+import io.legado.app.lib.theme.bottomBackground
+import io.legado.app.lib.theme.getPrimaryTextColor
+import io.legado.app.model.ReadBook
+import io.legado.app.ui.font.FontSelectDialog
 import io.legado.app.utils.*
 import io.legado.app.utils.viewbindingdelegate.viewBinding
 import splitties.views.onLongClick
 
-class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
+class ReadStyleDialog : BaseDialogFragment(R.layout.dialog_read_book_style),
+    FontSelectDialog.CallBack {
+
     private val binding by viewBinding(DialogReadBookStyleBinding::bind)
-    val callBack get() = activity as? ReadBookActivity
+    private val callBack get() = activity as? ReadBookActivity
     private lateinit var styleAdapter: StyleAdapter
     private lateinit var view:ItemReadStyleBinding
 
@@ -47,16 +55,8 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        (activity as ReadBookActivity).bottomDialog++
-        return inflater.inflate(R.layout.dialog_read_book_style, container)
-    }
-
     override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) {
+        (activity as ReadBookActivity).bottomDialog++
         initView()
         initReadCfgColor()
         initData()
@@ -148,10 +148,10 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
             postEvent(EventBus.UP_CONFIG, true)
         }
         tvTextFont.setOnClickListener {
-            FontSelectDialog().show(childFragmentManager, "fontSelectDialog")
+            showDialogFragment<FontSelectDialog>()
         }
         tvTextIndent.setOnClickListener {
-            selector(
+            context?.selector(
                 title = getString(R.string.text_indent),
                 items = resources.getStringArray(R.array.indent).toList()
             ) { _, index ->
@@ -170,6 +170,7 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
             ReadBook.book?.setPageAnim(-1)
             ReadBookConfig.pageAnim = binding.rgPageAnim.getIndexById(checkedId)
             callBack?.upPageAnim()
+            ReadBook.loadContent(false)
         }
         cbShareLayout.onCheckedChangeListener = { _, isChecked ->
             ReadBookConfig.shareLayout = isChecked
@@ -218,6 +219,7 @@ class ReadStyleDialog : BaseDialogFragment(), FontSelectDialog.CallBack {
     }
 
     private fun upView() = binding.run {
+        textFontWeightConverter.upUi(ReadBookConfig.textBold)
         ReadBook.pageAnim().let {
             if (it >= 0 && it < rgPageAnim.childCount) {
                 rgPageAnim.check(rgPageAnim[it].id)

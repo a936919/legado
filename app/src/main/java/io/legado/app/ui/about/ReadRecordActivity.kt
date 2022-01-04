@@ -24,7 +24,6 @@ import io.legado.app.ui.book.info.BookInfoActivity
 import io.legado.app.utils.*
 import io.legado.app.ui.book.read.ReadBookActivity
 import io.legado.app.ui.book.search.SearchActivity
-import io.legado.app.utils.cnCompare
 import io.legado.app.utils.startActivity
 import io.legado.app.utils.viewbindingdelegate.viewBinding
 import kotlinx.coroutines.Dispatchers.IO
@@ -35,7 +34,7 @@ import java.util.*
 
 class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
 
-    lateinit var adapter: RecordAdapter
+    private val adapter by lazy { RecordAdapter(this) }
     private var sortMode = 0
     private var status = -1
 
@@ -99,7 +98,6 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
 
     private fun initView() = binding.run {
         tvBookName.setText(R.string.all_read_time)
-        adapter = RecordAdapter(this@ReadRecordActivity)
         recyclerView.adapter = adapter
 /*
         readRecord.tvRemove.setOnClickListener {
@@ -109,7 +107,7 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
                     initData()
                 }
                 noButton()
-            }.show()
+            }
         }
 */
     }
@@ -249,7 +247,7 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
                     initData()
                 }
                 noButton()
-            }.show()
+            }
         }
     }
 

@@ -1,5 +1,6 @@
 package io.legado.app.base.adapter
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.SparseArray
 import android.view.LayoutInflater
@@ -84,6 +85,7 @@ abstract class RecyclerAdapter<ITEM, VB : ViewBinding>(protected val context: Co
         }
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     @Synchronized
     fun setItems(items: List<ITEM>?) {
         kotlin.runCatching {
@@ -197,6 +199,7 @@ abstract class RecyclerAdapter<ITEM, VB : ViewBinding>(protected val context: Co
         }
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     @Synchronized
     fun addItems(newItems: List<ITEM>) {
         kotlin.runCatching {
@@ -232,6 +235,7 @@ abstract class RecyclerAdapter<ITEM, VB : ViewBinding>(protected val context: Co
         }
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     @Synchronized
     fun removeItems(items: List<ITEM>) {
         kotlin.runCatching {
@@ -292,6 +296,7 @@ abstract class RecyclerAdapter<ITEM, VB : ViewBinding>(protected val context: Co
         }
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     @Synchronized
     fun clearItems() {
         kotlin.runCatching {

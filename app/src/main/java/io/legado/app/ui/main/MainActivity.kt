@@ -23,13 +23,12 @@ import io.legado.app.constant.PreferKey
 import io.legado.app.databinding.ActivityMainBinding
 import io.legado.app.help.AppConfig
 import io.legado.app.help.BookHelp
-import io.legado.app.help.DefaultData
 import io.legado.app.help.LocalConfig
 import io.legado.app.help.storage.Backup
 import io.legado.app.lib.permission.Permissions
 import io.legado.app.lib.permission.PermissionsCompat
-import io.legado.app.lib.theme.ATH
 import io.legado.app.lib.theme.elevation
+import io.legado.app.lib.theme.primaryColor
 import io.legado.app.service.BaseReadAloudService
 import io.legado.app.ui.main.bookshelf.BaseBookshelfFragment
 import io.legado.app.ui.main.bookshelf.style1.BookshelfFragment1
@@ -39,6 +38,8 @@ import io.legado.app.ui.main.my.MyFragment
 import io.legado.app.ui.main.rss.RssFragment
 import io.legado.app.ui.widget.dialog.TextDialog
 import io.legado.app.utils.observeEvent
+import io.legado.app.utils.setEdgeEffectColor
+import io.legado.app.utils.showDialogFragment
 import io.legado.app.utils.toastOnUi
 import io.legado.app.utils.viewbindingdelegate.viewBinding
 
@@ -74,8 +75,7 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         upBottomMenu()
         binding.apply {
-            ATH.applyEdgeEffectColor(viewPagerMain)
-            ATH.applyBottomNavigationColor(bottomNavigationView)
+            viewPagerMain.setEdgeEffectColor(primaryColor)
             viewPagerMain.offscreenPageLimit = 3
             viewPagerMain.adapter = TabFragmentPageAdapter(supportFragmentManager)
             viewPagerMain.addOnPageChangeListener(PageChangeCallback())
@@ -140,8 +140,8 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
                 checkPermissions()
             } else if (!BuildConfig.DEBUG) {
                 val log = String(assets.open("updateLog.md").readBytes())
-                TextDialog.show(supportFragmentManager, log, TextDialog.MD)
-                DefaultData.importDefaultTocRules()//版本更新时更新自带本地txt目录规则
+                showDialogFragment(TextDialog(log, TextDialog.Mode.MD))
+
             }
             viewModel.upVersion()
         }

@@ -6,7 +6,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.LiveData
 import io.legado.app.R
 import io.legado.app.base.VMBaseFragment
 import io.legado.app.constant.EventBus
@@ -24,20 +23,20 @@ import io.legado.app.utils.observeEvent
 import io.legado.app.utils.viewbindingdelegate.viewBinding
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.math.min
 
 class ChapterListFragment : VMBaseFragment<TocViewModel>(R.layout.fragment_chapter_list),
     ChapterListAdapter.Callback,
     TocViewModel.ChapterListCallBack {
     override val viewModel by activityViewModels<TocViewModel>()
     private val binding by viewBinding(FragmentChapterListBinding::bind)
-    lateinit var adapter: ChapterListAdapter
+    private val mLayoutManager by lazy { UpLinearLayoutManager(requireContext()) }
+    private val adapter by lazy { ChapterListAdapter(requireContext(), this) }
     private var durChapterIndex = 0
-    private lateinit var mLayoutManager: UpLinearLayoutManager
-    private var tocLiveData: LiveData<List<BookChapter>>? = null
-    private var scrollToDurChapter = false
+    private var tocFlowJob: Job? = null
 
     override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) = binding.run {
         viewModel.chapterCallBack = this@ChapterListFragment
@@ -55,15 +54,15 @@ class ChapterListFragment : VMBaseFragment<TocViewModel>(R.layout.fragment_chapt
     }
 
     private fun initRecyclerView() {
-        adapter = ChapterListAdapter(requireContext(), this)
-        mLayoutManager = UpLinearLayoutManager(requireContext())
         binding.recyclerView.layoutManager = mLayoutManager
         binding.recyclerView.addItemDecoration(VerticalDivider(requireContext()))
         binding.recyclerView.adapter = adapter
     }
 
     private fun initView() = binding.run {
-        ivChapterTop.setOnClickListener { mLayoutManager.scrollToPositionWithOffset(0, 0) }
+        ivChapterTop.setOnClickListener {
+            mLayoutManager.scrollToPositionWithOffset(0, 0)
+        }
         ivChapterBottom.setOnClickListener {
             if (adapter.itemCount > 0) {
                 mLayoutManager.scrollToPositionWithOffset(adapter.itemCount - 1, 0)
@@ -77,24 +76,12 @@ class ChapterListFragment : VMBaseFragment<TocViewModel>(R.layout.fragment_chapt
     @SuppressLint("SetTextI18n")
     private fun initBook(book: Book) {
         launch {
-            initToc()
+            upChapterList(null)
             durChapterIndex = book.durChapterIndex
             binding.tvCurrentChapterInfo.text =
                 "${book.durChapterTitle}(${book.durChapterIndex + 1}/${book.totalChapterNum})"
             initCacheFileNames(book)
         }
-    }
-
-    private fun initToc() {
-        tocLiveData?.removeObservers(this@ChapterListFragment)
-        tocLiveData = appDb.bookChapterDao.observeByBook(viewModel.bookUrl)
-        tocLiveData?.observe(viewLifecycleOwner, {
-            adapter.setItems(it)
-            if (!scrollToDurChapter) {
-                mLayoutManager.scrollToPositionWithOffset(durChapterIndex, 0)
-                scrollToDurChapter = true
-            }
-        })
     }
 
     private fun initCacheFileNames(book: Book) {
@@ -117,15 +104,20 @@ class ChapterListFragment : VMBaseFragment<TocViewModel>(R.layout.fragment_chapt
         }
     }
 
-    override fun startChapterListSearch(newText: String?) {
-        if (newText.isNullOrBlank()) {
-            initToc()
-        } else {
-            tocLiveData?.removeObservers(this)
-            tocLiveData = appDb.bookChapterDao.liveDataSearch(viewModel.bookUrl, newText)
-            tocLiveData?.observe(viewLifecycleOwner, {
-                adapter.setItems(it)
-            })
+    override fun upChapterList(searchKey: String?) {
+        tocFlowJob?.cancel()
+        tocFlowJob = launch {
+            when {
+                searchKey.isNullOrBlank() -> appDb.bookChapterDao.flowByBook(viewModel.bookUrl)
+                else -> appDb.bookChapterDao.flowSearch(viewModel.bookUrl, searchKey)
+            }.collect {
+                if (!(searchKey.isNullOrBlank() && it.isEmpty())) {
+                    adapter.setItems(it, adapter.diffCallBack)
+                    if (searchKey.isNullOrBlank() && mLayoutManager.findFirstVisibleItemPosition() < 0) {
+                        mLayoutManager.scrollToPositionWithOffset(durChapterIndex, 0)
+                    }
+                }
+            }
         }
     }
 
@@ -133,7 +125,7 @@ class ChapterListFragment : VMBaseFragment<TocViewModel>(R.layout.fragment_chapt
         get() = viewModel.bookData.value?.isLocalBook() == true
 
     override fun durChapterIndex(): Int {
-        return min(durChapterIndex, adapter.itemCount)
+        return durChapterIndex
     }
 
     override fun openChapter(bookChapter: BookChapter) {

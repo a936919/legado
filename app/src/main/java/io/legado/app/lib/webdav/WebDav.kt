@@ -1,6 +1,6 @@
 package io.legado.app.lib.webdav
 
-import io.legado.app.help.http.newCall
+import io.legado.app.help.http.newCallResponseBody
 import io.legado.app.help.http.okHttpClient
 import io.legado.app.help.http.text
 import okhttp3.*
@@ -9,6 +9,7 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.intellij.lang.annotations.Language
 import org.jsoup.Jsoup
+import timber.log.Timber
 import java.io.File
 import java.io.InputStream
 import java.net.MalformedURLException
@@ -91,7 +92,7 @@ class WebDav(urlStr: String) {
         val auth = HttpAuth.auth
         if (url != null && auth != null) {
             return kotlin.runCatching {
-                okHttpClient.newCall {
+                okHttpClient.newCallResponseBody {
                     url(url)
                     addHeader("Authorization", Credentials.basic(auth.user, auth.pass))
                     addHeader("Depth", "1")
@@ -100,8 +101,8 @@ class WebDav(urlStr: String) {
                     val requestBody = requestPropsStr.toRequestBody("text/plain".toMediaType())
                     method("PROPFIND", requestBody)
                 }.text()
-            }.onFailure {
-                it.printStackTrace()
+            }.onFailure { e ->
+                Timber.e(e)
             }.getOrNull()
         }
         return null
@@ -133,7 +134,7 @@ class WebDav(urlStr: String) {
                         }
                         list.add(webDavFile)
                     } catch (e: MalformedURLException) {
-                        e.printStackTrace()
+                        Timber.e(e)
                     }
                 }
             }
@@ -151,7 +152,7 @@ class WebDav(urlStr: String) {
         if (url != null && auth != null) {
             //防止报错
             return kotlin.runCatching {
-                okHttpClient.newCall {
+                okHttpClient.newCallResponseBody {
                     url(url)
                     method("MKCOL", null)
                     addHeader("Authorization", Credentials.basic(auth.user, auth.pass))
@@ -185,16 +186,19 @@ class WebDav(urlStr: String) {
     /**
      * 上传文件
      */
-    suspend fun upload(localPath: String, contentType: String? = null): Boolean {
+    suspend fun upload(
+        localPath: String,
+        contentType: String = "application/octet-stream"
+    ): Boolean {
         val file = File(localPath)
         if (!file.exists()) return false
         // 务必注意RequestBody不要嵌套，不然上传时内容可能会被追加多余的文件信息
-        val fileBody = file.asRequestBody(contentType?.toMediaType())
+        val fileBody = file.asRequestBody(contentType.toMediaType())
         val url = httpUrl
         val auth = HttpAuth.auth
         if (url != null && auth != null) {
             return kotlin.runCatching {
-                okHttpClient.newCall {
+                okHttpClient.newCallResponseBody {
                     url(url)
                     put(fileBody)
                     addHeader("Authorization", Credentials.basic(auth.user, auth.pass))
@@ -204,14 +208,14 @@ class WebDav(urlStr: String) {
         return false
     }
 
-    suspend fun upload(byteArray: ByteArray, contentType: String? = null): Boolean {
+    suspend fun upload(byteArray: ByteArray, contentType: String): Boolean {
         // 务必注意RequestBody不要嵌套，不然上传时内容可能会被追加多余的文件信息
-        val fileBody = byteArray.toRequestBody(contentType?.toMediaType())
+        val fileBody = byteArray.toRequestBody(contentType.toMediaType())
         val url = httpUrl
         val auth = HttpAuth.auth
         if (url != null && auth != null) {
             return kotlin.runCatching {
-                okHttpClient.newCall {
+                okHttpClient.newCallResponseBody {
                     url(url)
                     put(fileBody)
                     addHeader("Authorization", Credentials.basic(auth.user, auth.pass))
@@ -226,7 +230,7 @@ class WebDav(urlStr: String) {
         val auth = HttpAuth.auth
         if (url != null && auth != null) {
             return kotlin.runCatching {
-                okHttpClient.newCall {
+                okHttpClient.newCallResponseBody {
                     url(url)
                     addHeader("Authorization", Credentials.basic(auth.user, auth.pass))
                 }.byteStream()

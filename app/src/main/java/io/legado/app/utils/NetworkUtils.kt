@@ -1,5 +1,10 @@
 package io.legado.app.utils
 
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.os.Build
+import splitties.systemservices.connectivityManager
+import timber.log.Timber
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.SocketException
@@ -7,8 +12,39 @@ import java.net.URL
 import java.util.*
 import java.util.regex.Pattern
 
+
 @Suppress("unused", "MemberVisibilityCanBePrivate")
 object NetworkUtils {
+
+    /**
+     * 判断是否联网
+     */
+    @Suppress("DEPRECATION")
+    fun isAvailable(): Boolean {
+        if (Build.VERSION.SDK_INT < 23) {
+            val mWiFiNetworkInfo = connectivityManager.activeNetworkInfo
+            if (mWiFiNetworkInfo != null) {
+                //移动数据
+                return if (mWiFiNetworkInfo.type == ConnectivityManager.TYPE_WIFI) {
+                    //WIFI
+                    true
+                } else mWiFiNetworkInfo.type == ConnectivityManager.TYPE_MOBILE
+            }
+        } else {
+            val network = connectivityManager.activeNetwork
+            if (network != null) {
+                val nc = connectivityManager.getNetworkCapabilities(network)
+                if (nc != null) {
+                    //移动数据
+                    return if (nc.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                        //WIFI
+                        true
+                    } else nc.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+                }
+            }
+        }
+        return false
+    }
 
     private val notNeedEncoding: BitSet by lazy {
         val bitSet = BitSet(256)
@@ -79,7 +115,7 @@ object NetworkUtils {
             relativeUrl = parseUrl.toString()
             return relativeUrl
         } catch (e: Exception) {
-            e.printStackTrace()
+            Timber.e(e)
         }
         return relativeUrl
     }
@@ -95,7 +131,7 @@ object NetworkUtils {
             relativeUrl = parseUrl.toString()
             return relativeUrl
         } catch (e: Exception) {
-            e.printStackTrace()
+            Timber.e("网址拼接出错\n${e.localizedMessage}", e)
         }
         return relativeUrl
     }
@@ -123,7 +159,7 @@ object NetworkUtils {
         try {
             enumeration = NetworkInterface.getNetworkInterfaces()
         } catch (e: SocketException) {
-            e.printStackTrace()
+            Timber.e(e)
         }
 
         if (enumeration != null) {
@@ -149,8 +185,8 @@ object NetworkUtils {
      * @param input the address string to check for validity.
      * @return True if the input parameter is a valid IPv4 address.
      */
-    fun isIPv4Address(input: String): Boolean {
-        return IPV4_PATTERN.matcher(input).matches()
+    fun isIPv4Address(input: String?): Boolean {
+        return input != null && IPV4_PATTERN.matcher(input).matches()
     }
 
     /**

@@ -12,8 +12,8 @@ import io.legado.app.help.AppConfig
 import io.legado.app.lib.theme.getPrimaryDisabledTextColor
 import io.legado.app.lib.theme.getPrimaryTextColor
 import io.legado.app.ui.document.entity.FileItem
-import io.legado.app.ui.document.utils.ConvertUtils
 import io.legado.app.ui.document.utils.FilePickerIcon
+import io.legado.app.utils.ConvertUtils
 import io.legado.app.utils.FileUtils
 import io.legado.app.utils.cnCompare
 import java.io.File
@@ -63,10 +63,10 @@ class FileAdapter(context: Context, val callBack: CallBack) :
             data.add(fileParent)
         }
         currentPath?.let { currentPath ->
-            val files: Array<File?>? = FileUtils.listDirsAndFiles(currentPath)
+            val files: Array<File>? = FileUtils.listDirsAndFiles(currentPath)
             if (files != null) {
                 for (file in files) {
-                    if (file == null || (!callBack.isShowHideDir && file.name.startsWith("."))) {
+                    if (!callBack.isShowHideDir && file.name.startsWith(".")) {
                         continue
                     }
                     val fileItem = FileItem()
@@ -154,10 +154,12 @@ class FileAdapter(context: Context, val callBack: CallBack) :
          * 是否显示返回主目录
          */
         var isShowHomeDir: Boolean
+
         /**
          * 是否显示返回上一级
          */
         var isShowUpDir: Boolean
+
         /**
          * 是否显示隐藏的目录（以“.”开头）
          */

@@ -1,9 +1,9 @@
 package io.legado.app.help
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Color
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
+import android.util.DisplayMetrics
 import androidx.annotation.Keep
 import androidx.appcompat.app.AppCompatDelegate
 import io.legado.app.R
@@ -11,8 +11,10 @@ import io.legado.app.constant.EventBus
 import io.legado.app.constant.PreferKey
 import io.legado.app.constant.Theme
 import io.legado.app.lib.theme.ThemeStore
+import io.legado.app.model.BookCover
 import io.legado.app.utils.*
 import splitties.init.appCtx
+import timber.log.Timber
 import java.io.File
 
 object ThemeConfig {
@@ -28,6 +30,7 @@ object ThemeConfig {
         ReadBookConfig.upBg()
         applyTheme(context)
         initNightMode()
+        BookCover.upDefaultCover()
         postEvent(EventBus.RECREATE, "")
     }
 
@@ -41,14 +44,25 @@ object ThemeConfig {
         AppCompatDelegate.setDefaultNightMode(targetMode)
     }
 
-    fun getBgImage(context: Context): Drawable? {
-        val bgPath = when (Theme.getTheme()) {
-            Theme.Light -> context.getPrefString(PreferKey.bgImage)
-            Theme.Dark -> context.getPrefString(PreferKey.bgImageN)
+    fun getBgImage(context: Context, metrics: DisplayMetrics): Bitmap? {
+        val bgCfg = when (Theme.getTheme()) {
+            Theme.Light -> Pair(
+                context.getPrefString(PreferKey.bgImage),
+                context.getPrefInt(PreferKey.bgImageBlurring, 0)
+            )
+            Theme.Dark -> Pair(
+                context.getPrefString(PreferKey.bgImageN),
+                context.getPrefInt(PreferKey.bgImageNBlurring, 0)
+            )
             else -> null
+        } ?: return null
+        if (bgCfg.first.isNullOrBlank()) return null
+        val bgImage = BitmapUtils
+            .decodeBitmap(bgCfg.first!!, metrics.widthPixels, metrics.heightPixels)
+        if (bgCfg.second == 0) {
+            return bgImage
         }
-        if (bgPath.isNullOrBlank()) return null
-        return BitmapDrawable.createFromPath(bgPath)
+        return bgImage.stackBlur(bgCfg.second.toFloat())
     }
 
     fun upConfig() {
@@ -76,7 +90,7 @@ object ThemeConfig {
         return false
     }
 
-    private fun addConfig(newConfig: Config) {
+    fun addConfig(newConfig: Config) {
         configList.forEachIndexed { index, config ->
             if (newConfig.themeName == config.themeName) {
                 configList[index] = newConfig
@@ -94,7 +108,7 @@ object ThemeConfig {
                 val json = configFile.readText()
                 return GSON.fromJsonArray(json)
             }.onFailure {
-                it.printStackTrace()
+                Timber.e(it)
             }
         }
         return null

@@ -7,7 +7,7 @@ import io.legado.app.constant.AppConst.androidId
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.TimeRecord
-import io.legado.app.service.help.ReadBook
+import io.legado.app.model.ReadBook
 
 class BookInfoEditViewModel(application: Application) : BaseViewModel(application) {
     var book: Book? = null

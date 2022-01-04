@@ -7,7 +7,9 @@ import io.legado.app.data.entities.BookChapter
 import io.legado.app.data.entities.BookSource
 import io.legado.app.data.entities.rule.ContentRule
 import io.legado.app.help.BookHelp
+import io.legado.app.model.ContentEmptyException
 import io.legado.app.model.Debug
+import io.legado.app.model.NoStackTraceException
 import io.legado.app.model.analyzeRule.AnalyzeRule
 import io.legado.app.model.analyzeRule.AnalyzeUrl
 import io.legado.app.utils.HtmlFormatter
@@ -19,20 +21,23 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import splitties.init.appCtx
 
+/**
+ * 获取正文
+ */
 object BookContent {
 
     @Throws(Exception::class)
     suspend fun analyzeContent(
         scope: CoroutineScope,
-        body: String?,
+        bookSource: BookSource,
         book: Book,
         bookChapter: BookChapter,
-        bookSource: BookSource,
-        baseUrl: String,
         redirectUrl: String,
+        baseUrl: String,
+        body: String?,
         nextChapterUrl: String? = null
     ): String {
-        body ?: throw Exception(
+        body ?: throw NoStackTraceException(
             appCtx.getString(R.string.error_get_web_content, baseUrl)
         )
         Debug.log(bookSource.bookSourceUrl, "≡获取成功:${baseUrl}")
@@ -45,16 +50,16 @@ object BookContent {
         val content = StringBuilder()
         val nextUrlList = arrayListOf(baseUrl)
         val contentRule = bookSource.getContentRule()
-        val analyzeRule = AnalyzeRule(book).setContent(body, baseUrl)
+        val analyzeRule = AnalyzeRule(book, bookSource).setContent(body, baseUrl)
         analyzeRule.setRedirectUrl(baseUrl)
         analyzeRule.nextChapterUrl = mNextChapterUrl
         scope.ensureActive()
         var contentData = analyzeContent(
             book, baseUrl, redirectUrl, body, contentRule, bookChapter, bookSource, mNextChapterUrl
         )
-        content.append(contentData.content).append("\n")
-        if (contentData.nextUrl.size == 1) {
-            var nextUrl = contentData.nextUrl[0]
+        content.append(contentData.first)
+        if (contentData.second.size == 1) {
+            var nextUrl = contentData.second[0]
             while (nextUrl.isNotEmpty() && !nextUrlList.contains(nextUrl)) {
                 if (!mNextChapterUrl.isNullOrEmpty()
                     && NetworkUtils.getAbsoluteURL(baseUrl, nextUrl)
@@ -63,58 +68,60 @@ object BookContent {
                 nextUrlList.add(nextUrl)
                 scope.ensureActive()
                 val res = AnalyzeUrl(
-                    ruleUrl = nextUrl,
-                    book = book,
+                    mUrl = nextUrl,
+                    source = bookSource,
+                    ruleData = book,
                     headerMapF = bookSource.getHeaderMap()
-                ).getStrResponse(bookSource.bookSourceUrl)
+                ).getStrResponseAwait()
                 res.body?.let { nextBody ->
                     contentData = analyzeContent(
                         book, nextUrl, res.url, nextBody, contentRule,
                         bookChapter, bookSource, mNextChapterUrl, false
                     )
                     nextUrl =
-                        if (contentData.nextUrl.isNotEmpty()) contentData.nextUrl[0] else ""
-                    content.append(contentData.content).append("\n")
+                        if (contentData.second.isNotEmpty()) contentData.second[0] else ""
+                    content.append("\n").append(contentData.first)
                 }
             }
             Debug.log(bookSource.bookSourceUrl, "◇本章总页数:${nextUrlList.size}")
-        } else if (contentData.nextUrl.size > 1) {
-            Debug.log(bookSource.bookSourceUrl, "◇并发解析目录,总页数:${contentData.nextUrl.size}")
+        } else if (contentData.second.size > 1) {
+            Debug.log(bookSource.bookSourceUrl, "◇并发解析目录,总页数:${contentData.second.size}")
             withContext(IO) {
-                val asyncArray = Array(contentData.nextUrl.size) {
+                val asyncArray = Array(contentData.second.size) {
                     async(IO) {
-                        val urlStr = contentData.nextUrl[it]
+                        val urlStr = contentData.second[it]
                         val analyzeUrl = AnalyzeUrl(
-                            ruleUrl = urlStr,
-                            book = book,
+                            mUrl = urlStr,
+                            source = bookSource,
+                            ruleData = book,
                             headerMapF = bookSource.getHeaderMap()
                         )
-                        val res = analyzeUrl.getStrResponse(bookSource.bookSourceUrl)
+                        val res = analyzeUrl.getStrResponseAwait()
                         analyzeContent(
                             book, urlStr, res.url, res.body!!, contentRule,
                             bookChapter, bookSource, mNextChapterUrl, false
-                        ).content
+                        ).first
                     }
                 }
                 asyncArray.forEach { coroutine ->
                     scope.ensureActive()
-                    content.append(coroutine.await()).append("\n")
+                    content.append("\n").append(coroutine.await())
                 }
             }
         }
-        content.deleteCharAt(content.length - 1)
         var contentStr = content.toString()
         val replaceRegex = contentRule.replaceRegex
         if (!replaceRegex.isNullOrEmpty()) {
-            contentStr = analyzeRule.getString(replaceRegex, value = contentStr)
+            contentStr = analyzeRule.getString(replaceRegex, contentStr)
         }
         Debug.log(bookSource.bookSourceUrl, "┌获取章节名称")
         Debug.log(bookSource.bookSourceUrl, "└${bookChapter.title}")
         Debug.log(bookSource.bookSourceUrl, "┌获取正文内容")
         Debug.log(bookSource.bookSourceUrl, "└\n$contentStr")
-        if (contentStr.isNotBlank()) {
-            BookHelp.saveContent(book, bookChapter, contentStr)
+        if (contentStr.isBlank()) {
+            throw ContentEmptyException("内容为空")
         }
+        BookHelp.saveContent(scope, bookSource, book, bookChapter, contentStr)
         return contentStr
     }
 
@@ -129,8 +136,8 @@ object BookContent {
         bookSource: BookSource,
         nextChapterUrl: String?,
         printLog: Boolean = true
-    ): ContentData<List<String>> {
-        val analyzeRule = AnalyzeRule(book)
+    ): Pair<String, List<String>> {
+        val analyzeRule = AnalyzeRule(book, bookSource)
         analyzeRule.setContent(body, baseUrl)
         val rUrl = analyzeRule.setRedirectUrl(redirectUrl)
         analyzeRule.nextChapterUrl = nextChapterUrl
@@ -143,11 +150,11 @@ object BookContent {
         val nextUrlRule = contentRule.nextContentUrl
         if (!nextUrlRule.isNullOrEmpty()) {
             Debug.log(bookSource.bookSourceUrl, "┌获取正文下一页链接", printLog)
-            analyzeRule.getStringList(nextUrlRule, true)?.let {
+            analyzeRule.getStringList(nextUrlRule, isUrl = true)?.let {
                 nextUrlList.addAll(it)
             }
             Debug.log(bookSource.bookSourceUrl, "└" + nextUrlList.joinToString("，"), printLog)
         }
-        return ContentData(content, nextUrlList)
+        return Pair(content, nextUrlList)
     }
 }

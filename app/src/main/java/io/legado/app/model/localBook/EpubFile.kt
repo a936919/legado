@@ -7,23 +7,26 @@ import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.EpubChapter
 import io.legado.app.data.entities.BookChapter
-import io.legado.app.help.BookHelp
 import io.legado.app.utils.FileUtils
 import io.legado.app.utils.HtmlFormatter
 import io.legado.app.utils.MD5Utils
-import io.legado.app.utils.externalFilesDir
+import io.legado.app.utils.externalFiles
 import me.ag2s.epublib.domain.EpubBook
+
+import me.ag2s.epublib.domain.Resource
 import me.ag2s.epublib.domain.TOCReference
 import me.ag2s.epublib.epub.EpubReader
 import org.jsoup.Jsoup
+import org.jsoup.nodes.Element
+import org.jsoup.select.Elements
 import splitties.init.appCtx
+import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.nio.charset.Charset
 import java.util.*
-import java.util.zip.ZipFile
 
 class EpubFile(var book: Book) {
 
@@ -32,8 +35,6 @@ class EpubFile(var book: Book) {
 
         @Synchronized
         private fun getEFile(book: Book): EpubFile {
-            BookHelp.getEpubFile(book)
-
             if (eFile == null || eFile?.book?.bookUrl != book.bookUrl) {
                 eFile = EpubFile(book)
                 //对于Epub文件默认不启用替换
@@ -83,7 +84,7 @@ class EpubFile(var book: Book) {
             epubBook?.let {
                 if (book.coverUrl.isNullOrEmpty()) {
                     book.coverUrl = FileUtils.getPath(
-                        appCtx.externalFilesDir,
+                        appCtx.externalFiles,
                         "covers",
                         "${MD5Utils.md5Encode16(book.bookUrl)}.jpg"
                     )
@@ -100,21 +101,18 @@ class EpubFile(var book: Book) {
                 }
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Timber.e(e)
         }
     }
 
     /*重写epub文件解析代码，直接读出压缩包文件生成Resources给epublib，这样的好处是可以逐一修改某些文件的格式错误*/
     private fun readEpub(): EpubBook? {
         try {
-
-            val file = BookHelp.getEpubFile(book)
+            val bis = LocalBook.getBookInputStream(book)
             //通过懒加载读取epub
-            return EpubReader().readEpubLazy(ZipFile(file), "utf-8")
-
-
+            return EpubReader().readEpub(bis, "utf-8")
         } catch (e: Exception) {
-            e.printStackTrace()
+            Timber.e(e)
         }
         return null
     }
@@ -176,6 +174,32 @@ class EpubFile(var book: Book) {
         return null
     }
 
+    private fun getBody(res: Resource, startFragmentId: String?, endFragmentId: String?): Element {
+        val body = Jsoup.parse(String(res.data, mCharset)).body()
+        if (!startFragmentId.isNullOrBlank()) {
+            body.getElementById(startFragmentId)?.previousElementSiblings()?.remove()
+        }
+        if (!endFragmentId.isNullOrBlank() && endFragmentId != startFragmentId) {
+            body.getElementById(endFragmentId)?.nextElementSiblings()?.remove()
+        }
+        /*选择去除正文中的H标签，部分书籍标题与阅读标题重复待优化*/
+        val tag = Book.hTag
+        if (book.getDelTag(tag)) {
+            body.getElementsByTag("h1").remove()
+            body.getElementsByTag("h2").remove()
+            body.getElementsByTag("h3").remove()
+            body.getElementsByTag("h4").remove()
+            body.getElementsByTag("h5").remove()
+            body.getElementsByTag("h6").remove()
+            //body.getElementsMatchingOwnText(chapter.title)?.remove()
+        }
+
+        val children = body.children()
+        children.select("script").remove()
+        children.select("style").remove()
+        return body
+    }
+
     private fun getImage(href: String): InputStream? {
         val abHref = href.replace("../", "")
         return epubBook?.resources?.getByHref(abHref)?.inputStream
@@ -212,15 +236,16 @@ class EpubFile(var book: Book) {
                 var i = 0
                 val size = spineReferences.size
                 while (i < size) {
-                    val resource =
-                        spineReferences[i].resource
+                    val resource = spineReferences[i].resource
+
                     var title = resource.title
                     if (TextUtils.isEmpty(title)) {
                         try {
                             val doc =
                                 Jsoup.parse(String(resource.data, mCharset))
                             val elements = doc.getElementsByTag("title")
-                            if (elements != null && elements.size > 0) {
+                            if (elements.size > 0) {
+
                                 title = elements[0].text()
                             }
                         } catch (e: IOException) {
@@ -236,6 +261,7 @@ class EpubFile(var book: Book) {
                     } else {
                         chapter.title = title
                     }
+
                     chapterList.add(chapter)
                     i++
                 }
@@ -246,6 +272,7 @@ class EpubFile(var book: Book) {
                     chapterList[i].index = i
                 }
                 getChildChapter(chapterList)
+
             }
         }
         book.latestChapterTitle = chapterList.lastOrNull()?.title
@@ -305,15 +332,14 @@ class EpubFile(var book: Book) {
             var title = content.title
             if (TextUtils.isEmpty(title)) {
                 val elements = Jsoup.parse(
-                    String(
-                        epubBook!!.resources.getByHref(content.href).data,
-                        mCharset
-                    )
+                    String(epubBook!!.resources.getByHref(content.href).data, mCharset)
                 ).getElementsByTag("title")
                 title =
-                    if (elements != null && elements.size > 0 && elements[0].text()
-                            .isNotBlank()
-                    ) elements[0].text() else "--卷首--"
+                    if (elements.size > 0 && elements[0].text().isNotBlank())
+                        elements[0].text()
+                    else
+                        "--卷首--"
+
             }
             chapter.bookUrl = book.bookUrl
             chapter.title = title
@@ -321,10 +347,9 @@ class EpubFile(var book: Book) {
             chapter.startFragmentId =
                 if (content.href.substringAfter("#") == content.href) null
                 else content.href.substringAfter("#")
-            if (durIndex > 0) {
-                val preIndex = durIndex - 1
-                chapterList[preIndex].endFragmentId = chapter.startFragmentId
-            }
+            chapterList.lastOrNull()?.endFragmentId = chapter.startFragmentId
+            chapterList.lastOrNull()?.putVariable("nextUrl", chapter.url)
+
             chapterList.add(chapter)
             durIndex++
             i++
@@ -343,10 +368,8 @@ class EpubFile(var book: Book) {
                 chapter.title = ref.title
                 chapter.url = ref.completeHref
                 chapter.startFragmentId = ref.fragmentId
-                if (durIndex > 0) {
-                    val preIndex = durIndex - 1
-                    chapterList[preIndex].endFragmentId = chapter.startFragmentId
-                }
+                chapterList.lastOrNull()?.endFragmentId = chapter.startFragmentId
+                chapterList.lastOrNull()?.putVariable("nextUrl", chapter.url)
                 chapterList.add(chapter)
                 durIndex++
             }
@@ -355,6 +378,4 @@ class EpubFile(var book: Book) {
             }
         }
     }
-
-
 }

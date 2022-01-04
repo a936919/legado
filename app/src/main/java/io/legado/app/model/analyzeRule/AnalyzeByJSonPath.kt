@@ -3,6 +3,8 @@ package io.legado.app.model.analyzeRule
 import androidx.annotation.Keep
 import com.jayway.jsonpath.JsonPath
 import com.jayway.jsonpath.ReadContext
+
+import timber.log.Timber
 import java.util.*
 
 @Suppress("RegExpRedundantEscape")
@@ -30,41 +32,28 @@ class AnalyzeByJSonPath(json: Any) {
     fun getString(rule: String): String? {
         if (rule.isEmpty()) return null
         var result: String
-        val ruleAnalyzes = RuleAnalyzer(rule,true) //设置平衡组为代码平衡
-        val rules = ruleAnalyzes.splitRule("&&","||")
+        val ruleAnalyzes = RuleAnalyzer(rule, true) //设置平衡组为代码平衡
+        val rules = ruleAnalyzes.splitRule("&&", "||")
 
         if (rules.size == 1) {
 
             ruleAnalyzes.reSetPos() //将pos重置为0，复用解析器
 
-            result = ruleAnalyzes.innerRule("{$."){ getString(it) } //替换所有{$.rule...}
+            result = ruleAnalyzes.innerRule("{$.") { getString(it) } //替换所有{$.rule...}
 
             if (result.isEmpty()) { //st为空，表明无成功替换的内嵌规则
-
                 try {
-
                     val ob = ctx.read<Any>(rule)
-
-                    result =(if (ob is List<*>) {
-
-                        val builder = StringBuilder()
-                        for (o in ob) {
-                            builder.append(o).append("\n")
-                        }
-
-                        builder.deleteCharAt(builder.lastIndex) //删除末尾赘余换行
-
-                        builder
-
-                    } else ob).toString()
-
-                } catch (ignored: Exception) {
+                    result = if (ob is List<*>) {
+                        ob.joinToString("\n")
+                    } else {
+                        ob.toString()
+                    }
+                } catch (e: Exception) {
+                    Timber.e(e)
                 }
-
             }
-
             return result
-
         } else {
             val textList = arrayListOf<String>()
             for (rl in rules) {
@@ -83,34 +72,27 @@ class AnalyzeByJSonPath(json: Any) {
     internal fun getStringList(rule: String): List<String> {
         val result = ArrayList<String>()
         if (rule.isEmpty()) return result
-        val ruleAnalyzes = RuleAnalyzer(rule,true) //设置平衡组为代码平衡
-        val rules = ruleAnalyzes.splitRule("&&","||","%%")
+        val ruleAnalyzes = RuleAnalyzer(rule, true) //设置平衡组为代码平衡
+        val rules = ruleAnalyzes.splitRule("&&", "||", "%%")
 
         if (rules.size == 1) {
-
             ruleAnalyzes.reSetPos() //将pos重置为0，复用解析器
-
-            val st = ruleAnalyzes.innerRule("{$."){ getString(it) } //替换所有{$.rule...}
-
+            val st = ruleAnalyzes.innerRule("{$.") { getString(it) } //替换所有{$.rule...}
             if (st.isEmpty()) { //st为空，表明无成功替换的内嵌规则
-
                 try {
-
-                    val obj = ctx.read<Any>(rule) //kotlin的Any型返回值不包含null ，删除赘余 ?: return result
-
+                    val obj = ctx.read<Any>(rule)
                     if (obj is List<*>) {
-
                         for (o in obj) result.add(o.toString())
-
-                    } else result.add(obj.toString())
-
-                } catch (ignored: Exception) {
+                    } else {
+                        result.add(obj.toString())
+                    }
+                } catch (e: Exception) {
+                    Timber.e(e)
                 }
-
-            }else result.add(st)
-
+            } else {
+                result.add(st)
+            }
             return result
-
         } else {
             val results = ArrayList<List<String>>()
             for (rl in rules) {
@@ -148,17 +130,16 @@ class AnalyzeByJSonPath(json: Any) {
     internal fun getList(rule: String): ArrayList<Any>? {
         val result = ArrayList<Any>()
         if (rule.isEmpty()) return result
-        val ruleAnalyzes = RuleAnalyzer(rule,true) //设置平衡组为代码平衡
-        val rules = ruleAnalyzes.splitRule("&&","||","%%")
+        val ruleAnalyzes = RuleAnalyzer(rule, true) //设置平衡组为代码平衡
+        val rules = ruleAnalyzes.splitRule("&&", "||", "%%")
         if (rules.size == 1) {
             ctx.let {
                 try {
                     return it.read<ArrayList<Any>>(rules[0])
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    Timber.e(e)
                 }
             }
-            return null
         } else {
             val results = ArrayList<ArrayList<*>>()
             for (rl in rules) {

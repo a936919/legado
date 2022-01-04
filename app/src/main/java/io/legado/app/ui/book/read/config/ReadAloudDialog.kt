@@ -3,7 +3,10 @@ package io.legado.app.ui.book.read.config
 import android.content.DialogInterface
 import android.os.Build
 import android.os.Bundle
-import android.view.*
+import android.view.Gravity
+import android.view.View
+import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.SeekBar
 import androidx.annotation.RequiresApi
 import io.legado.app.R
@@ -13,9 +16,11 @@ import io.legado.app.databinding.DialogReadAloudBinding
 import io.legado.app.help.AppConfig
 import io.legado.app.lib.theme.*
 import io.legado.app.lib.theme.readCfgBottomText
+import io.legado.app.lib.theme.bottomBackground
+import io.legado.app.lib.theme.getPrimaryTextColor
+import io.legado.app.model.ReadAloud
+import io.legado.app.model.ReadBook
 import io.legado.app.service.BaseReadAloudService
-import io.legado.app.service.help.ReadAloud
-import io.legado.app.service.help.ReadBook
 import io.legado.app.ui.book.read.ReadBookActivity
 import io.legado.app.ui.widget.seekbar.SeekBarChangeListener
 import io.legado.app.utils.ColorUtils
@@ -25,8 +30,8 @@ import io.legado.app.utils.putPrefBoolean
 import io.legado.app.utils.viewbindingdelegate.viewBinding
 
 
-class ReadAloudDialog : BaseDialogFragment() {
-    private var callBack: CallBack? = null
+class ReadAloudDialog : BaseDialogFragment(R.layout.dialog_read_aloud) {
+    private val callBack: CallBack? get() = activity as? CallBack
     private val binding by viewBinding(DialogReadAloudBinding::bind)
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
@@ -50,21 +55,13 @@ class ReadAloudDialog : BaseDialogFragment() {
         (activity as ReadBookActivity).bottomDialog--
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        (activity as ReadBookActivity).bottomDialog++
-        callBack = activity as? CallBack
-        return inflater.inflate(R.layout.dialog_read_aloud, container)
-    }
-
     override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) {
+        (activity as ReadBookActivity).bottomDialog++
         val bg = requireContext().readCfgBottomBg
         val textColor = requireContext().readCfgBottomText
-        val secondtextColor = ColorUtils.withAlpha(textColor,0.5f)
-        binding.run  {
+        val secondtextColor = ColorUtils.withAlpha(textColor, 0.5f)
+        binding.run {
+
             rootView.setBackgroundColor(bg)
             tvPre.setTextColor(textColor)
             tvNext.setTextColor(textColor)
@@ -74,7 +71,9 @@ class ReadAloudDialog : BaseDialogFragment() {
             ivStop.setColorFilter(textColor)
             ivTimer.setColorFilter(textColor)
             tvTimer.setTextColor(textColor)
+            ivTtsSpeechReduce.setColorFilter(textColor)
             tvTtsSpeed.setTextColor(textColor)
+            ivTtsSpeechAdd.setColorFilter(textColor)
             ivCatalog.setColorFilter(textColor)
             tvCatalog.setTextColor(secondtextColor)
             ivMainMenu.setColorFilter(textColor)
@@ -96,7 +95,7 @@ class ReadAloudDialog : BaseDialogFragment() {
         seekTimer.progress = BaseReadAloudService.timeMinute
         cbTtsFollowSys.isChecked = requireContext().getPrefBoolean("ttsFollowSys", true)
         seekTtsSpeechRate.isEnabled = !cbTtsFollowSys.isChecked
-        seekTtsSpeechRate.progress = AppConfig.ttsSpeechRate
+        upSeekTimer()
     }
 
     private fun initEvent() = binding.run {
@@ -123,8 +122,19 @@ class ReadAloudDialog : BaseDialogFragment() {
             seekTtsSpeechRate.isEnabled = !isChecked
             upTtsSpeechRate()
         }
+        ivTtsSpeechReduce.setOnClickListener {
+            seekTtsSpeechRate.progress = AppConfig.ttsSpeechRate - 1
+            AppConfig.ttsSpeechRate = AppConfig.ttsSpeechRate - 1
+            upTtsSpeechRate()
+        }
+        ivTtsSpeechAdd.setOnClickListener {
+            seekTtsSpeechRate.progress = AppConfig.ttsSpeechRate + 1
+            AppConfig.ttsSpeechRate = AppConfig.ttsSpeechRate + 1
+            upTtsSpeechRate()
+        }
+        //设置保存的默认值
+        seekTtsSpeechRate.progress = AppConfig.ttsSpeechRate
         seekTtsSpeechRate.setOnSeekBarChangeListener(object : SeekBarChangeListener {
-
             override fun onStopTrackingTouch(seekBar: SeekBar) {
                 AppConfig.ttsSpeechRate = seekBar.progress
                 upTtsSpeechRate()
@@ -144,15 +154,31 @@ class ReadAloudDialog : BaseDialogFragment() {
     private fun upPlayState() {
         if (!BaseReadAloudService.pause) {
             binding.ivPlayPause.setImageResource(R.drawable.ic_pause_24dp)
+            binding.ivPlayPause.contentDescription = getString(R.string.pause)
         } else {
             binding.ivPlayPause.setImageResource(R.drawable.ic_play_24dp)
+            binding.ivPlayPause.contentDescription = getString(R.string.audio_play)
         }
         val textColor = requireContext().readCfgBottomText
         binding.ivPlayPause.setColorFilter(textColor)
     }
 
+    private fun upSeekTimer() {
+        binding.seekTimer.post {
+            if (BaseReadAloudService.timeMinute > 0) {
+                binding.seekTimer.progress = BaseReadAloudService.timeMinute
+            } else {
+                binding.seekTimer.progress = 0
+            }
+        }
+    }
+
     private fun upTimerText(timeMinute: Int) {
-        binding.tvTimer.text = requireContext().getString(R.string.timer_m, timeMinute)
+        if (timeMinute < 0) {
+            binding.tvTimer.text = requireContext().getString(R.string.timer_m, 0)
+        } else {
+            binding.tvTimer.text = requireContext().getString(R.string.timer_m, timeMinute)
+        }
     }
 
     private fun upTtsSpeechRate() {

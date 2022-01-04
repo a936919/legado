@@ -19,9 +19,10 @@ import io.legado.app.databinding.ActivityReplaceEditBinding
 import io.legado.app.lib.dialogs.selector
 import io.legado.app.ui.widget.KeyboardToolPop
 import io.legado.app.ui.widget.dialog.TextDialog
-import io.legado.app.utils.getSize
+import io.legado.app.utils.showDialogFragment
 import io.legado.app.utils.toastOnUi
 import io.legado.app.utils.viewbindingdelegate.viewBinding
+import io.legado.app.utils.windowSize
 import kotlin.math.abs
 
 /**
@@ -146,7 +147,7 @@ class ReplaceEditActivity :
 
     private fun showRegexHelp() {
         val mdText = String(assets.open("help/regexHelp.md").readBytes())
-        TextDialog.show(supportFragmentManager, mdText, TextDialog.MD)
+        showDialogFragment(TextDialog(mdText, TextDialog.Mode.MD))
     }
 
     private fun showKeyboardTopPopupWindow() {
@@ -166,7 +167,7 @@ class ReplaceEditActivity :
         val rect = Rect()
         // 获取当前页面窗口的显示范围
         window.decorView.getWindowVisibleDisplayFrame(rect)
-        val screenHeight = this.getSize().heightPixels
+        val screenHeight = this.windowSize.heightPixels
         val keyboardHeight = screenHeight - rect.bottom // 输入法的高度
         val preShowing = mIsSoftKeyBoardShowing
         if (abs(keyboardHeight) > screenHeight / 5) {

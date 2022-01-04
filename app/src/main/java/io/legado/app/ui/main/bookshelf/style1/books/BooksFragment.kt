@@ -1,11 +1,11 @@
 package io.legado.app.ui.main.bookshelf.style1.books
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.core.view.isGone
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -19,43 +19,47 @@ import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.databinding.FragmentBooksBinding
 import io.legado.app.help.AppConfig
-import io.legado.app.lib.theme.ATH
 import io.legado.app.lib.theme.accentColor
+import io.legado.app.lib.theme.primaryColor
 import io.legado.app.ui.book.arrange.ArrangeBookActivity
 import io.legado.app.ui.book.audio.AudioPlayActivity
 import io.legado.app.ui.book.info.BookInfoActivity
 import io.legado.app.ui.book.read.ReadBookActivity
 import io.legado.app.ui.main.MainViewModel
-import io.legado.app.utils.cnCompare
-import io.legado.app.utils.getPrefInt
-import io.legado.app.utils.observeEvent
-import io.legado.app.utils.startActivity
+import io.legado.app.utils.*
 import io.legado.app.utils.viewbindingdelegate.viewBinding
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import kotlin.math.max
 
 /**
  * 书架界面
  */
-class BooksFragment : BaseFragment(R.layout.fragment_books),
+class BooksFragment() : BaseFragment(R.layout.fragment_books),
     BaseBooksAdapter.CallBack {
 
-    companion object {
-        fun newInstance(position: Int, groupId: Long,groupName:String): BooksFragment {
-            return BooksFragment().apply {
-                val bundle = Bundle()
-                bundle.putInt("position", position)
-                bundle.putLong("groupId", groupId)
-                bundle.putString("groupName", groupName)
-                arguments = bundle
-            }
-        }
+    constructor(position: Int, groupId: Long,groupName:String) : this() {
+        val bundle = Bundle()
+        bundle.putInt("position", position)
+        bundle.putLong("groupId", groupId)
+        bundle.putString("groupName", groupName)
+        arguments = bundle
     }
 
     private val binding by viewBinding(FragmentBooksBinding::bind)
-    private val activityViewModel: MainViewModel
-            by activityViewModels()
-    private lateinit var booksAdapter: BaseBooksAdapter<*>
-    private var bookshelfLiveData: LiveData<List<Book>>? = null
+    private val activityViewModel by activityViewModels<MainViewModel>()
+    private val bookshelfLayout by lazy {
+        getPrefInt(PreferKey.bookshelfLayout)
+    }
+    private val booksAdapter: BaseBooksAdapter<*> by lazy {
+        if (bookshelfLayout == 0) {
+            BooksAdapterList(requireContext(), this)
+        } else {
+            BooksAdapterGrid(requireContext(), this)
+        }
+    }
+    private var booksFlowJob: Job? = null
     private var position = 0
     private var groupId = -1L
     private var groupName = ""
@@ -71,19 +75,16 @@ class BooksFragment : BaseFragment(R.layout.fragment_books),
     }
 
     private fun initRecyclerView() {
-        ATH.applyEdgeEffectColor(binding.rvBookshelf)
+        binding.rvBookshelf.setEdgeEffectColor(primaryColor)
         binding.refreshLayout.setColorSchemeColors(accentColor)
         binding.refreshLayout.setOnRefreshListener {
             binding.refreshLayout.isRefreshing = false
             activityViewModel.upToc(booksAdapter.getItems())
         }
-        val bookshelfLayout = getPrefInt(PreferKey.bookshelfLayout)
         if (bookshelfLayout == 0) {
             binding.rvBookshelf.layoutManager = LinearLayoutManager(context)
-            booksAdapter = BooksAdapterList(requireContext(), this)
         } else {
             binding.rvBookshelf.layoutManager = GridLayoutManager(context, bookshelfLayout + 2)
-            booksAdapter = BooksAdapterGrid(requireContext(), this)
         }
         binding.rvBookshelf.adapter = booksAdapter
         booksAdapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
@@ -106,15 +107,15 @@ class BooksFragment : BaseFragment(R.layout.fragment_books),
     }
 
     private fun upRecyclerData() {
-        bookshelfLiveData?.removeObservers(this)
-        bookshelfLiveData = when (groupId) {
-            AppConst.bookGroupAllId -> appDb.bookDao.observeAll()
-            AppConst.bookGroupLocalId -> appDb.bookDao.observeLocal()
-            AppConst.bookGroupAudioId -> appDb.bookDao.observeAudio()
-            AppConst.bookGroupNoneId -> appDb.bookDao.observeNoGroup()
-            else -> appDb.bookDao.observeByGroup(groupId)
-        }.apply {
-            observe(viewLifecycleOwner) { list ->
+        booksFlowJob?.cancel()
+        booksFlowJob = launch {
+            when (groupId) {
+                AppConst.bookGroupAllId -> appDb.bookDao.flowAll()
+                AppConst.bookGroupLocalId -> appDb.bookDao.flowLocal()
+                AppConst.bookGroupAudioId -> appDb.bookDao.flowAudio()
+                AppConst.bookGroupNoneId -> appDb.bookDao.flowNoGroup()
+                else -> appDb.bookDao.flowByGroup(groupId)
+            }.collect { list ->
                 binding.tvEmptyMsg.isGone = list.isNotEmpty()
                 val books = when (getPrefInt(PreferKey.bookshelfSort)) {
                     1 -> list.sortedByDescending { it.latestChapterTime }
@@ -173,12 +174,13 @@ class BooksFragment : BaseFragment(R.layout.fragment_books),
     }
 
     override fun isUpdate(bookUrl: String): Boolean {
-        return bookUrl in activityViewModel.updateList
+        return activityViewModel.isUpdate(bookUrl)
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     override fun observeLiveBus() {
         super.observeLiveBus()
-        observeEvent<String>(EventBus.UP_BOOK) {
+        observeEvent<String>(EventBus.UP_BOOKSHELF) {
             booksAdapter.notification(it)
         }
         observeEvent<String>(EventBus.BOOKSHELF_REFRESH) {

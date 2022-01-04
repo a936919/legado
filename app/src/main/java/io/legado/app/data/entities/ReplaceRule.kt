@@ -29,7 +29,6 @@ data class ReplaceRule(
     var order: Int = 0
 ) : Parcelable {
 
-
     override fun equals(other: Any?): Boolean {
         if (other is ReplaceRule) {
             return other.id == id
@@ -41,12 +40,12 @@ data class ReplaceRule(
         return id.hashCode()
     }
 
-    fun isValid(): Boolean{
-        if (TextUtils.isEmpty(pattern)){
+    fun isValid(): Boolean {
+        if (TextUtils.isEmpty(pattern)) {
             return false
         }
         //判断正则表达式是否正确
-        if (isRegex){
+        if (isRegex) {
             try {
                 Pattern.compile(pattern)
             } catch (ex: PatternSyntaxException) {

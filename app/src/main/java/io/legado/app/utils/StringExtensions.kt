@@ -63,6 +63,12 @@ fun String?.htmlFormat(): String {
         .replace("&nbsp;".toRegex(), " ")
 }
 
+fun String?.isXml(): Boolean =
+    this?.run {
+        val str = this.trim()
+        str.startsWith("<") && str.endsWith(">")
+    } ?: false
+
 fun String.splitNotBlank(vararg delimiter: String): Array<String> = run {
     this.split(*delimiter).map { it.trim() }.filterNot { it.isBlank() }.toTypedArray()
 }

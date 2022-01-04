@@ -17,7 +17,7 @@
         app:showAsAction="always"
         tools:ignore="AlwaysShowAction" />
     <item
-        android:id="@+id/menu_stop"
+        android:id="@+id/menu_start_stop"
         android:title="@string/stop"
         android:icon="@drawable/ic_refresh_white_24dp"
         app:showAsAction="always"

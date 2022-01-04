@@ -1,6 +1,8 @@
 package io.legado.app.help.http
 
-import kotlinx.coroutines.suspendCancellableCoroutine
+import io.legado.app.help.AppConfig
+import io.legado.app.help.http.cronet.CronetInterceptor
+import io.legado.app.help.http.cronet.CronetLoader
 import okhttp3.ConnectionSpec
 import okhttp3.Credentials
 import okhttp3.Interceptor
@@ -9,7 +11,6 @@ import java.net.InetSocketAddress
 import java.net.Proxy
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
-import kotlin.coroutines.resume
 
 private val proxyClientCache: ConcurrentHashMap<String, OkHttpClient> by lazy {
     ConcurrentHashMap()
@@ -26,6 +27,7 @@ val okHttpClient: OkHttpClient by lazy {
         .connectTimeout(15, TimeUnit.SECONDS)
         .writeTimeout(15, TimeUnit.SECONDS)
         .readTimeout(15, TimeUnit.SECONDS)
+        .callTimeout(60,TimeUnit.SECONDS)
         .sslSocketFactory(SSLHelper.unsafeSSLSocketFactory, SSLHelper.unsafeTrustManager)
         .retryOnConnectionFailure(true)
         .hostnameVerifier(SSLHelper.unsafeHostnameVerifier)
@@ -41,7 +43,9 @@ val okHttpClient: OkHttpClient by lazy {
                 .build()
             chain.proceed(request)
         })
-
+    if (!AppConfig.isGooglePlay && AppConfig.isCronet && CronetLoader.install()) {
+        builder.addInterceptor(CronetInterceptor(null))
+    }
     builder.build()
 }
 
@@ -88,24 +92,3 @@ fun getProxyClient(proxy: String? = null): OkHttpClient {
     }
     return okHttpClient
 }
-
-suspend fun getWebViewSrc(params: AjaxWebView.AjaxParams): StrResponse =
-    suspendCancellableCoroutine { block ->
-        val webView = AjaxWebView()
-        block.invokeOnCancellation {
-            webView.destroyWebView()
-        }
-        webView.callback = object : AjaxWebView.Callback() {
-            override fun onResult(response: StrResponse) {
-
-                if (!block.isCompleted)
-                    block.resume(response)
-            }
-
-            override fun onError(error: Throwable) {
-                if (!block.isCompleted)
-                    block.cancel(error)
-            }
-        }
-        webView.load(params)
-    }

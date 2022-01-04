@@ -2,30 +2,38 @@
 
 package io.legado.app.ui.rss.article
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import androidx.activity.result.contract.ActivityResultContracts
+import android.view.ViewGroup
 import androidx.activity.viewModels
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentStatePagerAdapter
 import io.legado.app.R
 import io.legado.app.base.VMBaseActivity
 import io.legado.app.databinding.ActivityRssArtivlesBinding
+import io.legado.app.databinding.DialogEditTextBinding
+import io.legado.app.lib.dialogs.alert
+import io.legado.app.ui.login.SourceLoginActivity
 import io.legado.app.ui.rss.source.edit.RssSourceEditActivity
+import io.legado.app.utils.StartActivityContract
 import io.legado.app.utils.gone
+import io.legado.app.utils.startActivity
 import io.legado.app.utils.viewbindingdelegate.viewBinding
 import io.legado.app.utils.visible
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class RssSortActivity : VMBaseActivity<ActivityRssArtivlesBinding, RssSortViewModel>() {
 
     override val binding by viewBinding(ActivityRssArtivlesBinding::inflate)
     override val viewModel by viewModels<RssSortViewModel>()
-    private lateinit var adapter: TabFragmentPageAdapter
-    private val fragments = linkedMapOf<String, Fragment>()
-    private val upSourceResult = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
+    private val adapter by lazy { TabFragmentPageAdapter() }
+    private val sortList = mutableListOf<Pair<String, String>>()
+    private val fragmentMap = hashMapOf<String, Fragment>()
+    private val editSourceResult = registerForActivityResult(
+        StartActivityContract(RssSourceEditActivity::class.java)
     ) {
         if (it.resultCode == RESULT_OK) {
             viewModel.initData(intent) {
@@ -35,7 +43,6 @@ class RssSortActivity : VMBaseActivity<ActivityRssArtivlesBinding, RssSortViewMo
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
-        adapter = TabFragmentPageAdapter()
         binding.viewPager.adapter = adapter
         binding.tabLayout.setupWithViewPager(binding.viewPager)
         viewModel.titleLiveData.observe(this, {
@@ -51,13 +58,23 @@ class RssSortActivity : VMBaseActivity<ActivityRssArtivlesBinding, RssSortViewMo
         return super.onCompatCreateOptionsMenu(menu)
     }
 
+    override fun onMenuOpened(featureId: Int, menu: Menu): Boolean {
+        menu.findItem(R.id.menu_login)?.isVisible =
+            !viewModel.rssSource?.loginUrl.isNullOrBlank()
+        return super.onMenuOpened(featureId, menu)
+    }
+
     override fun onCompatOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
+            R.id.menu_login -> startActivity<SourceLoginActivity> {
+                putExtra("type", "rssSource")
+                putExtra("key", viewModel.rssSource?.sourceUrl)
+            }
+            R.id.menu_set_source_variable -> setSourceVariable()
             R.id.menu_edit_source -> viewModel.rssSource?.sourceUrl?.let {
-                upSourceResult.launch(
-                    Intent(this, RssSourceEditActivity::class.java)
-                        .putExtra("data", it)
-                )
+                editSourceResult.launch {
+                    putExtra("sourceUrl", it)
+                }
             }
             R.id.menu_clear -> {
                 viewModel.url?.let {
@@ -73,16 +90,37 @@ class RssSortActivity : VMBaseActivity<ActivityRssArtivlesBinding, RssSortViewMo
     }
 
     private fun upFragments() {
-        fragments.clear()
-        viewModel.rssSource?.sortUrls()?.forEach {
-            fragments[it.key] = RssArticlesFragment.create(it.key, it.value)
+        viewModel.rssSource?.sortUrls()?.let {
+            sortList.clear()
+            sortList.addAll(it)
         }
-        if (fragments.size == 1) {
+        if (sortList.size == 1) {
             binding.tabLayout.gone()
         } else {
             binding.tabLayout.visible()
         }
         adapter.notifyDataSetChanged()
+    }
+
+    private fun setSourceVariable() {
+        launch {
+            val variable = withContext(Dispatchers.IO) { viewModel.rssSource?.getVariable() }
+            alert(R.string.set_source_variable) {
+                setMessage("源变量可在js中通过source.getVariable()获取")
+                val alertBinding = DialogEditTextBinding.inflate(layoutInflater).apply {
+                    editView.hint = "source variable"
+                    editView.setText(variable)
+                }
+                customView { alertBinding.root }
+                okButton {
+                    viewModel.rssSource?.setVariable(alertBinding.editView.text?.toString())
+                }
+                cancelButton()
+                neutralButton(R.string.delete) {
+                    viewModel.rssSource?.setVariable(null)
+                }
+            }
+        }
     }
 
     private inner class TabFragmentPageAdapter :
@@ -93,17 +131,23 @@ class RssSortActivity : VMBaseActivity<ActivityRssArtivlesBinding, RssSortViewMo
         }
 
         override fun getPageTitle(position: Int): CharSequence {
-            return fragments.keys.elementAt(position)
+            return sortList[position].first
         }
 
         override fun getItem(position: Int): Fragment {
-            return fragments.values.elementAt(position)
+            val sort = sortList[position]
+            return RssArticlesFragment(sort.first, sort.second)
         }
 
         override fun getCount(): Int {
-            return fragments.size
+            return sortList.size
         }
 
+        override fun instantiateItem(container: ViewGroup, position: Int): Any {
+            val fragment = super.instantiateItem(container, position) as Fragment
+            fragmentMap[sortList[position].first] = fragment
+            return fragment
+        }
     }
 
 }
