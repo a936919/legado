@@ -4,10 +4,8 @@ import android.content.DialogInterface
 import android.os.Build
 import android.os.Bundle
 import android.view.*
-import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.viewModels
-import io.legado.app.App
 import io.legado.app.R
 import io.legado.app.base.BaseDialogFragment
 import io.legado.app.data.appDb
