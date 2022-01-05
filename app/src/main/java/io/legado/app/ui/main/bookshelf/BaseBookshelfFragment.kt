@@ -20,7 +20,6 @@ import io.legado.app.help.AppConfig
 import io.legado.app.help.DirectLinkUpload
 import io.legado.app.lib.dialogs.alert
 import io.legado.app.lib.theme.accentColor
-import io.legado.app.lib.theme.readCfgTopText
 import io.legado.app.ui.about.AppLogDialog
 import io.legado.app.ui.book.arrange.ArrangeBookActivity
 import io.legado.app.ui.book.cache.CacheActivity

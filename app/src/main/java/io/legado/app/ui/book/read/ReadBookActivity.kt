@@ -20,10 +20,8 @@ import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
 import io.legado.app.data.entities.BookProgress
 import io.legado.app.data.entities.BookSource
-import io.legado.app.help.BookHelp
-import io.legado.app.help.IntentData
-import io.legado.app.help.ReadBookConfig
-import io.legado.app.help.ReadTipConfig
+import io.legado.app.databinding.DialogEpubConfigBinding
+import io.legado.app.help.*
 import io.legado.app.help.coroutine.Coroutine
 import io.legado.app.help.storage.AppWebDav
 import io.legado.app.help.storage.Backup
@@ -101,7 +99,7 @@ class ReadBookActivity : BaseReadBookActivity(),
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             it ?: return@registerForActivityResult
             it.data?.let { data ->
-                data.getIntExtra("chapterIndex", ReadBook.durChapterIndex).let { _ ->
+                data.getIntExtra("chapterIndex", ReadBook.durChapterIndex).let {
                     viewModel.searchContentQuery = data.getStringExtra("query") ?: ""
                     val searchResultIndex = data.getIntExtra("searchResultIndex", 0)
                     isShowingSearchResult = true
@@ -233,9 +231,6 @@ class ReadBookActivity : BaseReadBookActivity(),
                     R.id.menu_disable_book_source,
                     R.id.menu_help -> item.isVisible = false
                     R.id.ReplaceRule -> item.isVisible = true
-                    R.id.menu_del_h_tag -> item.isChecked = book.getDelTag(Book.hTag)
-                    R.id.menu_del_img_tag -> item.isChecked = book.getDelTag(Book.imgTag)
-                    R.id.menu_del_ruby_tag -> item.isChecked = book.getDelTag(Book.rubyTag)
                     R.id.menu_enable_replace -> item.isChecked = book.getUseReplaceRule()
                 }
             }
@@ -278,21 +273,7 @@ class ReadBookActivity : BaseReadBookActivity(),
                     showDialogFragment(BookmarkDialog(bookmark))
                 }
             }
-            R.id.menu_del_h_tag -> ReadBook.book?.let {
-                it.setDelTag(Book.hTag)
-                menu?.findItem(R.id.menu_del_h_tag)?.isChecked = it.getDelTag(Book.hTag)
-                refreshBook()
-            }
-            R.id.menu_del_img_tag -> ReadBook.book?.let {
-                it.setDelTag(Book.imgTag)
-                menu?.findItem(R.id.menu_del_img_tag)?.isChecked = it.getDelTag(Book.imgTag)
-                refreshBook()
-            }
-            R.id.menu_del_ruby_tag -> ReadBook.book?.let {
-                it.setDelTag(Book.rubyTag)
-                menu?.findItem(R.id.menu_del_ruby_tag)?.isChecked = it.getDelTag(Book.rubyTag)
-                refreshBook()
-            }
+
             R.id.menu_copy_text -> showDialogFragment(
                 TextDialog(ReadBook.curTextChapter?.getContent())
             )
@@ -339,6 +320,7 @@ class ReadBookActivity : BaseReadBookActivity(),
             R.id.menu_get_progress -> synProgress()
             R.id.menu_help -> showReadMenuHelp()
             R.id.ReplaceRule -> openReplaceRule()
+            R.id.menu_epub_cfg -> configEpub()
         }
         return super.onCompatOptionsItemSelected(item)
     }
@@ -1154,5 +1136,40 @@ class ReadBookActivity : BaseReadBookActivity(),
         showDownloadDialog()
     }
 
+    private fun configEpub() {
+        alert("Epub书籍设置") {
+            val alertBinding = DialogEpubConfigBinding.inflate(layoutInflater).apply {
+                ReadBook.book?.let {
+                    deleteHTag.isChecked = it.getDelTag(Book.hTag)
+                    deleteImgTag.isChecked = it.getDelTag(Book.imgTag)
+                    deleteRubyTag.isChecked = it.getDelTag(Book.rubyTag)
+                }
+            }
+            customView { alertBinding.root }
+            okButton {
+                alertBinding.apply {
+                    ReadBook.book?.let {
+                        var bChange = false
+                        if (deleteHTag.isChecked != it.getDelTag(Book.hTag)) {
+                            it.setDelTag(Book.hTag)
+                            bChange = true
+                        }
+                        if (deleteImgTag.isChecked != it.getDelTag(Book.imgTag)) {
+                            it.setDelTag(Book.imgTag)
+                            bChange = true
+                        }
+
+                        if (deleteRubyTag.isChecked != it.getDelTag(Book.rubyTag)) {
+                            it.setDelTag(Book.rubyTag)
+                            bChange = true
+                        }
+                        if (bChange)
+                            refreshBook()
+                    }
+                }
+            }
+            noButton()
+        }
+    }
 
 }

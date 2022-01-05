@@ -14,7 +14,6 @@ import io.legado.app.base.VMBaseActivity
 import io.legado.app.constant.AppConst.charsets
 import io.legado.app.constant.PreferKey
 import io.legado.app.data.entities.BookProgress
-import io.legado.app.data.entities.Bookmark
 import io.legado.app.databinding.*
 import io.legado.app.databinding.ActivityBookReadBinding
 import io.legado.app.databinding.DialogDownloadChoiceBinding
