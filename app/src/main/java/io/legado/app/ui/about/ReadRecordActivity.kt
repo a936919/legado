@@ -97,19 +97,8 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
     }
 
     private fun initView() = binding.run {
-        tvBookName.setText(R.string.all_read_time)
+        tvBookName.setText("总时间")
         recyclerView.adapter = adapter
-/*
-        readRecord.tvRemove.setOnClickListener {
-            alert(R.string.delete, R.string.sure_del) {
-                okButton {
-                    appDb.readRecordDao.clear()
-                    initData()
-                }
-                noButton()
-            }
-        }
-*/
     }
 
     private fun initData() {
@@ -134,11 +123,6 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
             }
         }
     }
-
-    private fun format(t: Long) :String{
-        return StringUtils.dateConvert(t,"yyyy-MM-dd-HH-mm-ss")
-    }
-
 
     private fun setBookStatus(readShow: ReadRecordShow){
         alert("阅读状态设置") {
