@@ -183,8 +183,11 @@ class ChangeSourceDialog() : BaseDialogFragment(R.layout.dialog_change_source),
             R.id.menu_delay -> alert("书源检索时间") {
                 var text=""
                 val searchGroup = appCtx.getPrefString("searchGroup") ?: ""
-                appDb.bookSourceDao.getEnabledByGroupSort(searchGroup).forEach {bookSource ->
-                    text = "${text}${bookSource.bookSourceName}  ${bookSource.searchBookName}\n连接速度：${bookSource.searchTime}毫秒\n"
+                appDb.bookSourceDao.getEnabledByGroupSuc(searchGroup).forEach {bookSource ->
+                    text = "${text}书源：${bookSource.bookSourceName}\n${bookSource.searchBookName} 速度：${bookSource.searchTime}毫秒\n"
+                }
+                appDb.bookSourceDao.getEnabledByGroupFail(searchGroup).forEach {bookSource ->
+                    text = "${text}书源：${bookSource.bookSourceName}\n${bookSource.searchBookName} 速度：${bookSource.searchTime}毫秒\n"
                 }
                 setMessage(text)
                 okButton { }

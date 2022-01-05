@@ -110,10 +110,9 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
     fun startSearch() {
         execute {
             stopSearch()
-            appDb.searchBookDao.clear(name, author)
+            appDb.searchBookDao.clearByGroup(name, author, searchGroup)
             searchBooks.clear()
             upAdapter()
-
             bookSourceList.clear()
             if (searchGroup.isBlank()) {
                 bookSourceList.addAll(appDb.bookSourceDao.allEnabled)
@@ -127,7 +126,6 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
             }
             searchStateData.postValue(true)
             initSearchPool()
-            appDb.searchBookDao.clearByGroup(name, author,searchGroup)
             threadCheck = bookSourceList.size
             sourceTime = ""
             for (i in 0 until threadCount) {
@@ -144,15 +142,14 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
             searchIndex++
         }
         val source = bookSourceList[searchIndex]
-        val startTime =  System.currentTimeMillis()
-        var status = ""
+        val startTime = System.currentTimeMillis()
+        var bSuccess = false
 
         val task = WebBook
             .searchBook(viewModelScope, source, name, context = searchPool!!)
             .timeout(60000L)
             .onSuccess(searchPool) {
                 it.forEach { searchBook ->
-
                     if (searchBook.name == name) {
                         if ((AppConfig.changeSourceCheckAuthor && searchBook.author.contains(author))
                             || !AppConfig.changeSourceCheckAuthor
@@ -166,15 +163,26 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
                             } else {
                                 searchFinish(searchBook)
                             }
+                            if (!bSuccess)
+                                appDb.bookSourceDao.getBookSource(source.bookSourceUrl)
+                                    ?.let { bookSource ->
+                                        bookSource.searchTime =
+                                            System.currentTimeMillis() - startTime
+                                        bookSource.searchBookName = "成功"
+                                        appDb.bookSourceDao.update(bookSource)
+                                        bSuccess = true
+                                    }
                         }
-                        status ="（成功）"
-                        return@onSuccess
                     }
                 }
-                status ="（未找到）"
             }
-            .onError(IO){
-                status ="（可能失效）"
+            .onError(IO) {
+                appDb.bookSourceDao.getBookSource(source.bookSourceUrl)?.let { bookSource ->
+                    bookSource.searchTime = System.currentTimeMillis() - startTime
+                    bookSource.searchBookName = "失效"
+                    appDb.bookSourceDao.update(bookSource)
+                    bSuccess = true
+                }
             }
             .onFinally(searchPool) {
                 synchronized(this) {
@@ -183,13 +191,16 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
                     } else {
                         searchIndex++
                     }
-                     appDb.bookSourceDao.getBookSource(source.bookSourceUrl)?.let {
-                         it.searchTime = System.currentTimeMillis() - startTime
-                         it.searchBookName = "$name$status"
-                         appDb.bookSourceDao.update(it)
-                     }
+
+                    if (!bSuccess) {
+                        appDb.bookSourceDao.getBookSource(source.bookSourceUrl)?.let { bookSource ->
+                            bookSource.searchTime = System.currentTimeMillis() - startTime
+                            bookSource.searchBookName = "失败"
+                            appDb.bookSourceDao.update(bookSource)
+                        }
+                    }
                     threadCheck--
-                    if(threadCheck<=0){
+                    if (threadCheck <= 0) {
                         tasks.clear()
                         searchPool?.close()
                         searchStateData.postValue(false)
@@ -249,8 +260,6 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
 
     fun startOrStopSearch() {
         if (tasks.isEmpty) {
-            searchBooks.clear()
-            upAdapter()
             startSearch()
         } else {
             stopSearch()
@@ -280,8 +289,8 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
     }
 
 
-    companion object{
-        var sourceTime:String = ""
+    companion object {
+        var sourceTime: String = ""
     }
 
     fun topSource(searchBook: SearchBook) {
@@ -328,4 +337,5 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
     fun firstSourceOrNull(searchBook: SearchBook): SearchBook? {
         return searchBooks.firstOrNull { it.bookUrl != searchBook.bookUrl }
     }
+
 }

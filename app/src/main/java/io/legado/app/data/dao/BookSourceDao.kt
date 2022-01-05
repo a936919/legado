@@ -121,7 +121,10 @@ interface BookSourceDao {
     @Query("select * from book_sources where enabled = 1 and bookSourceName like '%' || :name || '%'")
     fun getEnableByName(name: String): List<BookSource>
 
-    @Query("select * from book_sources where enabled = 1 and bookSourceGroup like '%' || :group || '%' order by searchTime")
-    fun getEnabledByGroupSort(group: String): List<BookSource>
+    @Query("select * from book_sources where enabled = 1 and bookSourceGroup like '%' || :group || '%' and searchBookName = '成功' order by searchTime")
+    fun getEnabledByGroupSuc(group: String): List<BookSource>
+    
+    @Query("select * from book_sources where enabled = 1 and bookSourceGroup like '%' || :group || '%' and searchBookName != '成功' order by searchTime")
+    fun getEnabledByGroupFail(group: String): List<BookSource>
 
 }
