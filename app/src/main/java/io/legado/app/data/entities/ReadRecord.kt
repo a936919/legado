@@ -36,5 +36,19 @@ data class ReadRecord(
         androidId =  AppConst.androidId,
         bookName = bookName,
         author = author,
+        date = TimeRecord.getDate(),
+        readTime = appDb.timeRecordDao.getReadTime(
+            AppConst.androidId,
+            bookName,
+            author,
+            TimeRecord.getDate()
+        ) ?: 0,
+        listenTime = appDb.timeRecordDao.getListenTime(
+            AppConst.androidId,
+            bookName,
+            author,
+            TimeRecord.getDate()
+        ) ?: 0
+
     )
 }

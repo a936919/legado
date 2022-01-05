@@ -31,10 +31,6 @@ class BookInfoEditViewModel(application: Application) : BaseViewModel(applicatio
             val readRecord = book.toReadRecord()
             appDb.readRecordDao.insert(readRecord)
             val timeRecord = readRecord.toTimeRecord()
-            timeRecord.date = TimeRecord.getDate()
-            timeRecord.readTime =
-                appDb.timeRecordDao.getReadTime(androidId, timeRecord.bookName, timeRecord.author)
-                    ?: 0L
             appDb.timeRecordDao.insert(timeRecord)
         }.onSuccess {
             success?.invoke()

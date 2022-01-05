@@ -1,20 +1,17 @@
 package io.legado.app.model
 
 import com.github.liuyueyi.quick.transfer.ChineseUtils
-import io.legado.app.api.controller.BookController.contentProcessor
 import io.legado.app.constant.AppConst.androidId
 import io.legado.app.constant.AppLog
 import io.legado.app.constant.BookType
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.*
 import io.legado.app.data.entities.TimeRecord
-import io.legado.app.help.*
 import io.legado.app.help.AppConfig
 import io.legado.app.help.BookHelp
 import io.legado.app.help.ContentProcessor
 import io.legado.app.help.ReadBookConfig
 import io.legado.app.help.coroutine.Coroutine
-import io.legado.app.help.http.cronet.CronetLoader.preDownload
 import io.legado.app.help.storage.AppWebDav
 import io.legado.app.model.webBook.WebBook
 import io.legado.app.service.BaseReadAloudService
@@ -22,7 +19,6 @@ import io.legado.app.service.WebService
 import io.legado.app.ui.book.read.page.entities.TextChapter
 import io.legado.app.ui.book.read.page.provider.ChapterProvider
 import io.legado.app.ui.book.read.page.provider.ImageProvider
-import kotlinx.coroutines.*
 import kotlin.math.min
 import io.legado.app.utils.msg
 
@@ -52,34 +48,16 @@ object ReadBook : CoroutineScope by MainScope() {
     private val loadingChapters = arrayListOf<Int>()
     private var readRecord: ReadRecord? = null
     private var timeRecord: TimeRecord? = null
-    var readStartTime: Long = System.currentTimeMillis()
-
     //历史记录，切换记录后记录切换前的进度
     var historyRecord: BookProgress? = null
+    var readStartTime: Long = System.currentTimeMillis()
 
-    fun resetData(book: Book) {
-        this.book = book
-        contentProcessor = ContentProcessor.get(book.name, book.origin)
+   fun resetData(book: Book) {
+        ReadBook.book = book
         readRecord = book.toReadRecord()
         timeRecord = readRecord?.toTimeRecord()
-        timeRecord?.let { timeRecord ->
-            timeRecord.date = TimeRecord.getDate()
-            timeRecord.readTime = appDb.timeRecordDao.getReadTime(
-                androidId,
-                timeRecord.bookName,
-                timeRecord.author,
-                timeRecord.date
-            )
-                ?: 0
-            timeRecord.listenTime = appDb.timeRecordDao.getListenTime(
-                androidId,
-                timeRecord.bookName,
-                timeRecord.author,
-                timeRecord.date
-            )
-                ?: 0
-        }
         saveReadRecord()
+        chapterSize = appDb.bookChapterDao.getChapterCount(book.bookUrl)
         durChapterIndex = book.durChapterIndex
         durChapterPos = book.durChapterPos
         isLocalBook = book.origin == BookType.local
@@ -92,6 +70,7 @@ object ReadBook : CoroutineScope by MainScope() {
             loadingChapters.clear()
         }
     }
+
     fun upData(book: Book) {
         ReadBook.book = book
         chapterSize = appDb.bookChapterDao.getChapterCount(book.bookUrl)

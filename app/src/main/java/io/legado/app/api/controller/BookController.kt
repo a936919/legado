@@ -69,6 +69,7 @@ object BookController {
         insertReadRecord(book)
         return returnData.setData(book)
     }
+
     fun getCover(parameters: Map<String, List<String>>): ReturnData {
         val returnData = ReturnData()
         val coverPath = parameters["path"]?.firstOrNull()
@@ -155,7 +156,7 @@ object BookController {
             if (content == null) {
                 appDb.bookSourceDao.getBookSource(book.origin)?.let { source ->
                     runBlocking {
-                        WebBook.getContentAwait(this, source,book, chapter)
+                        WebBook.getContentAwait(this, source, book, chapter)
                     }.let {
                         content = it
                     }
@@ -203,7 +204,14 @@ object BookController {
         val book = appDb.bookDao.getBook(bookUrl) ?: return returnData.setData("获取失败")
         val chapterName = appDb.bookChapterDao.getChapter(book.bookUrl, chapterIndex)?.title ?: ""
         val bookmark = Bookmark(
-                System.currentTimeMillis(), book.name, book.author, chapterIndex, pos, chapterName, bookText, ""
+            System.currentTimeMillis(),
+            book.name,
+            book.author,
+            chapterIndex,
+            pos,
+            chapterName,
+            bookText,
+            ""
         )
         appDb.bookmarkDao.insert(bookmark)
         synRecord(book, chapterIndex, pos)
@@ -232,15 +240,6 @@ object BookController {
             if (timeRecord == null || !timeRecord!!.equals(nowTimeRecord)) {
                 timeRecord = nowTimeRecord
                 timeRecord?.let {
-                    readStartTime = System.currentTimeMillis()
-                    it.date = TimeRecord.getDate()
-                    it.readTime = appDb.timeRecordDao.getReadTime(
-                            androidId,
-                            it.bookName,
-                            it.author,
-                            it.date
-                    )
-                            ?: 0
                     appDb.bookDao.update(book)
                     appDb.readRecordDao.insert(readRecord)
                     appDb.timeRecordDao.insert(it)
@@ -251,7 +250,8 @@ object BookController {
 
     private suspend fun processReplace(book: Book, chapter: BookChapter, content: String): String {
         contentProcessor?.let {
-            val contents = it.getContent(book, chapter, content, true, book.getUseReplaceRule(), false)
+            val contents =
+                it.getContent(book, chapter, content, true, book.getUseReplaceRule(), false)
             return contents.joinToString("\n")
         }
         return content
@@ -298,6 +298,7 @@ object BookController {
             }
         }
     }
+
     fun saveBookReadIndex(book: Book, index: Int) {
         book.durChapterIndex = index
         book.durChapterTime = System.currentTimeMillis()
