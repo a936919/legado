@@ -3,7 +3,6 @@ package io.legado.app.ui.book.read
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.ColorStateList
-import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.util.AttributeSet
 import android.view.Gravity
@@ -347,6 +346,11 @@ class ReadMenu @JvmOverloads constructor(
         menuBottomIn = AnimationUtilsSupport.loadAnimation(context, R.anim.anim_readbook_bottom_in)
         menuTopIn.setAnimationListener(object : Animation.AnimationListener {
             override fun onAnimationStart(animation: Animation) {
+                binding.tvSourceAction.gone()
+                binding.tvLogin.gone()
+                binding.tvPay.gone()
+                binding.tvChapterName.gone()
+                binding.tvChapterUrl.gone()
                 callBack.upSystemUiVisibility()
                 binding.llBrightness.visible(showBrightnessView)
             }
@@ -401,27 +405,11 @@ class ReadMenu @JvmOverloads constructor(
 
     fun upBookView() {
         binding.titleBar.title = ""
-        binding.tvLogin.visible(false)
         ReadBook.curTextChapter?.let {
-            binding.tvChapterName.text = it.title
-            binding.tvChapterName.setTextColor(context.readCfgTopText)
-            binding.tvChapterName.visible()
-            if (!ReadBook.isLocalBook) {
-                binding.tvChapterUrl.text = it.url
-                binding.tvChapterUrl.setTextColor(context.readCfgTopText)
-                binding.tvChapterUrl.visible()
-            } else {
-                binding.tvChapterUrl.gone()
-            }
             binding.seekReadPage.max = it.pageSize.minus(1)
             binding.seekReadPage.progress = ReadBook.durPageIndex()
             binding.tvPre.isEnabled = ReadBook.durChapterIndex != 0
             binding.tvNext.isEnabled = ReadBook.durChapterIndex != ReadBook.chapterSize - 1
-            binding.tvChapterName.gone()
-            binding.tvChapterUrl.gone()
-        } ?: let {
-            binding.tvChapterName.gone()
-            binding.tvChapterUrl.gone()
         }
     }
 

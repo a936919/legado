@@ -3,6 +3,7 @@ package io.legado.app.ui.main.bookshelf
 import android.annotation.SuppressLint
 import android.view.Menu
 import android.view.MenuItem
+import androidx.core.view.get
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.LiveData
@@ -18,6 +19,8 @@ import io.legado.app.databinding.DialogEditTextBinding
 import io.legado.app.help.AppConfig
 import io.legado.app.help.DirectLinkUpload
 import io.legado.app.lib.dialogs.alert
+import io.legado.app.lib.theme.accentColor
+import io.legado.app.lib.theme.readCfgTopText
 import io.legado.app.ui.about.AppLogDialog
 import io.legado.app.ui.book.arrange.ArrangeBookActivity
 import io.legado.app.ui.book.cache.CacheActivity
@@ -65,10 +68,26 @@ abstract class BaseBookshelfFragment(layoutId: Int) : VMBaseFragment<BookshelfVi
     abstract val books: List<Book>
     private var groupsLiveData: LiveData<List<BookGroup>>? = null
 
+    fun initMenu(menu: Menu)
+    {
+        for (i in 0 until menu.size()){
+            val item = menu[i]
+            item.icon?.setTint(accentColor)
+            when (item.itemId) {
+                R.id.menu_update_toc,
+                R.id.menu_add_url,
+                R.id.menu_arrange_bookshelf,
+                R.id.menu_export_bookshelf,
+                R.id.menu_group_manage,
+                R.id.menu_import_bookshelf-> item.isVisible = false
+            }
+        }
+    }
     abstract fun gotoTop()
 
     override fun onCompatCreateOptionsMenu(menu: Menu) {
         menuInflater.inflate(R.menu.main_bookshelf, menu)
+        initMenu(menu)
     }
 
     override fun onCompatOptionsItemSelected(item: MenuItem) {
