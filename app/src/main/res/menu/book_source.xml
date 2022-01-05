@@ -116,6 +116,11 @@
         android:icon="@drawable/ic_cfg_source"
         android:title="@string/txt_toc_regex"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/menu_rule_rss"
+        android:icon="@drawable/ic_add"
+        android:title="规则订阅"
+        app:showAsAction="never" />
 
     <item
         android:id="@+id/menu_help"
