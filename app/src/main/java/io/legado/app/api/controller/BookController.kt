@@ -251,7 +251,7 @@ object BookController {
     private suspend fun processReplace(book: Book, chapter: BookChapter, content: String): String {
         contentProcessor?.let {
             val contents =
-                it.getContent(book, chapter, content, true, book.getUseReplaceRule(), false)
+                it.getContent(book, chapter, content, false, book.getUseReplaceRule())
             return contents.joinToString("\n")
         }
         return content

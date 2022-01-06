@@ -1,19 +1,19 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "c6913d775f2f965ac5f3",
-    "url": "css/about.b9bb4fe0.css"
+    "revision": "2a92bc0e055c393abed1",
+    "url": "css/about.d357648b.css"
   },
   {
-    "revision": "c7b3e35a4e0391b1ed37",
-    "url": "css/app.e4c919b7.css"
+    "revision": "724b0395cdb4e35e5296",
+    "url": "css/app.e1c0d2e4.css"
   },
   {
-    "revision": "9a65f05f9810a3ea7f46",
-    "url": "css/chunk-vendors.8a465a1d.css"
+    "revision": "f5cfb32afa0bb1a5c179",
+    "url": "css/chunk-vendors.5f0f4fba.css"
   },
   {
-    "revision": "5ab5c6be15b21e2d609b",
-    "url": "css/detail.e03dc50b.css"
+    "revision": "94b0cddc94c6ce9fd4ff",
+    "url": "css/detail.5c33a506.css"
   },
   {
     "revision": "535877f50039c0cb49a6196a5b7517cd",
@@ -36,35 +36,35 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "fonts/shelffont.6c094b6d.ttf"
   },
   {
-    "revision": "8a8424347500238b7b6c08a98d0f89af",
+    "revision": "3ab8ce038a716fa72437d371981578e4",
     "url": "index.html"
   },
   {
-    "revision": "c6913d775f2f965ac5f3",
-    "url": "js/about.9f8f9ac0.js"
+    "revision": "2a92bc0e055c393abed1",
+    "url": "js/about.4a59e977.js"
   },
   {
-    "revision": "5998ccb313ed338c15e1",
-    "url": "js/about~detail.8270a871.js"
+    "revision": "88ab4d88e21195a3c105",
+    "url": "js/about~detail.71703f0f.js"
   },
   {
-    "revision": "c7b3e35a4e0391b1ed37",
-    "url": "js/app.e84ee963.js"
+    "revision": "724b0395cdb4e35e5296",
+    "url": "js/app.73d7f7ff.js"
   },
   {
-    "revision": "9a65f05f9810a3ea7f46",
-    "url": "js/chunk-vendors.3ef7796f.js"
+    "revision": "f5cfb32afa0bb1a5c179",
+    "url": "js/chunk-vendors.47c8d39a.js"
   },
   {
-    "revision": "5ab5c6be15b21e2d609b",
-    "url": "js/detail.4e6a53a9.js"
+    "revision": "94b0cddc94c6ce9fd4ff",
+    "url": "js/detail.b4c8b1b8.js"
   },
   {
     "revision": "b46d04eb43bc31ca0f9f95121646440d",
     "url": "manifest.json"
   },
   {
-    "revision": "b6216d61c03e6ce0c9aea6ca7808f7ca",
+    "revision": "735ab4f94fbcd57074377afca324c813",
     "url": "robots.txt"
   }
 ]);

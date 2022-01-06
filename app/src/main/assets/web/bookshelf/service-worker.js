@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
-  "precache-manifest.5ae9ceec57e7f0f3cc808807b7fe5f32.js"
+  "precache-manifest.2f31349da975f020d1ddd1ad1cd506ed.js"
 );
 
 workbox.core.setCacheNameDetails({prefix: "yd-web-tool"});
