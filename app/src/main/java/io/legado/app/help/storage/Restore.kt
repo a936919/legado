@@ -188,7 +188,7 @@ object Restore : BackupRestore() {
                 }
                 try {
                     val file =
-                        FileUtils.createFileIfNotExist("$path${File.separator}${ReadBookConfig.comicConfigFilePath}")
+                        FileUtils.createFileIfNotExist("$path${File.separator}${ReadBookConfig.comicConfigFileName}")
                     if (file.exists()) {
                         FileUtils.deleteFile(ReadBookConfig.comicConfigFilePath)
                         file.copyTo(File(ReadBookConfig.comicConfigFilePath))
