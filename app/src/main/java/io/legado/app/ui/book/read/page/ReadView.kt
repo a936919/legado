@@ -420,12 +420,10 @@ class ReadView(context: Context, attrs: AttributeSet) :
             (ReadBook.pageAnim() == 0 || ReadBook.pageAnim() == 1) && ReadBookConfig.useZhLayout
         when (action) {
             0 -> callBack.showActionMenu()
-            1 -> if (clickNoAnim) NoAnimPageDelegate(this).nextPageByAnim(defaultAnimationSpeed) else pageDelegate?.nextPageByAnim(
-                defaultAnimationSpeed
-            )
-            2 -> if (clickNoAnim) NoAnimPageDelegate(this).prevPageByAnim(defaultAnimationSpeed) else pageDelegate?.prevPageByAnim(
-                defaultAnimationSpeed
-            )
+            1 -> if (clickNoAnim) NoAnimPageDelegate(this).nextPageByAnim(defaultAnimationSpeed)
+            else pageDelegate?.nextPageByAnim(defaultAnimationSpeed)
+            2 -> if (clickNoAnim) NoAnimPageDelegate(this).prevPageByAnim(defaultAnimationSpeed)
+            else pageDelegate?.prevPageByAnim(defaultAnimationSpeed)
             3 -> ReadBook.moveToNextChapter(true)
             4 -> ReadBook.moveToPrevChapter(upContent = true, toLast = false)
             5 -> ReadAloud.prevParagraph(context)
