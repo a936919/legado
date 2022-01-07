@@ -310,7 +310,7 @@ class ReadView(context: Context, attrs: AttributeSet) :
                         if (end > textLines[lineIndex - 1].text.length + textLines[lineIndex].text.length) {
                             lineEnd = lineIndex + 1
                             end = (end - textLines[lineIndex - 1].text.length
-                                    - textLines[lineIndex].text.length)
+                                - textLines[lineIndex].text.length)
                         } else {
                             end = end - textLines[lineIndex - 1].text.length - 1
                         }
@@ -416,11 +416,16 @@ class ReadView(context: Context, attrs: AttributeSet) :
     }
 
     private fun click(action: Int) {
-        val clickNoAnim = ReadBookConfig.useZhLayout
+        val clickNoAnim =
+            (ReadBook.pageAnim() == 0 || ReadBook.pageAnim() == 1) && ReadBookConfig.useZhLayout
         when (action) {
             0 -> callBack.showActionMenu()
-            1 -> if(clickNoAnim) NoAnimPageDelegate(this).nextPageByAnim(defaultAnimationSpeed) else pageDelegate?.nextPageByAnim(defaultAnimationSpeed)
-            2 -> if(clickNoAnim) NoAnimPageDelegate(this).prevPageByAnim(defaultAnimationSpeed) else pageDelegate?.prevPageByAnim(defaultAnimationSpeed)
+            1 -> if (clickNoAnim) NoAnimPageDelegate(this).nextPageByAnim(defaultAnimationSpeed) else pageDelegate?.nextPageByAnim(
+                defaultAnimationSpeed
+            )
+            2 -> if (clickNoAnim) NoAnimPageDelegate(this).prevPageByAnim(defaultAnimationSpeed) else pageDelegate?.prevPageByAnim(
+                defaultAnimationSpeed
+            )
             3 -> ReadBook.moveToNextChapter(true)
             4 -> ReadBook.moveToPrevChapter(upContent = true, toLast = false)
             5 -> ReadAloud.prevParagraph(context)
