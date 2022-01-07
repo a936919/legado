@@ -20,6 +20,7 @@ import io.legado.app.databinding.FragmentBooksBinding
 import io.legado.app.help.AppConfig
 import io.legado.app.lib.theme.accentColor
 import io.legado.app.lib.theme.primaryColor
+import io.legado.app.ui.book.arrange.ArrangeBookActivity
 import io.legado.app.ui.book.audio.AudioPlayActivity
 import io.legado.app.ui.book.info.BookInfoActivity
 import io.legado.app.ui.book.read.ReadBookActivity
@@ -157,6 +158,13 @@ class BooksFragment() : BaseFragment(R.layout.fragment_books),
         startActivity<BookInfoActivity> {
             putExtra("name", book.name)
             putExtra("author", book.author)
+        }
+    }
+
+    override fun openArrangeBook(layoutPosition: Int) {
+        startActivity<ArrangeBookActivity>{
+            putExtra("groupId", groupId)
+            putExtra("position", layoutPosition)
         }
     }
 

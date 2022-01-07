@@ -8,7 +8,9 @@ import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import io.legado.app.R
+import io.legado.app.help.ReadBookConfig
 import io.legado.app.utils.ColorUtils
+import io.legado.app.utils.getCompatColor
 import io.legado.app.utils.dp
 
 /**
@@ -118,6 +120,19 @@ val Fragment.isDarkTheme: Boolean
 val Context.elevation: Float
     get() = ThemeStore.elevation(this)
 
+fun Context.getReadCfgTextColor(Bg: Int) = if(ColorUtils.isColorLight(Bg)) this.getCompatColor(R.color.readCfgTextDark) else this.getCompatColor(R.color.readCfgText)
+
+val Context.readCfgTopBg: Int
+    get() = ReadBookConfig.bgMeanColor//ThemeStore.primaryColor(this)
+
+val Context.readCfgTopText: Int
+    get() = this.getReadCfgTextColor(this.readCfgTopBg)
+
+val Context.readCfgBottomBg: Int
+    get() = this.readCfgTopBg
+
+val Context.readCfgBottomText: Int
+    get() = this.readCfgTopText
 val Context.filletBackground: GradientDrawable
     get() {
         val background = GradientDrawable()

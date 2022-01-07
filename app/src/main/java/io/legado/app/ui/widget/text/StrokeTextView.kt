@@ -30,7 +30,7 @@ open class StrokeTextView(context: Context, attrs: AttributeSet?) :
         upBackground()
     }
 
-    private fun upBackground() {
+    fun upBackground() {
         when {
             isInEditMode -> {
                 background = Selector.shapeBuild()
@@ -50,18 +50,17 @@ open class StrokeTextView(context: Context, attrs: AttributeSet?) :
                 )
             }
             isBottomBackground -> {
-                val isLight = ColorUtils.isColorLight(context.bottomBackground)
                 background = Selector.shapeBuild()
                     .setCornerRadius(radius)
                     .setStrokeWidth(1.dp)
                     .setDisabledStrokeColor(context.getCompatColor(R.color.md_grey_500))
-                    .setDefaultStrokeColor(context.getPrimaryTextColor(isLight))
+                    .setDefaultStrokeColor(ColorUtils.withAlpha(context.readCfgBottomText,0.5f))
                     .setSelectedStrokeColor(context.accentColor)
                     .setPressedBgColor(context.getCompatColor(R.color.transparent30))
                     .create()
                 setTextColor(
                     Selector.colorBuild()
-                        .setDefaultColor(context.getPrimaryTextColor(isLight))
+                        .setDefaultColor(context.readCfgBottomText)
                         .setSelectedColor(context.accentColor)
                         .setDisabledColor(context.getCompatColor(R.color.md_grey_500))
                         .create()

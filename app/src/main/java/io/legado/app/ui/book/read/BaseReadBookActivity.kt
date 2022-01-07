@@ -13,6 +13,8 @@ import io.legado.app.R
 import io.legado.app.base.VMBaseActivity
 import io.legado.app.constant.AppConst.charsets
 import io.legado.app.constant.PreferKey
+import io.legado.app.data.entities.BookProgress
+import io.legado.app.databinding.*
 import io.legado.app.databinding.ActivityBookReadBinding
 import io.legado.app.databinding.DialogDownloadChoiceBinding
 import io.legado.app.databinding.DialogEditTextBinding
@@ -21,16 +23,17 @@ import io.legado.app.help.LocalConfig
 import io.legado.app.help.ReadBookConfig
 import io.legado.app.lib.dialogs.alert
 import io.legado.app.lib.dialogs.selector
-import io.legado.app.lib.theme.ThemeStore
 import io.legado.app.lib.theme.backgroundColor
-import io.legado.app.lib.theme.bottomBackground
-import io.legado.app.model.CacheBook
-import io.legado.app.model.ReadBook
+import io.legado.app.lib.theme.readCfgTopBg
 import io.legado.app.ui.book.read.config.BgTextConfigDialog
 import io.legado.app.ui.book.read.config.ClickActionConfigDialog
 import io.legado.app.ui.book.read.config.PaddingConfigDialog
-import io.legado.app.ui.document.HandleFileContract
 import io.legado.app.utils.*
+import io.legado.app.utils.getPrefString
+import io.legado.app.lib.theme.bottomBackground
+import io.legado.app.model.CacheBook
+import io.legado.app.model.ReadBook
+import io.legado.app.ui.document.HandleFileContract
 import io.legado.app.utils.viewbindingdelegate.viewBinding
 
 /**
@@ -117,12 +120,16 @@ abstract class BaseReadBookActivity :
             }
         }
         upSystemUiVisibilityO(isInMultiWindow, toolBarHide)
+        setLightStatusBar(ColorUtils.isColorLight(readCfgTopBg))
+        /*
         if (toolBarHide) {
             setLightStatusBar(ReadBookConfig.durConfig.curStatusIconDark())
         } else {
-            val statusBarColor = ThemeStore.statusBarColor(this, AppConfig.isTransparentStatusBar)
-            setLightStatusBar(ColorUtils.isColorLight(statusBarColor))
-        }
+            ATH.setLightStatusBarAuto(
+                this,
+                ThemeStore.statusBarColor(this, AppConfig.isTransparentStatusBar)
+            )
+        }*/
     }
 
     @Suppress("DEPRECATION")
@@ -232,8 +239,68 @@ abstract class BaseReadBookActivity :
                     }
                 }
                 noButton()
-            }
+            }.show()
         }
+    }
+
+    @SuppressLint("InflateParams")
+    fun showSelectRecord(history: BookProgress?, web: BookProgress?, net: BookProgress?) {
+        alert("请选择阅读进度") {
+            var string: String
+            var progress: BookProgress?
+            val alertBinding = DialogSelectRecordBinding.inflate(layoutInflater).apply {
+                root.setBackgroundColor(root.context.backgroundColor)
+                ReadBook.let {
+                    string = "当前进度：[${it.durChapterIndex + 1}.${it.durChapterPos}]"
+                }
+                tvDur.text = string
+                progress = net
+                if (progress == null) {
+                    string = "云端进度为空"
+                    tvNet.text = string
+                } else {
+                    string = "[${progress!!.durChapterIndex + 1}.${progress!!.durChapterPos}]  "
+                    string += StringUtils.dateConvert(progress!!.durChapterTime, "yy年MM月dd日HH时mm分")
+                    tvNet.text = string
+                }
+                progress = web
+                if (progress == null) {
+                    string = "网页进度为空"
+                    tvWeb.text = string
+                } else {
+                    string = "[${progress!!.durChapterIndex + 1}.${progress!!.durChapterPos}]  "
+                    string += StringUtils.dateConvert(progress!!.durChapterTime, "yy年MM月dd日HH时mm分")
+                    tvWeb.text = string
+                }
+                progress = history
+                if (progress == null) {
+                    string = "历史进度为空"
+                    tvLocal.text = string
+                } else {
+                    string = "[${progress!!.durChapterIndex + 1}.${progress!!.durChapterPos}]  "
+                    string += StringUtils.dateConvert(progress!!.durChapterTime, "yy年MM月dd日HH时mm分")
+                    tvLocal.text = string
+                }
+                val checkId =
+                    if (history?.durChapterTime ?: 0 >= net?.durChapterTime ?: 0 && history?.durChapterTime ?: 0 >= web?.durChapterTime ?: 0) 4
+                    else if (net?.durChapterTime ?: 0 >= web?.durChapterTime ?: 0) 0 else 2
+                rgLayout.checkByIndex(checkId)
+            }
+            customView { alertBinding.root }
+            yesButton {
+                alertBinding.run {
+                    when (rgLayout.getCheckedIndex()) {
+                        0 -> progress = net
+                        2 -> progress = web
+                        4 -> progress = history
+                    }
+                    progress?.let { progress ->
+                        ReadBook.setProgress(progress)
+                    }
+                }
+            }
+            noButton()
+        }.show()
     }
 
     fun showCharsetConfig() {

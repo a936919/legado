@@ -3,7 +3,7 @@ package io.legado.app.constant
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.provider.Settings
-import io.legado.app.BuildConfig
+import androidx.multidex.BuildConfig
 import io.legado.app.R
 import splitties.init.appCtx
 import java.text.SimpleDateFormat

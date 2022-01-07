@@ -43,8 +43,11 @@ data class BookSource(
     var ruleSearch: SearchRule? = null,             // 搜索规则
     var ruleBookInfo: BookInfoRule? = null,         // 书籍信息页规则
     var ruleToc: TocRule? = null,                   // 目录页规则
-    var ruleContent: ContentRule? = null            // 正文页规则
+    var ruleContent: ContentRule? = null,            // 正文页规则
+    var searchTime: Long = 0,                        //搜索时间
+    var searchBookName: String = ""                   //搜索书目
 ) : Parcelable, BaseSource {
+
 
     override fun getTag(): String {
         return bookSourceName

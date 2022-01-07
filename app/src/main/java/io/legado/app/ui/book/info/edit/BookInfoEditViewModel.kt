@@ -3,8 +3,10 @@ package io.legado.app.ui.book.info.edit
 import android.app.Application
 import androidx.lifecycle.MutableLiveData
 import io.legado.app.base.BaseViewModel
+import io.legado.app.constant.AppConst.androidId
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
+import io.legado.app.data.entities.TimeRecord
 import io.legado.app.model.ReadBook
 
 class BookInfoEditViewModel(application: Application) : BaseViewModel(application) {
@@ -26,6 +28,10 @@ class BookInfoEditViewModel(application: Application) : BaseViewModel(applicatio
                 ReadBook.book = book
             }
             appDb.bookDao.update(book)
+            val readRecord = book.toReadRecord()
+            appDb.readRecordDao.insert(readRecord)
+            val timeRecord = readRecord.toTimeRecord()
+            appDb.timeRecordDao.insert(timeRecord)
         }.onSuccess {
             success?.invoke()
         }

@@ -14,4 +14,5 @@ class FileItem : JavaBean() {
     var path = "/"
     var size: Long = 0
     var isDirectory = false
+    var top = false
 }

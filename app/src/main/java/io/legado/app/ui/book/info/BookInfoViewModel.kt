@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import io.legado.app.R
 import io.legado.app.base.BaseViewModel
+import io.legado.app.constant.AppConst.androidId
 import io.legado.app.constant.AppLog
 import io.legado.app.constant.EventBus
 import io.legado.app.data.appDb
@@ -39,12 +40,10 @@ class BookInfoViewModel(application: Application) : BaseViewModel(application) {
             appDb.bookDao.getBook(name, author)?.let { book ->
                 inBookshelf = true
                 setBook(book)
-            } ?: let {
-                val searchBook = appDb.searchBookDao.getSearchBook(bookUrl)
-                    ?: appDb.searchBookDao.getFirstByNameAuthor(name, author)
-                searchBook?.toBook()?.let { book ->
-                    setBook(book)
-                }
+            } ?:appDb.readRecordDao.getBook(androidId,name,author)?.toBook()?.let { book ->
+                setBook(book)
+            }?: appDb.searchBookDao.getFirstByNameAuthor(name, author)?.toBook()?.let { book ->
+                setBook(book)
             }
         }
     }
@@ -117,8 +116,10 @@ class BookInfoViewModel(application: Application) : BaseViewModel(application) {
         execute(scope) {
             if (book.isLocalBook()) {
                 LocalBook.getChapterList(book).let {
-                    appDb.bookDao.update(book)
-                    appDb.bookChapterDao.insert(*it.toTypedArray())
+                    if (inBookshelf){
+                        appDb.bookDao.update(book)
+                        appDb.bookChapterDao.insert(*it.toTypedArray())
+                    }
                     chapterListData.postValue(it)
                 }
             } else {

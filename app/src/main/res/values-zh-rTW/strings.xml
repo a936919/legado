@@ -1,4 +1,7 @@
 <resources>
+    <!--mq-->
+    <string name="read_over_enable">请设置阅读状态</string>
+
     <!--App-->
     <string name="app_name">閱讀</string>
     <string name="receiving_shared_label">閱讀·搜尋</string>

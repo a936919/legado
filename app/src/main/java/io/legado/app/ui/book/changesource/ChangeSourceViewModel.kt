@@ -29,6 +29,7 @@ import kotlin.math.min
 @Suppress("MemberVisibilityCanBePrivate")
 class ChangeSourceViewModel(application: Application) : BaseViewModel(application) {
     private val threadCount = AppConfig.threadCount
+    private var threadCheck = threadCount
     private var searchPool: ExecutorCoroutineDispatcher? = null
     private var upAdapterJob: Job? = null
     val searchStateData = MutableLiveData<Boolean>()
@@ -109,7 +110,7 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
     fun startSearch() {
         execute {
             stopSearch()
-            appDb.searchBookDao.clear(name, author)
+            appDb.searchBookDao.clearByGroup(name, author, searchGroup)
             searchBooks.clear()
             upAdapter()
             bookSourceList.clear()
@@ -125,6 +126,8 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
             }
             searchStateData.postValue(true)
             initSearchPool()
+            threadCheck = bookSourceList.size
+            sourceTime = ""
             for (i in 0 until threadCount) {
                 search()
             }
@@ -139,6 +142,9 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
             searchIndex++
         }
         val source = bookSourceList[searchIndex]
+        val startTime = System.currentTimeMillis()
+        var bSuccess = false
+
         val task = WebBook
             .searchBook(viewModelScope, source, name, context = searchPool!!)
             .timeout(60000L)
@@ -157,8 +163,25 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
                             } else {
                                 searchFinish(searchBook)
                             }
+                            if (!bSuccess)
+                                appDb.bookSourceDao.getBookSource(source.bookSourceUrl)
+                                    ?.let { bookSource ->
+                                        bookSource.searchTime =
+                                            System.currentTimeMillis() - startTime
+                                        bookSource.searchBookName = "成功"
+                                        appDb.bookSourceDao.update(bookSource)
+                                        bSuccess = true
+                                    }
                         }
                     }
+                }
+            }
+            .onError(IO) {
+                appDb.bookSourceDao.getBookSource(source.bookSourceUrl)?.let { bookSource ->
+                    bookSource.searchTime = System.currentTimeMillis() - startTime
+                    bookSource.searchBookName = "失效"
+                    appDb.bookSourceDao.update(bookSource)
+                    bSuccess = true
                 }
             }
             .onFinally(searchPool) {
@@ -168,9 +191,18 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
                     } else {
                         searchIndex++
                     }
-                    if (searchIndex >= bookSourceList.lastIndex + bookSourceList.size
-                        || searchIndex >= bookSourceList.lastIndex + threadCount
-                    ) {
+
+                    if (!bSuccess) {
+                        appDb.bookSourceDao.getBookSource(source.bookSourceUrl)?.let { bookSource ->
+                            bookSource.searchTime = System.currentTimeMillis() - startTime
+                            bookSource.searchBookName = "失败"
+                            appDb.bookSourceDao.update(bookSource)
+                        }
+                    }
+                    threadCheck--
+                    if (threadCheck <= 0) {
+                        tasks.clear()
+                        searchPool?.close()
                         searchStateData.postValue(false)
                         tasks.clear()
                     }
@@ -254,6 +286,11 @@ class ChangeSourceViewModel(application: Application) : BaseViewModel(applicatio
             searchBooks.remove(searchBook)
             upAdapter()
         }
+    }
+
+
+    companion object {
+        var sourceTime: String = ""
     }
 
     fun topSource(searchBook: SearchBook) {

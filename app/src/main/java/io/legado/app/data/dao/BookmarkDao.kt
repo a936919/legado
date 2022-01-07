@@ -11,6 +11,15 @@ interface BookmarkDao {
     @get:Query("select * from bookmarks")
     val all: List<Bookmark>
 
+    @Query("select * from bookmarks  where bookName = :bookName and bookAuthor = :bookAuthor ")
+    fun getByBook(bookName: String,bookAuthor: String): List<Bookmark>
+
+    @Query("delete from bookmarks  where bookName = :bookName and bookAuthor = :bookAuthor ")
+    fun delByBook(bookName: String,bookAuthor: String)
+
+    @Query("select count(bookName) as Boolean from bookmarks where bookName = :bookName and bookAuthor = :bookAuthor ")
+    fun haveBook(bookName: String,bookAuthor: String): Boolean
+
     @Query(
         """select * from bookmarks 
         where bookName = :bookName and bookAuthor = :bookAuthor 

@@ -4,10 +4,7 @@ import android.content.Context
 import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatRadioButton
 import io.legado.app.R
-import io.legado.app.lib.theme.Selector
-import io.legado.app.lib.theme.accentColor
-import io.legado.app.lib.theme.bottomBackground
-import io.legado.app.lib.theme.getPrimaryTextColor
+import io.legado.app.lib.theme.*
 import io.legado.app.utils.ColorUtils
 import io.legado.app.utils.dp
 import io.legado.app.utils.getCompatColor
@@ -28,18 +25,17 @@ class ThemeRadioNoButton(context: Context, attrs: AttributeSet) :
         initTheme()
     }
 
-    private fun initTheme() {
+    fun initTheme() {
         when {
             isInEditMode -> Unit
             isBottomBackground -> {
-                val isLight = ColorUtils.isColorLight(context.bottomBackground)
-                val textColor = context.getPrimaryTextColor(isLight)
+                val textColor = context.readCfgBottomText
                 background = Selector.shapeBuild()
-                    .setCornerRadius(2.dp)
-                    .setStrokeWidth(2.dp)
+                    .setCornerRadius(1.dp)
+                    .setStrokeWidth(1.dp)
                     .setCheckedBgColor(context.accentColor)
                     .setCheckedStrokeColor(context.accentColor)
-                    .setDefaultStrokeColor(textColor)
+                    .setDefaultStrokeColor(ColorUtils.withAlpha(textColor,0.5f))
                     .create()
                 setTextColor(
                     Selector.colorBuild()

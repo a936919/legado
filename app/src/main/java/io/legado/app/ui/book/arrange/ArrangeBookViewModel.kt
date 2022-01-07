@@ -4,6 +4,7 @@ import android.app.Application
 import io.legado.app.base.BaseViewModel
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
+import io.legado.app.data.entities.ReadRecord
 
 
 class ArrangeBookViewModel(application: Application) : BaseViewModel(application) {
@@ -26,6 +27,12 @@ class ArrangeBookViewModel(application: Application) : BaseViewModel(application
     fun deleteBook(vararg book: Book) {
         execute {
             appDb.bookDao.delete(*book)
+        }
+    }
+
+    fun insertReadRecord(vararg record: ReadRecord) {
+        execute {
+            appDb.readRecordDao.insert(*record)
         }
     }
 

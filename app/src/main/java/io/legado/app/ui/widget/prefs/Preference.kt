@@ -14,8 +14,8 @@ import androidx.preference.PreferenceViewHolder
 import io.legado.app.R
 import io.legado.app.lib.theme.accentColor
 import io.legado.app.lib.theme.bottomBackground
-import io.legado.app.lib.theme.getPrimaryTextColor
 import io.legado.app.lib.theme.getSecondaryTextColor
+import io.legado.app.lib.theme.readCfgBottomText
 import io.legado.app.utils.ColorUtils
 import splitties.views.onLongClick
 import kotlin.math.roundToInt
@@ -58,7 +58,7 @@ class Preference(context: Context, attrs: AttributeSet) :
             }
             if (isBottomBackground && !tvTitle.isInEditMode) {
                 val isLight = ColorUtils.isColorLight(context.bottomBackground)
-                val pTextColor = context.getPrimaryTextColor(isLight)
+                val pTextColor = context.readCfgBottomText
                 tvTitle.setTextColor(pTextColor)
                 val sTextColor = context.getSecondaryTextColor(isLight)
                 tvSummary?.setTextColor(sTextColor)
@@ -100,10 +100,8 @@ class Preference(context: Context, attrs: AttributeSet) :
                     return v
                 }
             }
-
             return null
         }
-
     }
 
     override fun onBindViewHolder(holder: PreferenceViewHolder) {

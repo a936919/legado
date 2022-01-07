@@ -1,4 +1,7 @@
 <resources>
+    <!--mq-->
+    <string name="read_over_enable">请设置阅读状态</string>
+
     <!--App-->
     <string name="app_name">阅读</string>
     <string name="receiving_shared_label">阅读·搜索</string>
@@ -825,7 +828,7 @@
     <string name="reverse_content">反转内容</string>
     <string name="debug">调试</string>
     <string name="crash_log">崩溃日志</string>
-    <string name="use_zh_layout">使用自定义中文分行</string>
+    <string name="use_zh_layout">点击翻页无动画</string>
     <string name="image_style">图片样式</string>
     <string name="system_tts">系统TTS</string>
     <string name="export_type">导出格式</string>
@@ -911,5 +914,6 @@
     <string name="tts_speech_add">语速加</string>
     <string name="open_sys_dir_picker_error">打开系统文件夹选择器出错,自动打开应用文件夹选择器</string>
     <string name="expand_text_menu">展开文本选择菜单</string>
+
 
 </resources>

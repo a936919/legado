@@ -103,10 +103,11 @@ class ReplaceRuleActivity : VMBaseActivity<ActivityReplaceRuleBinding, ReplaceRu
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
+        val scope = intent.getStringExtra("scope") ?: ""
         initRecyclerView()
         initSearchView()
         initSelectActionView()
-        observeReplaceRuleData()
+        observeReplaceRuleData(scope)
         observeGroupData()
     }
 
@@ -178,7 +179,10 @@ class ReplaceRuleActivity : VMBaseActivity<ActivityReplaceRuleBinding, ReplaceRu
 
     private fun observeReplaceRuleData(searchKey: String? = null) {
         dataInit = false
-        replaceRuleFlowJob?.cancel()
+
+                var scope: String? = null
+
+                replaceRuleFlowJob?.cancel()
         replaceRuleFlowJob = launch {
             when {
                 searchKey.isNullOrEmpty() -> {
@@ -188,14 +192,25 @@ class ReplaceRuleActivity : VMBaseActivity<ActivityReplaceRuleBinding, ReplaceRu
                     val key = searchKey.substringAfter("group:")
                     appDb.replaceRuleDao.flowGroupSearch("%$key%")
                 }
+                searchKey.startsWith("scope:") -> {
+                    scope = searchKey.substringAfter("scope:")
+                    appDb.replaceRuleDao.flowAll()
+                }
                 else -> {
                     appDb.replaceRuleDao.flowSearch("%$searchKey%")
                 }
             }.collect {
+
                 if (dataInit) {
                     setResult(Activity.RESULT_OK)
                 }
-                adapter.setItems(it, adapter.diffItemCallBack)
+                var list = it
+                scope?.let { st ->
+                    list = it.filter { rule ->
+                        rule.scope == "" || rule.scope == null || st.contains(rule.scope!!)
+                    }
+                }
+                adapter.setItems(list, adapter.diffItemCallBack)
                 dataInit = true
             }
         }

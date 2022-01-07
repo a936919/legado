@@ -12,10 +12,9 @@ import com.bumptech.glide.request.target.Target
 import io.legado.app.constant.AppPattern
 import io.legado.app.help.AppConfig
 import io.legado.app.help.glide.ImageLoader
-import io.legado.app.lib.theme.accentColor
 import io.legado.app.model.BookCover
-import io.legado.app.utils.textHeight
 import io.legado.app.utils.toStringArray
+import kotlin.math.max
 
 /**
  * 封面
@@ -40,7 +39,7 @@ class CoverImageView @JvmOverloads constructor(
     private var authorHeight = 0f
     private val namePaint by lazy {
         val textPaint = TextPaint()
-        textPaint.typeface = Typeface.DEFAULT_BOLD
+        textPaint.typeface = Typeface.DEFAULT
         textPaint.isAntiAlias = true
         textPaint.textAlign = Paint.Align.CENTER
         textPaint
@@ -96,41 +95,32 @@ class CoverImageView @JvmOverloads constructor(
     private fun drawNameAuthor(canvas: Canvas) {
         if (!BookCover.drawBookName) return
         var startX = width * 0.2f
-        var startY = height * 0.2f
+        var startY = height * 0.4f
         name?.toStringArray()?.let { name ->
-            namePaint.textSize = width / 6
-            namePaint.strokeWidth = namePaint.textSize / 5
-            name.forEachIndexed { index, char ->
-                namePaint.color = Color.WHITE
-                namePaint.style = Paint.Style.STROKE
-                canvas.drawText(char, startX, startY, namePaint)
-                namePaint.color = context.accentColor
+            namePaint.textSize = width / 7
+            name.forEachIndexed { _, char ->
+                namePaint.color = Color.GRAY
                 namePaint.style = Paint.Style.FILL
-                canvas.drawText(char, startX, startY, namePaint)
-                startY += namePaint.textHeight
-                if (startY > height * 0.8) {
-                    startX += namePaint.textSize
-                    namePaint.textSize = width / 10
-                    startY = (height - (name.size - index - 1) * namePaint.textHeight) / 2
+                if (startX + namePaint.textSize > width * 0.8f) {
+                    canvas.drawText("...", startX, startY, namePaint)
+                    return@let
                 }
+                canvas.drawText(char, startX, startY, namePaint)
+                startX += namePaint.textSize
             }
         }
         if (!BookCover.drawBookAuthor) return
         author?.toStringArray()?.let { author ->
-            authorPaint.textSize = width / 10
-            authorPaint.strokeWidth = authorPaint.textSize / 5
-            startX = width * 0.8f
-            startY = height * 0.95f - author.size * authorPaint.textHeight
-            startY = maxOf(startY, height * 0.3f)
+            authorPaint.textSize = width / 9
+            startX = width * 0.95f - (author.size * authorPaint.textSize)
+            startX = max(startX, width * 0.3f)
+            startY = height * 0.8f
             author.forEach {
-                authorPaint.color = Color.WHITE
-                authorPaint.style = Paint.Style.STROKE
-                canvas.drawText(it, startX, startY, authorPaint)
-                authorPaint.color = context.accentColor
+                authorPaint.color = Color.GRAY
                 authorPaint.style = Paint.Style.FILL
                 canvas.drawText(it, startX, startY, authorPaint)
-                startY += authorPaint.textHeight
-                if (startY > height * 0.95) {
+                startX += authorPaint.textSize
+                if (startX > width * 0.95) {
                     return@let
                 }
             }

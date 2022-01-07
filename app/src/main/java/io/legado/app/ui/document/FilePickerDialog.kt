@@ -10,7 +10,10 @@ import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import io.legado.app.App
 import io.legado.app.R
+import io.legado.app.data.appDb
+import io.legado.app.data.entities.TopPath
 import io.legado.app.base.BaseDialogFragment
 import io.legado.app.databinding.DialogFileChooserBinding
 import io.legado.app.lib.theme.primaryColor
@@ -21,6 +24,7 @@ import io.legado.app.ui.document.adapter.PathAdapter
 import io.legado.app.ui.widget.recycler.VerticalDivider
 import io.legado.app.utils.*
 import io.legado.app.utils.viewbindingdelegate.viewBinding
+import okhttp3.internal.notifyAll
 import java.io.File
 
 
@@ -196,6 +200,26 @@ class FilePickerDialog : BaseDialogFragment(R.layout.dialog_file_chooser),
     override fun onDismiss(dialog: DialogInterface) {
         super.onDismiss(dialog)
         activity?.finish()
+    }
+
+    override fun processTopPath(position:Int){
+        val fileItem = fileAdapter.getItem(position)
+        if (fileItem?.isDirectory == true) {
+            val topPath=TopPath()
+            topPath.path = fileItem.path
+            if(appDb.topPathDao.isTopPath(fileItem.path)) {
+                appDb.topPathDao.delete(topPath)
+                toastOnUi("取消置顶")
+
+            } else {
+                appDb.topPathDao.insert(topPath)
+                toastOnUi("置顶")
+            }
+            fileAdapter.loadData(File(fileItem.path).parent ?: "")
+        }
+        else{
+            toastOnUi("无法置顶文件")
+        }
     }
 
     interface CallBack {

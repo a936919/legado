@@ -20,6 +20,12 @@ import io.legado.app.ui.book.read.page.provider.ChapterProvider
 import io.legado.app.ui.book.read.page.provider.ImageProvider
 import io.legado.app.ui.book.read.page.provider.TextPageFactory
 import io.legado.app.utils.*
+import io.legado.app.utils.activity
+import io.legado.app.utils.getCompatColor
+import io.legado.app.utils.getPrefBoolean
+import io.legado.app.utils.toastOnUi
+import kotlinx.coroutines.CoroutineScope
+import io.legado.app.utils.*
 import kotlin.math.min
 
 /**
@@ -56,16 +62,16 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
 
     fun upVisibleRect() {
         visibleRect.set(
-            ChapterProvider.paddingLeft.toFloat(),
-            ChapterProvider.paddingTop.toFloat(),
-            ChapterProvider.visibleRight.toFloat(),
+            0f,
+            0f,
+            ChapterProvider.viewWidth.toFloat(),
             ChapterProvider.visibleBottom.toFloat()
         )
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        ChapterProvider.upViewSize(w, h)
+        ChapterProvider.upViewSize(processComicMode(), w, h)
         upVisibleRect()
         textPage.format()
     }
@@ -115,8 +121,8 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
             lineTop,
             lineBase,
             lineBottom,
-            textLine.isTitle,
-            textLine.isReadAloud,
+            isTitle = textLine.isTitle,
+            isReadAloud = textLine.isReadAloud,
             textLine.isImage
         )
     }
@@ -139,10 +145,13 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
         } else {
             ChapterProvider.contentPaint
         }
+
+        textPaint.style = Paint.Style.FILL_AND_STROKE
+        textPaint.strokeWidth = ReadBookConfig.boldSize
         val textColor = if (isReadAloud) context.accentColor else ReadBookConfig.textColor
         textChars.forEach {
             if (it.isImage) {
-                drawImage(canvas, it, lineTop, lineBottom, isImageLine)
+                drawImage(canvas, it, lineTop, lineBottom,isImageLine)
             } else {
                 textPaint.color = textColor
                 if(it.isSearchResult) {
@@ -536,13 +545,38 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
         }
     }
 
+    private fun processComicMode(): Boolean {
+        val readConfigChage: Boolean
+        selectAble = if (callBack.intentIsComic) {
+            false
+        } else {
+            context.getPrefBoolean(PreferKey.textSelectAble, true)
+        }
+        if (ReadBookConfig.isComicMod != callBack.intentIsComic) {
+            ReadBookConfig.isComicMod = callBack.intentIsComic
+            readConfigChage = true
+        } else {
+            readConfigChage = false
+        }
+
+        if (readConfigChage) {
+            ReadBookConfig.upBg()
+            callBack.upPageAnim()
+            postEvent(PreferKey.textSelectAble, selectAble)
+        }
+        return readConfigChage
+    }
+
     interface CallBack {
         fun upSelectedStart(x: Float, y: Float, top: Float)
         fun upSelectedEnd(x: Float, y: Float)
         fun onCancelSelect()
+        fun upPageAnim()
         val headerHeight: Int
         val pageFactory: TextPageFactory
         val isScroll: Boolean
+        val intentIsComic: Boolean
         var isSelectingSearchResult: Boolean
+
     }
 }

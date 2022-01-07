@@ -6,6 +6,7 @@ import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import android.os.Bundle
 import android.util.AttributeSet
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -73,6 +74,7 @@ abstract class BaseActivity<VB : ViewBinding>(
             findViewById<TitleBar>(R.id.title_bar)
                 ?.onMultiWindowModeChanged(isInMultiWindowMode, fullScreen)
         }
+        //todo 追踪当前是哪个Activity Log.d("mq-1",javaClass.simpleName)
         onActivityCreated(savedInstanceState)
         observeLiveBus()
     }

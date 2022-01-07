@@ -14,8 +14,9 @@ import android.view.animation.Animation
 import android.widget.FrameLayout
 import android.widget.SeekBar
 import androidx.appcompat.widget.PopupMenu
-import androidx.core.view.isGone
+import androidx.core.view.get
 import androidx.core.view.isVisible
+import androidx.core.view.size
 import io.legado.app.R
 import io.legado.app.constant.PreferKey
 import io.legado.app.databinding.ViewReadMenuBinding
@@ -43,11 +44,13 @@ class ReadMenu @JvmOverloads constructor(
     private lateinit var menuTopOut: Animation
     private lateinit var menuBottomIn: Animation
     private lateinit var menuBottomOut: Animation
-    private val bgColor: Int = context.bottomBackground
-    private val textColor: Int = context.getPrimaryTextColor(ColorUtils.isColorLight(bgColor))
+    private var bgColor: Int = context.readCfgBottomBg
+    private var textColor:Int = context.readCfgBottomText
+    private val iconColor:Int = context.accentColor
+    private val iconTextColor:Int = context.getPrimaryTextColor(ColorUtils.isColorLight(iconColor))
     private val bottomBackgroundList: ColorStateList = Selector.colorBuild()
-        .setDefaultColor(bgColor)
-        .setPressedColor(ColorUtils.darkenColor(bgColor))
+        .setDefaultColor(iconColor)
+        .setPressedColor(ColorUtils.darkenColor(iconColor))
         .create()
     private var onMenuOutEnd: (() -> Unit)? = null
     private val showBrightnessView
@@ -69,6 +72,7 @@ class ReadMenu @JvmOverloads constructor(
     }
 
     init {
+        initReadCfgColor()
         initView()
         upBrightnessState()
         bindEvent()
@@ -83,17 +87,30 @@ class ReadMenu @JvmOverloads constructor(
         initAnimation()
         val brightnessBackground = GradientDrawable()
         brightnessBackground.cornerRadius = 5F.dp
-        brightnessBackground.setColor(ColorUtils.adjustAlpha(bgColor, 0.5f))
+        brightnessBackground.setColor(ColorUtils.adjustAlpha(iconColor, 0.5f))
         llBrightness.background = brightnessBackground
-        llBottomBg.setBackgroundColor(bgColor)
         fabSearch.backgroundTintList = bottomBackgroundList
-        fabSearch.setColorFilter(textColor)
+        fabSearch.setColorFilter(iconTextColor)
         fabAutoPage.backgroundTintList = bottomBackgroundList
-        fabAutoPage.setColorFilter(textColor)
+        fabAutoPage.setColorFilter(iconTextColor)
         fabReplaceRule.backgroundTintList = bottomBackgroundList
-        fabReplaceRule.setColorFilter(textColor)
+        fabReplaceRule.setColorFilter(iconTextColor)
         fabNightTheme.backgroundTintList = bottomBackgroundList
-        fabNightTheme.setColorFilter(textColor)
+        fabNightTheme.setColorFilter(iconTextColor)
+        fabReplaceRule.invisible()
+        fabAutoPage.invisible()
+        fabSearch.invisible()
+        vwBg.setOnClickListener { }
+        vwNavigationBar.setOnClickListener { }
+        seekBrightness.progress = context.getPrefInt("brightness", 100)
+    }
+
+    private fun initReadCfgColor()=with(binding) {
+        titleBar.setBackgroundColor(context.readCfgTopBg)
+        titleBar.setTitleTextColor(context.readCfgTopText)
+        UIUtils.setToolbarMoreIconCustomColor(titleBar.toolbar,context.readCfgTopText)
+        UIUtils.setToolbarBackIconCustomColor(titleBar.toolbar,context.readCfgTopText)
+        llBottomBg.setBackgroundColor(bgColor)
         tvPre.setTextColor(textColor)
         tvNext.setTextColor(textColor)
         ivCatalog.setColorFilter(textColor)
@@ -104,6 +121,13 @@ class ReadMenu @JvmOverloads constructor(
         tvFont.setTextColor(textColor)
         ivSetting.setColorFilter(textColor)
         tvSetting.setTextColor(textColor)
+        val menu = (context as ReadBookActivity).menu
+        if (menu != null){
+            for (i in 0 until menu.size){
+                val item = menu[i]
+                item.icon?.setTint(textColor)
+            }
+        }
         vwBg.setOnClickListener(null)
         llBrightness.setOnClickListener(null)
         seekBrightness.post {
@@ -143,6 +167,16 @@ class ReadMenu @JvmOverloads constructor(
         binding.bottomMenu.visible()
         binding.titleBar.startAnimation(menuTopIn)
         binding.bottomMenu.startAnimation(menuBottomIn)
+        updateBg()
+    }
+
+
+    private fun updateBg(){
+        if(bgColor!=context.readCfgBottomBg) {
+            bgColor = context.readCfgBottomBg
+            textColor = context.readCfgBottomText
+            initReadCfgColor()
+        }
     }
 
     fun runMenuOut(onMenuOutEnd: (() -> Unit)? = null) {
@@ -276,7 +310,7 @@ class ReadMenu @JvmOverloads constructor(
                 callBack.openChapterList()
             }
         }
-
+        /*
         //朗读
         llReadAloud.setOnClickListener {
             runMenuOut {
@@ -285,6 +319,11 @@ class ReadMenu @JvmOverloads constructor(
         }
         llReadAloud.onLongClick {
             runMenuOut { callBack.showReadAloudDialog() }
+        }*/
+        llReadAloud.setOnClickListener {
+            runMenuOut {
+                callBack.showBookOtherInfo()
+            }
         }
         //界面
         llFont.setOnClickListener {
@@ -307,11 +346,11 @@ class ReadMenu @JvmOverloads constructor(
         menuBottomIn = AnimationUtilsSupport.loadAnimation(context, R.anim.anim_readbook_bottom_in)
         menuTopIn.setAnimationListener(object : Animation.AnimationListener {
             override fun onAnimationStart(animation: Animation) {
-                binding.tvSourceAction.isGone = ReadBook.isLocalBook
-                binding.tvLogin.isGone = ReadBook.bookSource?.loginUrl.isNullOrEmpty()
-                binding.tvPay.isGone = ReadBook.bookSource?.loginUrl.isNullOrEmpty()
-                        || ReadBook.curTextChapter?.isVip != true
-                        || ReadBook.curTextChapter?.isPay == true
+                binding.tvSourceAction.gone()
+                binding.tvLogin.gone()
+                binding.tvPay.gone()
+                binding.tvChapterName.gone()
+                binding.tvChapterUrl.gone()
                 callBack.upSystemUiVisibility()
                 binding.llBrightness.visible(showBrightnessView)
             }
@@ -365,23 +404,12 @@ class ReadMenu @JvmOverloads constructor(
     }
 
     fun upBookView() {
-        binding.titleBar.title = ReadBook.book?.name
+        binding.titleBar.title = ""
         ReadBook.curTextChapter?.let {
-            binding.tvChapterName.text = it.title
-            binding.tvChapterName.visible()
-            if (!ReadBook.isLocalBook) {
-                binding.tvChapterUrl.text = it.url
-                binding.tvChapterUrl.visible()
-            } else {
-                binding.tvChapterUrl.gone()
-            }
             binding.seekReadPage.max = it.pageSize.minus(1)
             binding.seekReadPage.progress = ReadBook.durPageIndex()
             binding.tvPre.isEnabled = ReadBook.durChapterIndex != 0
             binding.tvNext.isEnabled = ReadBook.durChapterIndex != ReadBook.chapterSize - 1
-        } ?: let {
-            binding.tvChapterName.gone()
-            binding.tvChapterUrl.gone()
         }
     }
 
@@ -397,7 +425,7 @@ class ReadMenu @JvmOverloads constructor(
             fabAutoPage.setImageResource(R.drawable.ic_auto_page)
             fabAutoPage.contentDescription = context.getString(R.string.auto_next_page)
         }
-        fabAutoPage.setColorFilter(textColor)
+        fabAutoPage.setColorFilter(iconTextColor)
     }
 
     interface CallBack {
@@ -412,6 +440,7 @@ class ReadMenu @JvmOverloads constructor(
         fun upSystemUiVisibility()
         fun onClickReadAloud()
         fun showReadMenuHelp()
+        fun showBookOtherInfo()
         fun showLogin()
         fun payAction()
         fun disableSource()

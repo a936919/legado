@@ -1,16 +1,20 @@
 package io.legado.app.ui.book.read.config
 
 import android.content.DialogInterface
+import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.SeekBar
+import androidx.annotation.RequiresApi
 import io.legado.app.R
 import io.legado.app.base.BaseDialogFragment
 import io.legado.app.databinding.DialogAutoReadBinding
 import io.legado.app.help.ReadBookConfig
+import io.legado.app.lib.theme.readCfgBottomBg
+import io.legado.app.lib.theme.readCfgBottomText
 import io.legado.app.lib.theme.bottomBackground
 import io.legado.app.lib.theme.getPrimaryTextColor
 import io.legado.app.model.ReadAloud
@@ -28,10 +32,12 @@ class AutoReadDialog : BaseDialogFragment(R.layout.dialog_auto_read) {
     private val binding by viewBinding(DialogAutoReadBinding::bind)
     private val callBack: CallBack? get() = activity as? CallBack
 
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
     override fun onStart() {
         super.onStart()
         dialog?.window?.let {
             it.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+            it.setElevation(0.0f)
             it.setBackgroundDrawableResource(R.color.background)
             it.decorView.setPadding(0, 0, 0, 0)
             val attr = it.attributes
@@ -47,22 +53,23 @@ class AutoReadDialog : BaseDialogFragment(R.layout.dialog_auto_read) {
         (activity as ReadBookActivity).bottomDialog--
     }
 
+
     override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) = binding.run {
         (activity as ReadBookActivity).bottomDialog++
-        val bg = requireContext().bottomBackground
-        val isLight = ColorUtils.isColorLight(bg)
-        val textColor = requireContext().getPrimaryTextColor(isLight)
+        val bg = requireContext().readCfgBottomBg
+        val textColor = requireContext().readCfgBottomText
+        val secondtextColor = ColorUtils.withAlpha(textColor,0.5f)
         root.setBackgroundColor(bg)
         tvReadSpeedTitle.setTextColor(textColor)
         tvReadSpeed.setTextColor(textColor)
         ivCatalog.setColorFilter(textColor)
-        tvCatalog.setTextColor(textColor)
+        tvCatalog.setTextColor(secondtextColor)
         ivMainMenu.setColorFilter(textColor)
-        tvMainMenu.setTextColor(textColor)
+        tvMainMenu.setTextColor(secondtextColor)
         ivAutoPageStop.setColorFilter(textColor)
-        tvAutoPageStop.setTextColor(textColor)
+        tvAutoPageStop.setTextColor(secondtextColor)
         ivSetting.setColorFilter(textColor)
-        tvSetting.setTextColor(textColor)
+        tvSetting.setTextColor(secondtextColor)
         initOnChange()
         initData()
         initEvent()

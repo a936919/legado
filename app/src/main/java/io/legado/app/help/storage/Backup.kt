@@ -38,10 +38,13 @@ object Backup : BackupRestore() {
             "readRecord.json",
             "searchHistory.json",
             "sourceSub.json",
+            "topPath.json",
+            "timeRecord.json",
             DefaultData.txtTocRuleFileName,
             DefaultData.httpTtsFileName,
             ReadBookConfig.configFileName,
             ReadBookConfig.shareConfigFileName,
+            ReadBookConfig.comicConfigFileName,
             ThemeConfig.configFileName,
             "config.xml"
         )
@@ -74,6 +77,8 @@ object Backup : BackupRestore() {
             writeListToJson(appDb.searchKeywordDao.all, "searchHistory.json", backupPath)
             writeListToJson(appDb.ruleSubDao.all, "sourceSub.json", backupPath)
             writeListToJson(appDb.txtTocRuleDao.all, DefaultData.txtTocRuleFileName, backupPath)
+            writeListToJson(appDb.topPathDao.all, "topPath.json", backupPath)
+            writeListToJson(appDb.timeRecordDao.all, "timeRecord.json", backupPath)
             writeListToJson(appDb.httpTTSDao.all, DefaultData.httpTtsFileName, backupPath)
             GSON.toJson(ReadBookConfig.configList).let {
                 FileUtils.createFileIfNotExist(backupPath + File.separator + ReadBookConfig.configFileName)
@@ -81,6 +86,10 @@ object Backup : BackupRestore() {
             }
             GSON.toJson(ReadBookConfig.shareConfig).let {
                 FileUtils.createFileIfNotExist(backupPath + File.separator + ReadBookConfig.shareConfigFileName)
+                    .writeText(it)
+            }
+            GSON.toJson(ReadBookConfig.comicConfig).let {
+                FileUtils.createFileIfNotExist(backupPath + File.separator + ReadBookConfig.comicConfigFileName)
                     .writeText(it)
             }
             GSON.toJson(ThemeConfig.configList).let {

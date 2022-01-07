@@ -3,8 +3,10 @@ package io.legado.app.ui.document.adapter
 
 import android.content.Context
 import android.view.ViewGroup
+import io.legado.app.App
 import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.base.adapter.RecyclerAdapter
+import io.legado.app.data.appDb
 import io.legado.app.databinding.ItemFileFilepickerBinding
 import io.legado.app.help.AppConfig
 import io.legado.app.lib.theme.getPrimaryDisabledTextColor
@@ -13,6 +15,7 @@ import io.legado.app.ui.document.entity.FileItem
 import io.legado.app.ui.document.utils.FilePickerIcon
 import io.legado.app.utils.ConvertUtils
 import io.legado.app.utils.FileUtils
+import io.legado.app.utils.cnCompare
 import java.io.File
 import java.util.*
 
@@ -28,6 +31,7 @@ class FileAdapter(context: Context, val callBack: CallBack) :
     private val fileIcon = ConvertUtils.toDrawable(FilePickerIcon.getFile())
     private val primaryTextColor = context.getPrimaryTextColor(!AppConfig.isNightTheme)
     private val disabledTextColor = context.getPrimaryDisabledTextColor(!AppConfig.isNightTheme)
+    private val topIcon = ConvertUtils.toDrawable(FilePickerIcon.getTop())
 
     fun loadData(path: String?) {
         if (path == null) {
@@ -77,12 +81,21 @@ class FileAdapter(context: Context, val callBack: CallBack) :
                     }
                     fileItem.name = file.name
                     fileItem.path = file.absolutePath
+                    fileItem.top = appDb.topPathDao.isTopPath(fileItem.path)
+                    if( fileItem.top) fileItem.icon = topIcon
                     data.add(fileItem)
                 }
             }
+            data.sortWith{o1,o2->
+                var sort = -o1.top.compareTo(o2.top)
+                if (sort == 0) {
+                    sort = -o1.isDirectory.compareTo(o2.isDirectory)
+                    if(sort == 0) sort = o2.name?.let { o1.name?.cnCompare(it) } ?:0
+                }
+                sort
+            }
             setItems(data)
         }
-
     }
 
     override fun getViewBinding(parent: ViewGroup): ItemFileFilepickerBinding {
@@ -120,11 +133,15 @@ class FileAdapter(context: Context, val callBack: CallBack) :
         holder.itemView.setOnClickListener {
             callBack.onFileClick(holder.layoutPosition)
         }
+        holder.itemView.setOnLongClickListener{
+            callBack.processTopPath(holder.layoutPosition)
+            true
+        }
     }
 
     interface CallBack {
         fun onFileClick(position: Int)
-
+        fun processTopPath(position:Int)
         //允许的扩展名
         var allowExtensions: Array<String>?
 

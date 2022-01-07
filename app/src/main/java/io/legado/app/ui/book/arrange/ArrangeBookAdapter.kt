@@ -11,9 +11,12 @@ import io.legado.app.base.adapter.RecyclerAdapter
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookGroup
 import io.legado.app.databinding.ItemArrangeBookBinding
+import io.legado.app.lib.theme.accentColor
 import io.legado.app.lib.theme.backgroundColor
+import io.legado.app.ui.book.info.BookInfoActivity
 import io.legado.app.ui.widget.recycler.DragSelectTouchHelper
 import io.legado.app.ui.widget.recycler.ItemTouchCallback
+import io.legado.app.utils.startActivity
 import java.util.*
 
 class ArrangeBookAdapter(context: Context, val callBack: CallBack) :
@@ -32,6 +35,15 @@ class ArrangeBookAdapter(context: Context, val callBack: CallBack) :
         callBack.upSelectCount()
     }
 
+    override fun gotoPositionAndSelect(position: Int) {
+        if(position>=0){
+            getItem(position)?.let{
+                selectedBooks.add(it)
+            }
+            callBack.gotoPosition(Integer.max(position - 2, 0))
+        }
+    }
+
     override fun convert(
         holder: ItemViewHolder,
         binding: ItemArrangeBookBinding,
@@ -43,8 +55,10 @@ class ArrangeBookAdapter(context: Context, val callBack: CallBack) :
             tvName.text = item.name
             tvAuthor.text = item.author
             tvAuthor.visibility = if (item.author.isEmpty()) View.GONE else View.VISIBLE
-            tvGroupS.text = getGroupName(item.group)
+            tvGroupS.text = if(item.status == 0) "" else if(item.status == 1) "已读" else ""
+            tvGroupS.setTextColor(context.accentColor)
             checkbox.isChecked = selectedBooks.contains(item)
+            ivCover.load(item.getDisplayCover(),item.name,item.author)
         }
     }
 
@@ -86,6 +100,20 @@ class ArrangeBookAdapter(context: Context, val callBack: CallBack) :
                     callBack.selectGroup(groupRequestCode, it.group)
                 }
             }
+            tvStatus.setOnClickListener {
+                getItem(holder.layoutPosition)?.let {
+                    val books = arrayListOf(it)
+                    callBack.setBookStatus(*books.toTypedArray())
+                }
+            }
+            tvInfo.setOnClickListener {
+                getItem(holder.layoutPosition)?.let {
+                    context.startActivity<BookInfoActivity>{
+                        putExtra("name", it.name)
+                        putExtra("author", it.author)
+                    }
+                }
+            }
         }
     }
 
@@ -124,6 +152,8 @@ class ArrangeBookAdapter(context: Context, val callBack: CallBack) :
         }
         return books.toTypedArray()
     }
+
+
 
     private fun getGroupList(groupId: Long): List<String> {
         val groupNames = arrayListOf<String>()
@@ -202,5 +232,7 @@ class ArrangeBookAdapter(context: Context, val callBack: CallBack) :
         fun updateBook(vararg book: Book)
         fun deleteBook(book: Book)
         fun selectGroup(requestCode: Int, groupId: Long)
+        fun gotoPosition(position: Int)
+        fun setBookStatus(vararg book: Book)
     }
 }

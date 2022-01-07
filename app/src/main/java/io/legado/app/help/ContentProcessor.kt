@@ -6,12 +6,13 @@ import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
 import io.legado.app.data.entities.ReplaceRule
+import io.legado.app.utils.mqLog
 import io.legado.app.utils.toastOnUi
 import splitties.init.appCtx
 import java.lang.ref.WeakReference
 import java.util.regex.Pattern
 
-class ContentProcessor private constructor(
+class ContentProcessor(
     private val bookName: String,
     private val bookOrigin: String
 ) {
@@ -110,6 +111,7 @@ class ContentProcessor private constructor(
             }
         }
         val contents = arrayListOf<String>()
+
         mContent.split("\n").forEach { str ->
             val paragraph = str.trim {
                 it.code <= 0x20 || it == '　'
@@ -119,9 +121,10 @@ class ContentProcessor private constructor(
                     contents.add(paragraph)
                 } else {
                     contents.add("${ReadBookConfig.paragraphIndent}$paragraph")
-                }
+            }
             }
         }
+
         return contents
     }
 

@@ -8,11 +8,11 @@ import android.view.MenuItem
 import android.view.ViewGroup
 import androidx.activity.viewModels
 import androidx.fragment.app.Fragment
+import androidx.multidex.BuildConfig
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentStatePagerAdapter
 import androidx.viewpager.widget.ViewPager
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import io.legado.app.BuildConfig
 import io.legado.app.R
 import io.legado.app.base.VMBaseActivity
 import io.legado.app.constant.AppConst.appInfo
@@ -23,9 +23,10 @@ import io.legado.app.help.AppConfig
 import io.legado.app.help.BookHelp
 import io.legado.app.help.LocalConfig
 import io.legado.app.help.storage.Backup
+import io.legado.app.lib.permission.Permissions
+import io.legado.app.lib.permission.PermissionsCompat
 import io.legado.app.lib.theme.elevation
 import io.legado.app.lib.theme.primaryColor
-import io.legado.app.service.BaseReadAloudService
 import io.legado.app.ui.main.bookshelf.BaseBookshelfFragment
 import io.legado.app.ui.main.bookshelf.style1.BookshelfFragment1
 import io.legado.app.ui.main.bookshelf.style2.BookshelfFragment2
@@ -53,6 +54,16 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
     private val fragmentMap = hashMapOf<Int, Fragment>()
     private var bottomMenuCount = 2
     private val realPositions = arrayOf(0, 1, 2, 3)
+
+    private fun checkPermissions(success: (() -> Unit)? = null) {
+        PermissionsCompat.Builder(this)
+            .addPermissions(*Permissions.Group.STORAGE)
+            .rationale(R.string.tip_perm_request_storage)
+            .onGranted {
+                success?.invoke()
+            }
+            .request()
+    }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         upBottomMenu()
@@ -119,8 +130,7 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
         if (LocalConfig.versionCode != appInfo.versionCode) {
             LocalConfig.versionCode = appInfo.versionCode
             if (LocalConfig.isFirstOpenApp) {
-                val text = String(assets.open("help/appHelp.md").readBytes())
-                showDialogFragment(TextDialog(text, TextDialog.Mode.MD))
+                checkPermissions()
             } else if (!BuildConfig.DEBUG) {
                 val log = String(assets.open("updateLog.md").readBytes())
                 showDialogFragment(TextDialog(log, TextDialog.Mode.MD))
@@ -142,16 +152,8 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
                             return true
                         }
                     }
-                    if (System.currentTimeMillis() - exitTime > 2000) {
-                        toastOnUi(R.string.double_click_exit)
-                        exitTime = System.currentTimeMillis()
-                    } else {
-                        if (BaseReadAloudService.pause) {
-                            finish()
-                        } else {
-                            moveTaskToBack(true)
-                        }
-                    }
+
+                    moveTaskToBack(true)
                     return true
                 }
             }

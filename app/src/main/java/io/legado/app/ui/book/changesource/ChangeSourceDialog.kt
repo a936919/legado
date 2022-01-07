@@ -21,12 +21,16 @@ import io.legado.app.data.entities.BookSource
 import io.legado.app.data.entities.SearchBook
 import io.legado.app.databinding.DialogChangeSourceBinding
 import io.legado.app.help.AppConfig
+import io.legado.app.lib.dialogs.alert
+import io.legado.app.lib.theme.backgroundColor
+import io.legado.app.lib.theme.getPrimaryTextColor
 import io.legado.app.lib.theme.primaryColor
 import io.legado.app.ui.book.source.edit.BookSourceEditActivity
 import io.legado.app.ui.book.source.manage.BookSourceActivity
 import io.legado.app.ui.widget.recycler.VerticalDivider
 import io.legado.app.utils.*
 import io.legado.app.utils.viewbindingdelegate.viewBinding
+import splitties.init.appCtx
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
@@ -63,6 +67,7 @@ class ChangeSourceDialog() : BaseDialogFragment(R.layout.dialog_change_source),
         viewModel.initData(arguments)
         showTitle()
         initMenu()
+        initSourceName()
         initRecyclerView()
         initSearchView()
         initLiveData()
@@ -84,6 +89,18 @@ class ChangeSourceDialog() : BaseDialogFragment(R.layout.dialog_change_source),
             ?.isChecked = AppConfig.changeSourceLoadInfo
         binding.toolBar.menu.findItem(R.id.menu_load_toc)
             ?.isChecked = AppConfig.changeSourceLoadToc
+    }
+
+    private fun initSourceName(){
+        val isLight = ColorUtils.isColorLight(requireContext().backgroundColor)
+        var string = "书源不在库中"
+        callBack?.oldBook?.origin?.let{
+            val bookSource = appDb.bookSourceDao.getBookSource(it)
+            if(bookSource!=null) string = "书源:${bookSource.bookSourceName} ┇ 分组:${bookSource.bookSourceGroup}"
+        }
+        binding.sourceName.text = string
+        binding.sourceName.setTextColor(requireContext().getPrimaryTextColor(isLight))
+        ChangeSourceViewModel.sourceTime = "请检索书源获取本书的检索时间"
     }
 
     private fun initRecyclerView() {
@@ -163,6 +180,18 @@ class ChangeSourceDialog() : BaseDialogFragment(R.layout.dialog_change_source),
 
     override fun onMenuItemClick(item: MenuItem?): Boolean {
         when (item?.itemId) {
+            R.id.menu_delay -> alert("书源检索时间") {
+                var text=""
+                val searchGroup = appCtx.getPrefString("searchGroup") ?: ""
+                appDb.bookSourceDao.getEnabledByGroupSuc(searchGroup).forEach {bookSource ->
+                    text = "${text}书源：${bookSource.bookSourceName}\n${bookSource.searchBookName} 速度：${bookSource.searchTime}毫秒\n"
+                }
+                appDb.bookSourceDao.getEnabledByGroupFail(searchGroup).forEach {bookSource ->
+                    text = "${text}书源：${bookSource.bookSourceName}\n${bookSource.searchBookName} 速度：${bookSource.searchTime}毫秒\n"
+                }
+                setMessage(text)
+                okButton { }
+            }.show()
             R.id.menu_check_author -> {
                 AppConfig.changeSourceCheckAuthor = !item.isChecked
                 item.isChecked = !item.isChecked

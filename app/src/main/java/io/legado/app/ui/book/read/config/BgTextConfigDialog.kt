@@ -23,6 +23,7 @@ import io.legado.app.help.http.newCallResponseBody
 import io.legado.app.help.http.okHttpClient
 import io.legado.app.lib.dialogs.SelectItem
 import io.legado.app.lib.dialogs.alert
+import io.legado.app.lib.theme.*
 import io.legado.app.lib.dialogs.selector
 import io.legado.app.lib.theme.bottomBackground
 import io.legado.app.lib.theme.getPrimaryTextColor
@@ -95,9 +96,9 @@ class BgTextConfigDialog : BaseDialogFragment(R.layout.dialog_read_bg_text) {
     }
 
     private fun initView() = binding.run {
-        val bg = requireContext().bottomBackground
+        val bg = requireContext().readCfgBottomBg
         val isLight = ColorUtils.isColorLight(bg)
-        primaryTextColor = requireContext().getPrimaryTextColor(isLight)
+        primaryTextColor = requireContext().readCfgBottomText
         secondaryTextColor = requireContext().getSecondaryTextColor(isLight)
         rootView.setBackgroundColor(bg)
         tvNameTitle.setTextColor(primaryTextColor)

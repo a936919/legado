@@ -115,4 +115,16 @@ interface BookSourceDao {
 
     @get:Query("select max(customOrder) from book_sources")
     val maxOrder: Int
+    @Query("select * from book_sources where bookSourceName like '%' || :name || '%'")
+    fun getByName(name: String): List<BookSource>
+
+    @Query("select * from book_sources where enabled = 1 and bookSourceName like '%' || :name || '%'")
+    fun getEnableByName(name: String): List<BookSource>
+
+    @Query("select * from book_sources where enabled = 1 and bookSourceGroup like '%' || :group || '%' and searchBookName = '成功' order by searchTime")
+    fun getEnabledByGroupSuc(group: String): List<BookSource>
+    
+    @Query("select * from book_sources where enabled = 1 and bookSourceGroup like '%' || :group || '%' and searchBookName != '成功' order by searchTime")
+    fun getEnabledByGroupFail(group: String): List<BookSource>
+
 }

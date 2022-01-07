@@ -54,6 +54,7 @@ class MyFragment : BaseFragment(R.layout.fragment_my_config) {
                 val text = String(requireContext().assets.open("help/appHelp.md").readBytes())
                 showDialogFragment(TextDialog(text, TextDialog.Mode.MD))
             }
+            R.id.menu_debug -> mqLog.debug()
         }
     }
 
@@ -93,10 +94,6 @@ class MyFragment : BaseFragment(R.layout.fragment_my_config) {
                     view?.post { ThemeConfig.applyDayNight(requireContext()) }
                     true
                 }
-            }
-            if (AppConfig.isGooglePlay) {
-                findPreference<PreferenceCategory>("aboutCategory")
-                    ?.removePreferenceRecursively("donate")
             }
         }
 

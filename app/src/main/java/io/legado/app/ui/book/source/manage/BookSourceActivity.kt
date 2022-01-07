@@ -32,6 +32,7 @@ import io.legado.app.ui.book.source.debug.BookSourceDebugActivity
 import io.legado.app.ui.book.source.edit.BookSourceEditActivity
 import io.legado.app.ui.document.HandleFileContract
 import io.legado.app.ui.qrcode.QrCodeResult
+import io.legado.app.ui.rss.subscription.RuleSubActivity
 import io.legado.app.ui.widget.SelectActionBar
 import io.legado.app.ui.widget.dialog.TextDialog
 import io.legado.app.ui.widget.recycler.DragSelectTouchHelper
@@ -128,6 +129,7 @@ class BookSourceActivity : VMBaseActivity<ActivityBookSourceBinding, BookSourceV
             }
             R.id.menu_import_onLine -> showImportDialog()
             R.id.menu_text_toc_rule -> startActivity<TxtTocRuleActivity>()
+            R.id.menu_rule_rss -> startActivity<RuleSubActivity>()
             R.id.menu_sort_manual -> {
                 item.isChecked = true
                 sortCheck(Sort.Default)

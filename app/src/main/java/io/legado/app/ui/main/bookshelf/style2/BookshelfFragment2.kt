@@ -20,9 +20,9 @@ import io.legado.app.databinding.FragmentBookshelf1Binding
 import io.legado.app.help.AppConfig
 import io.legado.app.lib.theme.accentColor
 import io.legado.app.lib.theme.primaryColor
+import io.legado.app.ui.book.arrange.ArrangeBookActivity
 import io.legado.app.ui.book.audio.AudioPlayActivity
 import io.legado.app.ui.book.group.GroupEditDialog
-import io.legado.app.ui.book.info.BookInfoActivity
 import io.legado.app.ui.book.read.ReadBookActivity
 import io.legado.app.ui.book.search.SearchActivity
 import io.legado.app.ui.main.bookshelf.BaseBookshelfFragment
@@ -190,9 +190,18 @@ class BookshelfFragment2 : BaseBookshelfFragment(R.layout.fragment_bookshelf1),
 
     override fun onItemLongClick(position: Int) {
         when (val item = getItem(position)) {
-            is Book -> startActivity<BookInfoActivity> {
-                putExtra("name", item.name)
-                putExtra("author", item.author)
+            is Book -> startActivity<ArrangeBookActivity> {
+                val layoutPosition = if (groupId == AppConst.bookGroupNoneId) {
+                    if (position < bookGroups.size) {
+                        position
+                    } else {
+                        position - bookGroups.size
+                    }
+                } else {
+                    position
+                }
+                putExtra("groupId", groupId)
+                putExtra("position", layoutPosition)
             }
             is BookGroup -> showDialogFragment(GroupEditDialog(item))
         }

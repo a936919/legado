@@ -1,9 +1,12 @@
 package io.legado.app.model
 
+import com.github.liuyueyi.quick.transfer.ChineseUtils
+import io.legado.app.constant.AppConst.androidId
 import io.legado.app.constant.AppLog
 import io.legado.app.constant.BookType
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.*
+import io.legado.app.data.entities.TimeRecord
 import io.legado.app.help.AppConfig
 import io.legado.app.help.BookHelp
 import io.legado.app.help.ContentProcessor
@@ -12,9 +15,11 @@ import io.legado.app.help.coroutine.Coroutine
 import io.legado.app.help.storage.AppWebDav
 import io.legado.app.model.webBook.WebBook
 import io.legado.app.service.BaseReadAloudService
+import io.legado.app.service.WebService
 import io.legado.app.ui.book.read.page.entities.TextChapter
 import io.legado.app.ui.book.read.page.provider.ChapterProvider
 import io.legado.app.ui.book.read.page.provider.ImageProvider
+import kotlin.math.min
 import io.legado.app.utils.msg
 
 import io.legado.app.utils.toastOnUi
@@ -41,13 +46,17 @@ object ReadBook : CoroutineScope by MainScope() {
     var bookSource: BookSource? = null
     var msg: String? = null
     private val loadingChapters = arrayListOf<Int>()
-    private val readRecord = ReadRecord()
+    private var readRecord: ReadRecord? = null
+    private var timeRecord: TimeRecord? = null
+    //历史记录，切换记录后记录切换前的进度
+    var historyRecord: BookProgress? = null
     var readStartTime: Long = System.currentTimeMillis()
 
-    fun resetData(book: Book) {
+   fun resetData(book: Book) {
         ReadBook.book = book
-        readRecord.bookName = book.name
-        readRecord.readTime = appDb.readRecordDao.getReadTime(book.name) ?: 0
+        readRecord = book.toReadRecord()
+        timeRecord = readRecord?.toTimeRecord()
+        saveReadRecord()
         chapterSize = appDb.bookChapterDao.getChapterCount(book.bookUrl)
         durChapterIndex = book.durChapterIndex
         durChapterPos = book.durChapterPos
@@ -71,7 +80,14 @@ object ReadBook : CoroutineScope by MainScope() {
             clearTextChapter()
         }
         callBack?.upMenuView()
+        historyRecord = book.toBookProgress()
         upWebBook(book)
+    }
+    private fun saveReadRecord() {
+        Coroutine.async {
+            readRecord?.let { appDb.readRecordDao.insert(it) }
+            timeRecord?.let { appDb.timeRecordDao.insert(it) }
+        }
     }
 
     fun upWebBook(book: Book) {
@@ -114,9 +130,52 @@ object ReadBook : CoroutineScope by MainScope() {
 
     fun upReadStartTime() {
         Coroutine.async {
-            readRecord.readTime = readRecord.readTime + System.currentTimeMillis() - readStartTime
-            readStartTime = System.currentTimeMillis()
-            appDb.readRecordDao.insert(readRecord)
+            timeRecord?.let { timeRecord ->
+                val dataChange = timeRecord.date != TimeRecord.getDate()
+                var dif = System.currentTimeMillis() - readStartTime
+                val maxInterval = 3 * 60 * 1000L
+                dif = min(dif, maxInterval)//翻页时间超过3分钟，不计为阅读时间
+                readStartTime = System.currentTimeMillis()
+
+                if (dataChange) {
+                    timeRecord.date = TimeRecord.getDate()
+                    timeRecord.readTime = appDb.timeRecordDao.getReadTime(
+                        androidId,
+                        timeRecord.bookName,
+                        timeRecord.author,
+                        timeRecord.date
+                    )
+                        ?: 0
+                    timeRecord.listenTime = appDb.timeRecordDao.getListenTime(
+                        androidId,
+                        timeRecord.bookName,
+                        timeRecord.author,
+                        timeRecord.date
+                    )
+                        ?: 0
+                } else if (WebService.isRun) {
+                    val readTime = appDb.timeRecordDao.getReadTime(
+                        androidId,
+                        timeRecord.bookName,
+                        timeRecord.author,
+                        timeRecord.date
+                    )
+                    if (readTime != null) {
+                        if (readTime > timeRecord.readTime) {
+                            timeRecord.readTime = readTime
+                        }
+                    }
+                }
+
+                if (BaseReadAloudService.isRun)
+                    timeRecord.listenTime = timeRecord.listenTime + dif
+                else
+                    timeRecord.readTime = timeRecord.readTime + dif
+
+                if (dataChange) appDb.timeRecordDao.insert(timeRecord) else appDb.timeRecordDao.update(
+                    timeRecord
+                )
+            }
         }
     }
 
@@ -130,6 +189,7 @@ object ReadBook : CoroutineScope by MainScope() {
     fun moveToNextPage() {
         durChapterPos = curTextChapter?.getNextPageLength(durChapterPos) ?: durChapterPos
         callBack?.upContent()
+        upReadStartTime()
         saveRead()
     }
 
@@ -349,10 +409,15 @@ object ReadBook : CoroutineScope by MainScope() {
             removeLoading(chapter.index)
             if (chapter.index in durChapterIndex - 1..durChapterIndex + 1) {
                 val contentProcessor = ContentProcessor.get(book.name, book.origin)
-                val displayTitle = chapter.getDisplayTitle(
+                var displayTitle = chapter.getDisplayTitle(
                     contentProcessor.getReplaceRules(),
                     book.getUseReplaceRule()
                 )
+                displayTitle = when (AppConfig.chineseConverterType) {
+                    1 ->  ChineseUtils.t2s(displayTitle)
+                    2 ->  ChineseUtils.s2t(displayTitle)
+                    else -> displayTitle
+                }
                 val contents = contentProcessor.getContent(book, chapter, content)
                 val textChapter = ChapterProvider
                     .getTextChapter(book, chapter, displayTitle, contents, chapterSize)
@@ -428,10 +493,20 @@ object ReadBook : CoroutineScope by MainScope() {
                     book.durChapterTitle = it.title
                 }
                 appDb.bookDao.update(book)
+                readRecord?.let { readRecord ->
+                    readRecord.durChapterTime = book.durChapterTime
+                    readRecord.durChapterIndex = book.durChapterIndex
+                    readRecord.durChapterPos = book.durChapterPos
+                    readRecord.durChapterTitle = book.durChapterTitle.toString()
+                    appDb.readRecordDao.update(readRecord)
+                }
             }
         }
     }
 
+    fun synProgress(book: Book) {
+        callBack?.synProgress(book)
+    }
     /**
      * 预下载
      */
@@ -463,10 +538,9 @@ object ReadBook : CoroutineScope by MainScope() {
         )
 
         fun pageChanged()
-
         fun contentLoadFinish()
-
         fun upPageAnim()
+        fun synProgress(book: Book)
     }
 
 }

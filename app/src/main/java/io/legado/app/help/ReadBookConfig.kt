@@ -7,6 +7,7 @@ import android.graphics.drawable.Drawable
 import androidx.annotation.Keep
 import io.legado.app.R
 import io.legado.app.constant.PreferKey
+import io.legado.app.data.appDb
 import io.legado.app.help.coroutine.Coroutine
 import io.legado.app.ui.book.read.page.provider.ChapterProvider
 import io.legado.app.utils.*
@@ -23,15 +24,24 @@ import java.io.File
 object ReadBookConfig {
     const val configFileName = "readConfig.json"
     const val shareConfigFileName = "shareReadConfig.json"
+    const val comicConfigFileName = "comicConfig.json"
     val configFilePath = FileUtils.getPath(appCtx.filesDir, configFileName)
     val shareConfigFilePath = FileUtils.getPath(appCtx.filesDir, shareConfigFileName)
+    val comicConfigFilePath = FileUtils.getPath(appCtx.filesDir, comicConfigFileName)
     val configList: ArrayList<Config> = arrayListOf()
+    var isComicMod = false
     lateinit var shareConfig: Config
+    lateinit var comicConfig: Config
+    private val bgColorComic = Color.parseColor("#000000")
+    private val textColorComic = Color.parseColor("#ADADAD")
+
     var durConfig
         get() = getConfig(styleSelect)
         set(value) {
             configList[styleSelect] = value
-            if (shareLayout) {
+            if (isComicMod) {
+                comicConfig = value
+            } else if (shareLayout) {
                 shareConfig = value
             }
             upBg()
@@ -39,11 +49,12 @@ object ReadBookConfig {
 
     var bg: Drawable? = null
     var bgMeanColor: Int = 0
-    val textColor: Int get() = durConfig.curTextColor()
+    val textColor: Int get() = if (isComicMod) textColorComic else durConfig.curTextColor()
 
     init {
         initConfigs()
         initShareConfig()
+        initComicConfig()
     }
 
     @Synchronized
@@ -85,18 +96,35 @@ object ReadBookConfig {
         shareConfig = c ?: configList.getOrNull(5) ?: Config()
     }
 
+    fun initComicConfig() {
+        val configFile = File(comicConfigFilePath)
+        var c: Config? = null
+        if (configFile.exists()) {
+            try {
+                val json = configFile.readText()
+                c = GSON.fromJsonObject(json)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        comicConfig = c ?: Config()
+    }
+
+
     fun upBg() {
         val resources = appCtx.resources
         val dm = resources.displayMetrics
         val width = dm.widthPixels
         val height = dm.heightPixels
-        bg = durConfig.curBgDrawable(width, height).apply {
+        bg = if (isComicMod) ColorDrawable(bgColorComic)
+        else durConfig.curBgDrawable(width, height).apply {
             if (this is BitmapDrawable) {
                 bgMeanColor = bitmap.getMeanColor()
             } else if (this is ColorDrawable) {
                 bgMeanColor = color
             }
         }
+        if (isComicMod) bgMeanColor = bgColorComic
     }
 
     fun save() {
@@ -109,6 +137,10 @@ object ReadBookConfig {
                 GSON.toJson(shareConfig).let {
                     FileUtils.deleteFile(shareConfigFilePath)
                     FileUtils.createFileIfNotExist(shareConfigFilePath).writeText(it)
+                }
+                GSON.toJson(comicConfig).let {
+                    FileUtils.deleteFile(comicConfigFilePath)
+                    FileUtils.createFileIfNotExist(comicConfigFilePath).writeText(it)
                 }
             }
         }
@@ -160,8 +192,7 @@ object ReadBookConfig {
     var hideStatusBar = appCtx.getPrefBoolean(PreferKey.hideStatusBar)
     var hideNavigationBar = appCtx.getPrefBoolean(PreferKey.hideNavigationBar)
     var useZhLayout = appCtx.getPrefBoolean(PreferKey.useZhLayout)
-
-    val config get() = if (shareLayout) shareConfig else durConfig
+    val config get() = if (isComicMod) comicConfig else if (shareLayout) shareConfig else durConfig
 
     var pageAnim: Int
         get() = config.curPageAnim()
@@ -179,6 +210,12 @@ object ReadBookConfig {
         get() = config.textBold
         set(value) {
             config.textBold = value
+        }
+
+    var boldSize: Float
+        get() = config.boldSize
+        set(value) {
+            config.boldSize = value
         }
 
     var textSize: Int
@@ -323,6 +360,7 @@ object ReadBookConfig {
         if (shareLayout) {
             exportConfig.textFont = shareConfig.textFont
             exportConfig.textBold = shareConfig.textBold
+            exportConfig.boldSize = shareConfig.boldSize
             exportConfig.textSize = shareConfig.textSize
             exportConfig.letterSpacing = shareConfig.letterSpacing
             exportConfig.lineSpacingExtra = shareConfig.lineSpacingExtra
@@ -358,6 +396,13 @@ object ReadBookConfig {
         return exportConfig
     }
 
+    fun isComic(bookSourceUrl: String): Boolean {
+        val bookSource = appDb.bookSourceDao.getBookSource(bookSourceUrl)
+        return bookSource?.bookSourceComment?.contains(
+            "comic",
+            true
+        ) == true || bookSource?.bookSourceGroup?.contains("漫画") == true
+    }
     suspend fun import(byteArray: ByteArray): Config {
         return withContext(IO) {
             val configZipPath = FileUtils.getPath(appCtx.externalCache, configFileName)
@@ -433,6 +478,7 @@ object ReadBookConfig {
         private var pageAnimEInk: Int = 3,
         var textFont: String = "",//字体
         var textBold: Int = 0,//是否粗体字 0:正常, 1:粗体, 2:细体
+        var boldSize: Float = 0f,//字重，0.1跨度增加
         var textSize: Int = 20,//文字大小
         var letterSpacing: Float = 0.1f,//字间距
         var lineSpacingExtra: Int = 12,//行间距
@@ -464,7 +510,8 @@ object ReadBookConfig {
         var tipFooterRight: Int = ReadTipConfig.pageAndTotal,
         var tipColor: Int = 0,
         var headerMode: Int = 0,
-        var footerMode: Int = 0
+        var footerMode: Int = 0,
+        var now: Long = System.currentTimeMillis(),
     ) {
 
         fun setCurTextColor(color: Int) {

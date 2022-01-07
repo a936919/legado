@@ -61,12 +61,12 @@ open class WelcomeActivity : BaseActivity<ActivityWelcomeBinding>() {
             }
             //初始化简繁转换引擎
             when (AppConfig.chineseConverterType) {
-                1 -> ChineseUtils.t2s("初始化")
-                2 -> ChineseUtils.s2t("初始化")
+                1 ->  ChineseUtils.t2s("初始化")
+                2 ->  ChineseUtils.s2t("初始化")
                 else -> null
             }
         }
-        binding.root.postDelayed({ startMainActivity() }, 500)
+        binding.root.post { startMainActivity() }
     }
 
     private fun startMainActivity() {

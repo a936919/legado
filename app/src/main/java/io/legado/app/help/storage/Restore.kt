@@ -3,7 +3,7 @@ package io.legado.app.help.storage
 import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
-import io.legado.app.BuildConfig
+import androidx.multidex.BuildConfig
 import io.legado.app.R
 import io.legado.app.constant.AppConst.androidId
 import io.legado.app.constant.EventBus
@@ -15,6 +15,7 @@ import io.legado.app.help.LauncherIconHelp
 import io.legado.app.help.ReadBookConfig
 import io.legado.app.help.ThemeConfig
 import io.legado.app.utils.*
+import io.legado.app.data.entities.TimeRecord
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.delay
@@ -95,6 +96,10 @@ object Restore : BackupRestore() {
             fileToListT<RuleSub>(path, "sourceSub.json")?.let {
                 appDb.ruleSubDao.insert(*it.toTypedArray())
             }
+            fileToListT<TopPath>(path, "topPath.json")?.let {
+                appDb.topPathDao.insert(*it.toTypedArray())
+            }
+
             fileToListT<TxtTocRule>(path, DefaultData.txtTocRuleFileName)?.let {
                 appDb.txtTocRuleDao.insert(*it.toTypedArray())
             }
@@ -104,13 +109,39 @@ object Restore : BackupRestore() {
             fileToListT<ReadRecord>(path, "readRecord.json")?.let {
                 it.forEach { readRecord ->
                     //判断是不是本机记录
-                    if (readRecord.deviceId != androidId) {
+                    if (readRecord.androidId != androidId) {
                         appDb.readRecordDao.insert(readRecord)
                     } else {
-                        val time = appDb.readRecordDao
-                            .getReadTime(readRecord.deviceId, readRecord.bookName)
-                        if (time == null || time < readRecord.readTime) {
+                        val book = appDb.readRecordDao
+                            .getBook(readRecord.androidId, readRecord.bookName, readRecord.author)
+                        if (book == null || book.durChapterTime < readRecord.durChapterTime) {
                             appDb.readRecordDao.insert(readRecord)
+                        }
+                    }
+                }
+            }
+            fileToListT<TimeRecord>(path, "timeRecord.json")?.let {
+                it.forEach { timeRecord ->
+                    //判断是不是本机记录
+                    if (timeRecord.androidId != androidId) {
+                        appDb.timeRecordDao.insert(timeRecord)
+                    } else {
+                        val readTime = appDb.timeRecordDao
+                            .getReadTime(
+                                timeRecord.androidId,
+                                timeRecord.bookName,
+                                timeRecord.author,
+                                timeRecord.date
+                            )
+                        val listenTime = appDb.timeRecordDao
+                            .getListenTime(
+                                timeRecord.androidId,
+                                timeRecord.bookName,
+                                timeRecord.author,
+                                timeRecord.date
+                            )
+                        if (readTime == null || readTime < timeRecord.readTime || listenTime == null || listenTime < timeRecord.listenTime) {
+                            appDb.timeRecordDao.insert(timeRecord)
                         }
                     }
                 }
@@ -155,6 +186,17 @@ object Restore : BackupRestore() {
                 } catch (e: Exception) {
                     Timber.e(e)
                 }
+                try {
+                    val file =
+                        FileUtils.createFileIfNotExist("$path${File.separator}${ReadBookConfig.comicConfigFilePath}")
+                    if (file.exists()) {
+                        FileUtils.deleteFile(ReadBookConfig.comicConfigFilePath)
+                        file.copyTo(File(ReadBookConfig.comicConfigFilePath))
+                        ReadBookConfig.initComicConfig()
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
             Preferences.getSharedPreferences(appCtx, path, "config")?.all?.let { map ->
                 val edit = appCtx.defaultSharedPreferences.edit()
@@ -186,6 +228,7 @@ object Restore : BackupRestore() {
                 LauncherIconHelp.changeIcon(appCtx.getPrefString(PreferKey.launcherIcon))
             }
             postEvent(EventBus.RECREATE, "")
+
         }
     }
 

@@ -205,7 +205,7 @@ class ImportBookActivity : VMBaseActivity<ActivityImportBookBinding, ImportBookV
                         else -> item.name.matches(bookFileRegex)
                     }
                 }
-                docList.sortWith(compareBy({ !it.isDir }, { it.name }))
+                docList.sortWith(compareBy({ !it.isDir }, { -it.date.time }))
                 withContext(Main) {
                     adapter.setItems(docList)
                 }
@@ -270,12 +270,12 @@ class ImportBookActivity : VMBaseActivity<ActivityImportBookBinding, ImportBookV
             false
         }
     }
-
+/*
     override fun onBackPressed() {
         if (!goBackDir()) {
             super.onBackPressed()
         }
-    }
+    }*/
 
     override fun upCountView() {
         binding.selectActionBar.upCountView(adapter.selectedUris.size, adapter.checkableCount)

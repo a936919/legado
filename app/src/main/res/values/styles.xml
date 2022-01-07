@@ -83,7 +83,10 @@
     <style name="ToolbarTitle" parent="@style/TextAppearance.Widget.AppCompat.Toolbar.Title">
         <item name="android:textSize">20sp</item>
     </style>
-
+    <style name="ReadTitlebar" parent="@style/TextAppearance.AppCompat.Title">
+        <item name="android:textSize">17sp</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
     //*******************Widget Style**********************************//
 
     <style name="Style.Shadow.Top" parent="android:Widget">

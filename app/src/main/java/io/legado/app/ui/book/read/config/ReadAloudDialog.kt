@@ -1,17 +1,21 @@
 package io.legado.app.ui.book.read.config
 
 import android.content.DialogInterface
+import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.SeekBar
+import androidx.annotation.RequiresApi
 import io.legado.app.R
 import io.legado.app.base.BaseDialogFragment
 import io.legado.app.constant.EventBus
 import io.legado.app.databinding.DialogReadAloudBinding
 import io.legado.app.help.AppConfig
+import io.legado.app.lib.theme.*
+import io.legado.app.lib.theme.readCfgBottomText
 import io.legado.app.lib.theme.bottomBackground
 import io.legado.app.lib.theme.getPrimaryTextColor
 import io.legado.app.model.ReadAloud
@@ -30,10 +34,12 @@ class ReadAloudDialog : BaseDialogFragment(R.layout.dialog_read_aloud) {
     private val callBack: CallBack? get() = activity as? CallBack
     private val binding by viewBinding(DialogReadAloudBinding::bind)
 
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
     override fun onStart() {
         super.onStart()
         dialog?.window?.let {
             it.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+            it.setElevation(0.0f)
             it.setBackgroundDrawableResource(R.color.background)
             it.decorView.setPadding(0, 0, 0, 0)
             val attr = it.attributes
@@ -51,10 +57,11 @@ class ReadAloudDialog : BaseDialogFragment(R.layout.dialog_read_aloud) {
 
     override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) {
         (activity as ReadBookActivity).bottomDialog++
-        val bg = requireContext().bottomBackground
-        val isLight = ColorUtils.isColorLight(bg)
-        val textColor = requireContext().getPrimaryTextColor(isLight)
+        val bg = requireContext().readCfgBottomBg
+        val textColor = requireContext().readCfgBottomText
+        val secondtextColor = ColorUtils.withAlpha(textColor, 0.5f)
         binding.run {
+
             rootView.setBackgroundColor(bg)
             tvPre.setTextColor(textColor)
             tvNext.setTextColor(textColor)
@@ -68,14 +75,15 @@ class ReadAloudDialog : BaseDialogFragment(R.layout.dialog_read_aloud) {
             tvTtsSpeed.setTextColor(textColor)
             ivTtsSpeechAdd.setColorFilter(textColor)
             ivCatalog.setColorFilter(textColor)
-            tvCatalog.setTextColor(textColor)
+            tvCatalog.setTextColor(secondtextColor)
             ivMainMenu.setColorFilter(textColor)
-            tvMainMenu.setTextColor(textColor)
+            tvMainMenu.setTextColor(secondtextColor)
             ivToBackstage.setColorFilter(textColor)
-            tvToBackstage.setTextColor(textColor)
+            tvToBackstage.setTextColor(secondtextColor)
             ivSetting.setColorFilter(textColor)
-            tvSetting.setTextColor(textColor)
+            tvSetting.setTextColor(secondtextColor)
             cbTtsFollowSys.setTextColor(textColor)
+
         }
         initData()
         initEvent()
@@ -151,9 +159,7 @@ class ReadAloudDialog : BaseDialogFragment(R.layout.dialog_read_aloud) {
             binding.ivPlayPause.setImageResource(R.drawable.ic_play_24dp)
             binding.ivPlayPause.contentDescription = getString(R.string.audio_play)
         }
-        val bg = requireContext().bottomBackground
-        val isLight = ColorUtils.isColorLight(bg)
-        val textColor = requireContext().getPrimaryTextColor(isLight)
+        val textColor = requireContext().readCfgBottomText
         binding.ivPlayPause.setColorFilter(textColor)
     }
 

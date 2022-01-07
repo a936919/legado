@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:padding="16dp">
+
+
+    <io.legado.app.lib.theme.view.ThemeSwitch
+        android:id="@+id/delete_h_tag"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="6dp"
+        android:text="过滤书籍中的标题"
+        app:layout_constraintBottom_toTopOf = "@id/delete_img_tag"
+        tools:ignore="MissingConstraints,TouchTargetSizeCheck" />
+
+    <io.legado.app.lib.theme.view.ThemeSwitch
+        android:id="@+id/delete_img_tag"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="6dp"
+        android:text="过滤书籍中的图片"
+        app:layout_constraintBottom_toTopOf = "@id/delete_ruby_tag"
+        tools:ignore="MissingConstraints,TouchTargetSizeCheck" />
+
+    <io.legado.app.lib.theme.view.ThemeSwitch
+        android:id="@+id/delete_ruby_tag"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="6dp"
+        android:text="过滤书籍中的弹注"
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:ignore="MissingConstraints,TouchTargetSizeCheck" />
+</androidx.constraintlayout.widget.ConstraintLayout>

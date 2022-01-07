@@ -15,7 +15,9 @@ import io.legado.app.constant.PreferKey
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookGroup
+import io.legado.app.data.entities.ReadRecord
 import io.legado.app.databinding.ActivityArrangeBookBinding
+import io.legado.app.databinding.DialogBookStatusBinding
 import io.legado.app.lib.dialogs.alert
 import io.legado.app.lib.theme.primaryColor
 import io.legado.app.ui.book.group.GroupManageDialog
@@ -24,6 +26,7 @@ import io.legado.app.ui.widget.SelectActionBar
 import io.legado.app.ui.widget.recycler.DragSelectTouchHelper
 import io.legado.app.ui.widget.recycler.ItemTouchCallback
 import io.legado.app.ui.widget.recycler.VerticalDivider
+import io.legado.app.utils.*
 import io.legado.app.utils.cnCompare
 import io.legado.app.utils.getPrefInt
 import io.legado.app.utils.setEdgeEffectColor
@@ -51,9 +54,11 @@ class ArrangeBookActivity : VMBaseActivity<ActivityArrangeBookBinding, ArrangeBo
     private var booksFlowJob: Job? = null
     private var menu: Menu? = null
     private var groupId: Long = -1
+    private var position: Int = 0
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         groupId = intent.getLongExtra("groupId", -1)
+        position = intent.getIntExtra("position", -1)
         launch {
             binding.titleBar.subtitle = withContext(IO) {
                 appDb.bookGroupDao.getByID(groupId)?.groupName
@@ -138,8 +143,10 @@ class ArrangeBookActivity : VMBaseActivity<ActivityArrangeBookBinding, ArrangeBo
                     3 -> list.sortedBy { it.order }
                     else -> list.sortedByDescending { it.durChapterTime }
                 }
-                adapter.setItems(books)
+                adapter.setItems(position, books)
+                position = -1
             }
+
         }
     }
 
@@ -167,6 +174,7 @@ class ArrangeBookActivity : VMBaseActivity<ActivityArrangeBookBinding, ArrangeBo
             R.id.menu_update_disable ->
                 viewModel.upCanUpdate(adapter.selectedBooks(), false)
             R.id.menu_add_to_group -> selectGroup(addToGroupRequestCode, 0)
+            R.id.menu_set_status -> setBookStatus(*adapter.selectedBooks())
         }
         return false
     }
@@ -226,4 +234,36 @@ class ArrangeBookActivity : VMBaseActivity<ActivityArrangeBookBinding, ArrangeBo
         }
     }
 
+    override fun setBookStatus(vararg book: Book) {
+        alert("阅读状态设置") {
+            val alertBinding = DialogBookStatusBinding.inflate(layoutInflater)
+            var change = false
+            if (book.size == 1) alertBinding.rgLayout.checkByIndex(book[0].status)
+            alertBinding.rgLayout.setOnCheckedChangeListener { _, _ ->
+                change = true
+            }
+            customView { alertBinding.root }
+            okButton {
+                alertBinding.apply {
+                    if (change) {
+                        val status = rgLayout.getCheckedIndex()
+                        val readRecords = arrayListOf<ReadRecord>()
+                        book.forEach {
+                            it.status = status
+                            readRecords.add(it.toReadRecord())
+                        }
+                        viewModel.updateBook(*book)
+                        viewModel.insertReadRecord(*readRecords.toTypedArray())
+                    }
+                }
+            }
+            noButton()
+        }.show()
+    }
+
+    override fun gotoPosition(position: Int) {
+        binding.recyclerView.scrollToPosition(position)
+    }
+
 }
+

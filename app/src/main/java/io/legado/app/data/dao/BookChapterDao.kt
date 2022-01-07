@@ -7,6 +7,9 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface BookChapterDao {
 
+    @Query("select * from chapters")
+    fun observeAll(): List<BookChapter>
+
     @Query("select * from chapters where bookUrl = :bookUrl order by `index`")
     fun flowByBook(bookUrl: String): Flow<List<BookChapter>>
 

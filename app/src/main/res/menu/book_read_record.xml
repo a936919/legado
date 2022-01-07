@@ -2,11 +2,28 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/menu_sort_name"
-        android:title="按书名排序" />
-
+        android:id="@+id/menu_read_all"
+        android:visible="false"
+        android:title="全部" />
+    <item
+        android:id="@+id/menu_read_now"
+        android:visible="false"
+        android:title="在读" />
+    <item
+        android:id="@+id/menu_read_finish"
+        android:title="已读" />
+    <item
+        android:id="@+id/menu_read_plan"
+        android:visible="false"
+        android:title="想读" />
+    <item
+        android:id="@+id/menu_book_mark"
+        android:title="书签" />
+    <item
+        android:id="@+id/menu_sort_current"
+        android:title="全部（按顺序排序）" />
     <item
         android:id="@+id/menu_sort_time"
-        android:title="按时间排序" />
+        android:title="全部（按时间排序）" />
 
 </menu>

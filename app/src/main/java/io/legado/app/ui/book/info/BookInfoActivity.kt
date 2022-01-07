@@ -18,8 +18,10 @@ import io.legado.app.constant.Theme
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.TimeRecord
 import io.legado.app.databinding.ActivityBookInfoBinding
+import io.legado.app.databinding.DialogBookStatusBinding
+import io.legado.app.data.entities.BookSource
 import io.legado.app.databinding.DialogEditTextBinding
 import io.legado.app.help.BlurTransformation
 import io.legado.app.help.glide.ImageLoader
@@ -108,6 +110,21 @@ class BookInfoActivity :
         viewModel.chapterListData.observe(this, { upLoading(false, it) })
         viewModel.initData(intent)
         initOnClick()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.bookData.observe(this, { showReadTime(it) })
+    }
+
+    private fun showReadTime(book: Book){
+        val time =  appDb.timeRecordDao.getReadTime(book.name,book.author)?:0
+        val timeRecord = appDb.timeRecordDao.getRecord(book.name,book.author)
+        var string = "本书已读  ${TimeRecord.formatDuring(time)}"
+        timeRecord?.forEach{
+            string = "${string}\n${StringUtils.dateConvert(it.date,"yyyy年MM月dd日")} ${TimeRecord.formatDuring(it.readTime)}"
+        }
+        binding.tvReadTime?.text = string
     }
 
     override fun onCompatCreateOptionsMenu(menu: Menu): Boolean {
@@ -261,6 +278,11 @@ class BookInfoActivity :
                 )
             }
         }
+        tvBookStatus?.setOnClickListener {
+            viewModel.bookData.value?.let {
+                setBookStatus(it)
+            }
+        }
         tvRead.setOnClickListener {
             viewModel.bookData.value?.let {
                 readBook(it)
@@ -285,6 +307,7 @@ class BookInfoActivity :
         tvChangeSource.setOnClickListener {
             viewModel.bookData.value?.let {
                 showDialogFragment(ChangeSourceDialog(it.name, it.author))
+
             }
         }
         tvTocView.setOnClickListener {
@@ -317,6 +340,30 @@ class BookInfoActivity :
         }
     }
 
+    private fun setBookStatus(book: Book) {
+        alert("阅读状态设置") {
+            val alertBinding = DialogBookStatusBinding.inflate(layoutInflater)
+            var change = false
+            alertBinding.rgLayout.checkByIndex(book.status)
+            alertBinding.rgLayout.setOnCheckedChangeListener { _, _ ->
+                change = true
+            }
+            customView { alertBinding.root }
+            okButton {
+                alertBinding.apply {
+                    if (change) {
+                        val status = rgLayout.getCheckedIndex()
+                        book.status = status
+                        if (viewModel.inBookshelf) {
+                            appDb.bookDao.update(book)
+                        }
+                        appDb.readRecordDao.insert(book.toReadRecord())
+                    }
+                }
+            }
+            noButton()
+        }.show()
+    }
     private fun setSourceVariable() {
         launch {
             val variable = withContext(IO) { viewModel.bookSource?.getVariable() }

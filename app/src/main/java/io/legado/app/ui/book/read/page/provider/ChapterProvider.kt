@@ -3,7 +3,6 @@ package io.legado.app.ui.book.read.page.provider
 import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
-import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
 import io.legado.app.constant.AppPattern
@@ -20,6 +19,7 @@ import io.legado.app.ui.book.read.page.entities.TextPage
 import io.legado.app.utils.*
 import splitties.init.appCtx
 import java.util.*
+import kotlin.math.min
 
 /**
  * 解析内容生成章节和页面
@@ -279,11 +279,7 @@ object ChapterProvider {
     ): Pair<Int, Float> {
         var absStartX = x
         var durY = if (isTitle) y + titleTopSpacing else y
-        val layout = if (ReadBookConfig.useZhLayout) {
-            ZhLayout(text, textPaint, visibleWidth)
-        } else StaticLayout(
-            text, textPaint, visibleWidth, Layout.Alignment.ALIGN_NORMAL, 0f, 0f, true
-        )
+        val layout = ZhLayout(text, textPaint, visibleWidth)
         for (lineIndex in 0 until layout.lineCount) {
             val textLine = TextLine(isTitle = isTitle)
             if (durY + textPaint.textHeight > visibleHeight) {
@@ -307,7 +303,6 @@ object ChapterProvider {
             }
             val words =
                 text.substring(layout.getLineStart(lineIndex), layout.getLineEnd(lineIndex))
-            val desiredWidth = layout.getLineWidth(lineIndex)
             var isLastLine = false
             if (lineIndex == 0 && layout.lineCount > 1 && !isTitle) {
                 //第一行
@@ -317,7 +312,8 @@ object ChapterProvider {
                     textLine,
                     words.toStringArray(),
                     textPaint,
-                    desiredWidth,
+                    lineIndex,
+                    layout,
                     srcList
                 )
             } else if (lineIndex == layout.lineCount - 1) {
@@ -327,14 +323,7 @@ object ChapterProvider {
                 val startX = if (isTitle && ReadBookConfig.titleMode == 1)
                     (visibleWidth - layout.getLineWidth(lineIndex)) / 2
                 else 0f
-                addCharsToLineLast(
-                    absStartX,
-                    textLine,
-                    words.toStringArray(),
-                    textPaint,
-                    startX,
-                    srcList
-                )
+                addCharsToLineLast(absStartX,textLine, words.toStringArray(), startX, lineIndex, layout, srcList)
             } else {
                 //中间行
                 textLine.text = words
@@ -342,9 +331,9 @@ object ChapterProvider {
                     absStartX,
                     textLine,
                     words.toStringArray(),
-                    textPaint,
-                    desiredWidth,
                     0f,
+                    lineIndex,
+                    layout,
                     srcList
                 )
             }
@@ -364,16 +353,17 @@ object ChapterProvider {
      * 有缩进,两端对齐
      */
     private fun addCharsToLineFirst(
-        absStartX: Int,
+        absStartX:Int,
         textLine: TextLine,
         words: Array<String>,
         textPaint: TextPaint,
-        desiredWidth: Float,
+        line: Int,
+        layout: ZhLayout,
         srcList: LinkedList<String>?
     ) {
         var x = 0f
         if (!ReadBookConfig.textFullJustify) {
-            addCharsToLineLast(absStartX, textLine, words, textPaint, x, srcList)
+            addCharsToLineLast(absStartX,textLine, words, x, line, layout, srcList)
             return
         }
         val bodyIndent = ReadBookConfig.paragraphIndent
@@ -389,10 +379,8 @@ object ChapterProvider {
             )
             x = x1
         }
-        if (words.size > bodyIndent.length) {
-            val words1 = words.copyOfRange(bodyIndent.length, words.size)
-            addCharsToLineMiddle(absStartX, textLine, words1, textPaint, desiredWidth, x, srcList)
-        }
+        val words1 = words.copyOfRange(bodyIndent.length, words.size)
+        addCharsToLineMiddle(absStartX,textLine, words1, x, line, layout, srcList)
     }
 
     /**
@@ -402,42 +390,22 @@ object ChapterProvider {
         absStartX: Int,
         textLine: TextLine,
         words: Array<String>,
-        textPaint: TextPaint,
-        desiredWidth: Float,
         startX: Float,
+        line: Int,
+        layout: ZhLayout,
         srcList: LinkedList<String>?
     ) {
         if (!ReadBookConfig.textFullJustify) {
-            addCharsToLineLast(absStartX, textLine, words, textPaint, startX, srcList)
+            addCharsToLineLast(absStartX,textLine, words, startX, line, layout, srcList)
             return
         }
-        val gapCount: Int = words.lastIndex
-        val d = (visibleWidth - desiredWidth) / gapCount
-        var x = startX
-        words.forEachIndexed { index, char ->
-            val cw = StaticLayout.getDesiredWidth(char, textPaint)
-            val x1 = if (index != words.lastIndex) (x + cw + d) else (x + cw)
-            if (srcList != null && char == srcReplaceChar) {
-                textLine.textChars.add(
-                    TextChar(
-                        charData = srcList.removeFirst(),
-                        start = absStartX + x,
-                        end = absStartX + x1,
-                        isImage = true
-                    )
-                )
-            } else {
-                textLine.textChars.add(
-                    TextChar(
-                        charData = char,
-                        start = absStartX + x,
-                        end = absStartX + x1
-                    )
-                )
-            }
-            x = x1
+        val interval = layout.getInterval(line, words, visibleWidth)
+        /*间隔太大左对齐*/
+        if (interval.total > (visibleWidth / 6)) {
+            addCharsToLineLast(absStartX,textLine, words, startX, line, layout, srcList)
+            return
         }
-        exceed(absStartX, textLine, words)
+        wordsProcess(absStartX,textLine, words, startX, line, layout, interval.single, srcList);
     }
 
     /**
@@ -447,53 +415,56 @@ object ChapterProvider {
         absStartX: Int,
         textLine: TextLine,
         words: Array<String>,
-        textPaint: TextPaint,
         startX: Float,
+        line: Int,
+        layout: ZhLayout,
         srcList: LinkedList<String>?
     ) {
-        var x = startX
-        words.forEach { char ->
-            val cw = StaticLayout.getDesiredWidth(char, textPaint)
-            val x1 = x + cw
-            if (srcList != null && char == srcReplaceChar) {
+        val interval = layout.getInterval(line, words, visibleWidth)
+        /*目前改的不算严格意义的左对齐。会根据设置行宽做间隔叠加，保证上下行效果和两边间隔一致*/
+        /*存在半角字符情况下依靠中文算出的默认间隔会越界*/
+        val d = min((interval.single), (getDefInterval(layout)))
+        wordsProcess(absStartX,textLine, words, startX, line, layout, d, srcList);
+    }
+
+    private fun wordsProcess(
+        absStartX: Int,
+        textLine: TextLine,
+        words: Array<String>,
+        startX: Float,
+        line: Int,
+        layout: ZhLayout,
+        d: Float,
+        srcList: LinkedList<String>?
+    ) {
+        val locate = ZhLayout.Locate()
+        locate.start = startX
+        words.forEachIndexed { index, s ->
+            layout.getLocate(line, words.lastIndex - index, s, d, locate)
+            if (srcList != null && s == srcReplaceChar) {
                 textLine.textChars.add(
                     TextChar(
-                        charData = srcList.removeFirst(),
-                        start = absStartX + x,
-                        end = absStartX + x1,
+                        srcList.removeFirst(),
+                        start = absStartX + locate.start,
+                        end = absStartX + locate.end,
                         isImage = true
                     )
                 )
             } else {
                 textLine.textChars.add(
                     TextChar(
-                        charData = char,
-                        start = absStartX + x,
-                        end = absStartX + x1
+                        s, start = absStartX + locate.start, end = absStartX + locate.end
                     )
                 )
             }
-            x = x1
+            locate.start = locate.end
         }
-        exceed(absStartX, textLine, words)
     }
 
-    /**
-     * 超出边界处理
-     */
-    private fun exceed(absStartX: Int, textLine: TextLine, words: Array<String>) {
-        val visibleEnd = absStartX + visibleWidth
-        val endX = textLine.textChars.lastOrNull()?.end ?: return
-        if (endX > visibleEnd) {
-            val cc = (endX - visibleEnd) / words.size
-            for (i in 0..words.lastIndex) {
-                textLine.getTextCharReverseAt(i).let {
-                    val py = cc * (words.size - i)
-                    it.start = it.start - py
-                    it.end = it.end - py
-                }
-            }
-        }
+    fun getDefInterval(layout: ZhLayout): Float {
+        val defCharWidth = layout.getDefaultWidth()
+        val f = (visibleWidth / defCharWidth).toInt().toFloat()
+        return (visibleWidth % defCharWidth) / f
     }
 
     /**
@@ -578,12 +549,13 @@ object ChapterProvider {
     /**
      * 更新View尺寸
      */
-    fun upViewSize(width: Int, height: Int) {
-        if (width > 0 && height > 0 && (width != viewWidth || height != viewHeight)) {
+    fun upViewSize(readConfigChage: Boolean, width: Int, height: Int) {
+        if (width > 0 && height > 0 && (readConfigChage || width != viewWidth || height != viewHeight)) {
+            val viewChange = width != viewWidth || height != viewHeight
             viewWidth = width
             viewHeight = height
             upLayout()
-            postEvent(EventBus.UP_CONFIG, true)
+            postEvent(EventBus.UP_CONFIG, viewChange)
         }
     }
 

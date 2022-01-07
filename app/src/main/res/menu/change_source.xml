@@ -10,7 +10,12 @@
         app:actionViewClass="androidx.appcompat.widget.SearchView"
         app:showAsAction="always"
         tools:ignore="AlwaysShowAction" />
-
+    <item
+        android:id="@+id/menu_delay"
+        android:title="@string/screen"
+        android:icon="@drawable/ic_history"
+        app:showAsAction="always"
+        tools:ignore="AlwaysShowAction" />
     <item
         android:id="@+id/menu_start_stop"
         android:title="@string/stop"
@@ -22,7 +27,6 @@
         android:id="@+id/menu_source_manage"
         android:title="@string/book_source_manage"
         app:showAsAction="never" />
-
     <item
         android:id="@+id/menu_check_author"
         android:title="@string/checkAuthor"

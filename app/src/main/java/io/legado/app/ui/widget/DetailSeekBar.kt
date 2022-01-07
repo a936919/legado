@@ -1,14 +1,15 @@
 package io.legado.app.ui.widget
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.FrameLayout
 import android.widget.SeekBar
 import io.legado.app.R
 import io.legado.app.databinding.ViewDetailSeekBarBinding
-import io.legado.app.lib.theme.bottomBackground
-import io.legado.app.lib.theme.getPrimaryTextColor
+import io.legado.app.lib.theme.Selector
+import io.legado.app.lib.theme.readCfgBottomText
 import io.legado.app.ui.widget.seekbar.SeekBarChangeListener
 import io.legado.app.utils.ColorUtils
 import io.legado.app.utils.progressAdd
@@ -44,12 +45,7 @@ class DetailSeekBar @JvmOverloads constructor(
         binding.seekBar.max = typedArray.getInteger(R.styleable.DetailSeekBar_max, 0)
         typedArray.recycle()
         if (isBottomBackground && !isInEditMode) {
-            val isLight = ColorUtils.isColorLight(context.bottomBackground)
-            val textColor = context.getPrimaryTextColor(isLight)
-            binding.tvSeekTitle.setTextColor(textColor)
-            binding.ivSeekPlus.setColorFilter(textColor)
-            binding.ivSeekReduce.setColorFilter(textColor)
-            binding.tvSeekValue.setTextColor(textColor)
+            upBackground()
         }
         binding.ivSeekPlus.setOnClickListener {
             binding.seekBar.progressAdd(1)
@@ -60,6 +56,20 @@ class DetailSeekBar @JvmOverloads constructor(
             onChanged?.invoke(binding.seekBar.progress)
         }
         binding.seekBar.setOnSeekBarChangeListener(this)
+    }
+
+    fun upBackground(){
+        val textColor = context.readCfgBottomText
+        var colorList: ColorStateList = Selector.colorBuild()
+                .setDefaultColor(textColor)
+                .setPressedColor(ColorUtils.darkenColor(textColor))
+                .create()
+        binding.tvSeekTitle.setTextColor(textColor)
+        binding.ivSeekPlus.setColorFilter(textColor)
+        binding.ivSeekReduce.setColorFilter(textColor)
+        binding.tvSeekValue.setTextColor(textColor)
+        binding.seekBar.progressBackgroundTintList = colorList
+
     }
 
     private fun upValue(progress: Int = binding.seekBar.progress) {

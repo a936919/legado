@@ -7,47 +7,83 @@
     <group android:id="@+id/menu_group_on_line">
         <item
             android:id="@+id/menu_change_source"
-            android:icon="@drawable/ic_exchange"
+            android:icon="@drawable/ic_book_source_line"
             android:title="@string/change_origin"
             app:showAsAction="always" />
-
         <item
             android:id="@+id/menu_refresh"
             android:icon="@drawable/ic_refresh_black_24dp"
             android:title="@string/refresh"
-            app:showAsAction="always" />
+            app:showAsAction="never" />
 
         <item
             android:id="@+id/menu_download"
-            android:icon="@drawable/ic_download_line"
             android:title="@string/offline_cache"
-            app:showAsAction="always" />
+            app:showAsAction="never" />
 
+        <item
+            android:id="@+id/menu_source_edit"
+            android:title="编辑书源"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/menu_reverse_content"
+            android:title="@string/reverse_content"
+            app:showAsAction="never" />
     </group>
 
     <group android:id="@+id/menu_group_text">
         <item
             android:id="@+id/menu_toc_regex"
-            android:icon="@drawable/ic_exchange"
             android:title="@string/txt_toc_regex"
-            android:visible="false"
+            android:icon="@drawable/ic_book_source_line"
+            app:showAsAction="always" />
+    </group>
+
+    <group android:id="@+id/menu_group_epub">
+        <item
+            android:id="@+id/menu_epub_cfg"
+            android:title="epub书籍设置"
+            android:icon="@drawable/ic_book_source_line"
             app:showAsAction="always" />
     </group>
 
     <group android:id="@+id/menu_group_local">
-
         <item
             android:id="@+id/menu_set_charset"
-            android:icon="@drawable/ic_translate"
             android:title="@string/set_charset"
-            app:showAsAction="always" />
-
+            app:showAsAction="never" />
     </group>
+
+
+    <item
+        android:id="@+id/ReplaceRule"
+        android:icon="@drawable/ic_purify_line"
+        android:title="@string/change_origin"
+        app:showAsAction="always" />
 
     <item
         android:id="@+id/menu_add_bookmark"
+        android:icon="@drawable/ic_bookmark_line"
         android:title="@string/bookmark_add"
-        app:showAsAction="never" />
+        app:showAsAction="always" />
+
+    <group android:id="@+id/menu_group_login">
+        <item
+            android:id="@+id/menu_login"
+            android:title="@string/login"
+            android:visible="false"
+            app:showAsAction="never" />
+    </group>
+
+    <group android:id="@+id/menu_group_on_line_ns">
+
+        <item
+            android:id="@+id/menu_disable_book_source"
+            android:title="@string/disable_book_source"
+            android:visible="false"
+            app:showAsAction="never" />
+
+    </group>
 
     <item
         android:id="@+id/menu_copy_text"
@@ -64,23 +100,19 @@
         android:title="@string/get_book_progress"
         app:showAsAction="never" />
 
-    <item
-        android:id="@+id/menu_reverse_content"
-        android:title="@string/reverse_content"
-        app:showAsAction="never" />
 
     <item
         android:id="@+id/menu_enable_replace"
-        android:title="@string/replace_rule_title"
         android:checkable="true"
         android:checked="true"
+        android:title="@string/replace_rule_title"
         app:showAsAction="never" />
 
     <item
         android:id="@+id/menu_re_segment"
-        android:title="@string/re_segment"
         android:checkable="true"
         android:checked="false"
+        android:title="@string/re_segment"
         app:showAsAction="never" />
 
     <item
@@ -94,8 +126,8 @@
         app:showAsAction="never" />
 
     <item
-        android:id="@+id/menu_log"
-        android:title="@string/log"
+        android:id="@+id/menu_book_info"
+        android:title="@string/book_info"
         app:showAsAction="never" />
 
     <item

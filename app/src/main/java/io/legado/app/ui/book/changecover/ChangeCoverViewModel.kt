@@ -109,7 +109,7 @@ class ChangeCoverViewModel(application: Application) : BaseViewModel(application
             .onSuccess(searchPool) {
                 if (it.isNotEmpty()) {
                     val searchBook = it[0]
-                    if (searchBook.name == name && searchBook.author == author
+                    if (searchBook.name == name
                         && !searchBook.coverUrl.isNullOrEmpty()
                     ) {
                         appDb.searchBookDao.insert(searchBook)

@@ -22,7 +22,7 @@ val appDb by lazy {
         ReplaceRule::class, SearchBook::class, SearchKeyword::class, Cookie::class,
         RssSource::class, Bookmark::class, RssArticle::class, RssReadRecord::class,
         RssStar::class, TxtTocRule::class, ReadRecord::class, HttpTTS::class, Cache::class,
-        RuleSub::class]
+        RuleSub::class, TopPath::class, TimeRecord::class, EpubChapter::class]
 )
 abstract class AppDatabase : RoomDatabase() {
 
@@ -43,6 +43,10 @@ abstract class AppDatabase : RoomDatabase() {
     abstract val httpTTSDao: HttpTTSDao
     abstract val cacheDao: CacheDao
     abstract val ruleSubDao: RuleSubDao
+    abstract val topPathDao: TopPathDao
+    abstract val timeRecordDao: TimeRecordDao
+    abstract val epubChapterDao: EpubChapterDao
+
 
     companion object {
 

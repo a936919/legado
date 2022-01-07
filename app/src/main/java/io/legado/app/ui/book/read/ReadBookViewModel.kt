@@ -1,7 +1,6 @@
 package io.legado.app.ui.book.read
 
 import android.app.Application
-import android.content.Intent
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import io.legado.app.R
@@ -23,6 +22,7 @@ import io.legado.app.model.ReadBook
 import io.legado.app.model.localBook.LocalBook
 import io.legado.app.model.webBook.WebBook
 import io.legado.app.service.BaseReadAloudService
+import io.legado.app.utils.*
 import io.legado.app.ui.book.read.page.entities.TextChapter
 import io.legado.app.ui.book.searchContent.SearchResult
 import io.legado.app.utils.msg
@@ -37,18 +37,9 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
     var searchContentQuery = ""
     private var changeSourceCoroutine: Coroutine<*>? = null
 
-    fun initData(intent: Intent) {
+    fun initData(book: Book?) {
         execute {
-            ReadBook.inBookshelf = intent.getBooleanExtra("inBookshelf", true)
-            val bookUrl = intent.getStringExtra("bookUrl")
-            val book = when {
-                bookUrl.isNullOrEmpty() -> appDb.bookDao.lastReadBook
-                else -> appDb.bookDao.getBook(bookUrl)
-            } ?: ReadBook.book
-            when {
-                book != null -> initBook(book)
-                else -> ReadBook.upMsg(context.getString(R.string.no_book))
-            }
+            if (book != null) initBook(book)
         }.onFinally {
             ReadBook.saveRead()
         }
@@ -57,6 +48,7 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
     private fun initBook(book: Book) {
         if (ReadBook.book?.bookUrl != book.bookUrl) {
             ReadBook.resetData(book)
+            ReadBook.historyRecord = book.toBookProgress()
             isInitFinish = true
             if (ReadBook.chapterSize == 0) {
                 if (book.tocUrl.isEmpty()) {
@@ -70,7 +62,7 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
                 }
                 ReadBook.loadContent(resetPageOffset = true)
             }
-            syncBookProgress(book)
+            ReadBook.synProgress(book)
         } else {
             ReadBook.upData(book)
             isInitFinish = true
@@ -87,8 +79,9 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
                     ReadBook.loadContent(resetPageOffset = true)
                 }
             }
+
             if (!BaseReadAloudService.isRun) {
-                syncBookProgress(book)
+                ReadBook.synProgress(book)
             }
         }
         if (!book.isLocalBook() && ReadBook.bookSource == null) {
@@ -150,25 +143,19 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
         }
     }
 
-    fun syncBookProgress(
+    fun getWebDavProgress(
         book: Book,
         alertSync: ((progress: BookProgress) -> Unit)? = null
     ) {
-        if (AppConfig.syncBookProgress)
+        if (AppConfig.syncBookProgress) {
             execute {
                 AppWebDav.getBookProgress(book)
             }.onSuccess {
-                it?.let { progress ->
-                    if (progress.durChapterIndex < book.durChapterIndex ||
-                        (progress.durChapterIndex == book.durChapterIndex && progress.durChapterPos < book.durChapterPos)
-                    ) {
-                        alertSync?.invoke(progress)
-                    } else {
-                        ReadBook.setProgress(progress)
-                    }
-                }
+                alertSync?.invoke(it!!)
             }
+        }
     }
+
 
     fun changeTo(source: BookSource, book: Book) {
         changeSourceCoroutine?.cancel()
@@ -193,6 +180,7 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
             ReadBook.resetData(book)
             ReadBook.upMsg(null)
             ReadBook.loadContent(resetPageOffset = true)
+            appDb.readRecordDao.insert(book.toReadRecord())
         }.timeout(60000)
             .onError {
                 context.toastOnUi("换源失败\n${it.localizedMessage}")
@@ -222,7 +210,7 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
     fun openChapter(index: Int, durChapterPos: Int = 0, success: (() -> Unit)? = null) {
         ReadBook.clearTextChapter()
         ReadBook.callBack?.upContent()
-        if (index != ReadBook.durChapterIndex) {
+        if (index != ReadBook.durChapterIndex || durChapterPos != ReadBook.durChapterPos) {
             ReadBook.durChapterIndex = index
             ReadBook.durChapterPos = durChapterPos
         }

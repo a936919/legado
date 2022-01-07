@@ -3,13 +3,16 @@ package io.legado.app.model.localBook
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.text.TextUtils
+import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
+import io.legado.app.data.entities.EpubChapter
 import io.legado.app.data.entities.BookChapter
 import io.legado.app.utils.FileUtils
 import io.legado.app.utils.HtmlFormatter
 import io.legado.app.utils.MD5Utils
 import io.legado.app.utils.externalFiles
 import me.ag2s.epublib.domain.EpubBook
+
 import me.ag2s.epublib.domain.Resource
 import me.ag2s.epublib.domain.TOCReference
 import me.ag2s.epublib.epub.EpubReader
@@ -116,27 +119,53 @@ class EpubFile(var book: Book) {
 
     private fun getContent(chapter: BookChapter): String? {
         /*获取当前章节文本*/
-        epubBook?.let { epubBook ->
-            val nextUrl = chapter.getVariable("nextUrl")
-            val startFragmentId = chapter.startFragmentId
-            val endFragmentId = chapter.endFragmentId
-            val elements = Elements()
-            var isChapter = false
-            /*一些书籍依靠href索引的resource会包含多个章节，需要依靠fragmentId来截取到当前章节的内容*/
-            /*注:这里较大增加了内容加载的时间，所以首次获取内容后可存储到本地cache，减少重复加载*/
-            for (res in epubBook.contents) {
-                if (chapter.url.substringBeforeLast("#") == res.href) {
-                    elements.add(getBody(res, startFragmentId, endFragmentId))
-                    isChapter = true
-                } else if (isChapter) {
-                    if (nextUrl.isNullOrBlank() || res.href == nextUrl.substringBeforeLast("#")) {
-                        break
-                    }
-                    elements.add(getBody(res, startFragmentId, endFragmentId))
-                }
+        var string = getChildChapter(chapter, chapter.url)
+        val childContends = appDb.epubChapterDao.get(book.bookUrl, chapter.url)
+        childContends?.forEach {
+            string += "\n" + getChildChapter(chapter, it.href)
+        }
+        return string
+    }
+
+    private fun getChildChapter(chapter: BookChapter, href: String): String? {
+        epubBook?.let {
+            val body = Jsoup.parse(String(it.resources.getByHref(href).data, mCharset)).body()
+
+            if (chapter.url == href) {
+                val startFragmentId = chapter.startFragmentId
+                val endFragmentId = chapter.endFragmentId
+                /*一些书籍依靠href索引的resource会包含多个章节，需要依靠fragmentId来截取到当前章节的内容*/
+                /*注:这里较大增加了内容加载的时间，所以首次获取内容后可存储到本地cache，减少重复加载*/
+                if (!startFragmentId.isNullOrBlank())
+                    body.getElementById(startFragmentId)?.previousElementSiblings()?.remove()
+                if (!endFragmentId.isNullOrBlank() && endFragmentId != startFragmentId)
+                    body.getElementById(endFragmentId)?.nextElementSiblings()?.remove()
             }
+
+            /*选择去除正文中的H标签，部分书籍标题与阅读标题重复待优化*/
+            var tag = Book.hTag
+            if (book.getDelTag(tag)) {
+                body.getElementsByTag("h1")?.remove()
+                body.getElementsByTag("h2")?.remove()
+                body.getElementsByTag("h3")?.remove()
+                body.getElementsByTag("h4")?.remove()
+                body.getElementsByTag("h5")?.remove()
+                body.getElementsByTag("h6")?.remove()
+                //body.getElementsMatchingOwnText(chapter.title)?.remove()
+            }
+
+            /*选择去除正文中的img标签，目前图片支持效果待优化*/
+            tag = Book.imgTag
+            if (book.getDelTag(tag)) {
+                body.getElementsByTag("img")?.remove()
+            }
+
+            val elements = body.children()
+            elements.select("script").remove()
+            elements.select("style").remove()
+            /*选择去除正文中的ruby标签，目前注释支持效果待优化*/
+            tag = Book.rubyTag
             var html = elements.outerHtml()
-            val tag = Book.rubyTag
             if (book.getDelTag(tag)) {
                 html = html.replace("<ruby>\\s?([\\u4e00-\\u9fa5])\\s?.*?</ruby>".toRegex(), "$1")
             }
@@ -208,6 +237,7 @@ class EpubFile(var book: Book) {
                 val size = spineReferences.size
                 while (i < size) {
                     val resource = spineReferences[i].resource
+
                     var title = resource.title
                     if (TextUtils.isEmpty(title)) {
                         try {
@@ -215,6 +245,7 @@ class EpubFile(var book: Book) {
                                 Jsoup.parse(String(resource.data, mCharset))
                             val elements = doc.getElementsByTag("title")
                             if (elements.size > 0) {
+
                                 title = elements[0].text()
                             }
                         } catch (e: IOException) {
@@ -230,6 +261,7 @@ class EpubFile(var book: Book) {
                     } else {
                         chapter.title = title
                     }
+
                     chapterList.add(chapter)
                     i++
                 }
@@ -239,11 +271,45 @@ class EpubFile(var book: Book) {
                 for (i in chapterList.indices) {
                     chapterList[i].index = i
                 }
+                getChildChapter(chapterList)
+
             }
         }
         book.latestChapterTitle = chapterList.lastOrNull()?.title
         book.totalChapterNum = chapterList.size
         return chapterList
+    }
+
+    /*获取当前章节的子章节。部分书籍一个章节包含多个html文件，（一些精排书籍，每一章节正文前的标题、标题封面、引言等都会有独立html）*/
+    /*需在读取常规章节列表后调用，遍历书籍全内容，根据href检索原不包含在章节内的html归属父章节*/
+    private fun getChildChapter(chapterList: ArrayList<BookChapter>) {
+        epubBook?.let {
+            val contents = it.contents
+            val chapters = ArrayList<EpubChapter>()
+            if (contents != null) {
+                var i = 0
+                var j = 0
+                var parentHref: String? = null
+                while (i < contents.size) {
+                    val content = contents[i]
+                    if (j < chapterList.size && content.href == chapterList[j].url) {
+                        parentHref = content.href
+                        j++
+                    } else if (!parentHref.isNullOrBlank() && content.mediaType.toString()
+                            .contains("htm")
+                    ) {
+                        val epubChapter = EpubChapter()
+                        epubChapter.bookUrl = book.bookUrl
+                        epubChapter.href = content.href
+                        epubChapter.parentHref = parentHref
+                        chapters.add(epubChapter)
+                    }
+                    i++
+                }
+            }
+            appDb.epubChapterDao.deleteByName(book.bookUrl)
+            if (chapters.size > 0) appDb.epubChapterDao.insert(*chapters.toTypedArray())
+        }
     }
 
     /*获取书籍起始页内容。部分书籍第一章之前存在封面，引言，扉页等内容*/
@@ -273,6 +339,7 @@ class EpubFile(var book: Book) {
                         elements[0].text()
                     else
                         "--卷首--"
+
             }
             chapter.bookUrl = book.bookUrl
             chapter.title = title
@@ -280,9 +347,9 @@ class EpubFile(var book: Book) {
             chapter.startFragmentId =
                 if (content.href.substringAfter("#") == content.href) null
                 else content.href.substringAfter("#")
-
             chapterList.lastOrNull()?.endFragmentId = chapter.startFragmentId
             chapterList.lastOrNull()?.putVariable("nextUrl", chapter.url)
+
             chapterList.add(chapter)
             durIndex++
             i++
@@ -311,5 +378,4 @@ class EpubFile(var book: Book) {
             }
         }
     }
-
 }

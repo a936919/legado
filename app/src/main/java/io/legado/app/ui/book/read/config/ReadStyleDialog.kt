@@ -1,7 +1,10 @@
 package io.legado.app.ui.book.read.config
 
 import android.content.DialogInterface
+import android.os.Build
 import android.os.Bundle
+import android.view.*
+import androidx.annotation.RequiresApi
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -17,10 +20,12 @@ import io.legado.app.databinding.ItemReadStyleBinding
 import io.legado.app.help.ReadBookConfig
 import io.legado.app.lib.dialogs.selector
 import io.legado.app.lib.theme.accentColor
+import io.legado.app.lib.theme.readCfgBottomBg
+import io.legado.app.lib.theme.readCfgBottomText
+import io.legado.app.ui.book.read.ReadBookActivity
 import io.legado.app.lib.theme.bottomBackground
 import io.legado.app.lib.theme.getPrimaryTextColor
 import io.legado.app.model.ReadBook
-import io.legado.app.ui.book.read.ReadBookActivity
 import io.legado.app.ui.font.FontSelectDialog
 import io.legado.app.utils.*
 import io.legado.app.utils.viewbindingdelegate.viewBinding
@@ -32,11 +37,14 @@ class ReadStyleDialog : BaseDialogFragment(R.layout.dialog_read_book_style),
     private val binding by viewBinding(DialogReadBookStyleBinding::bind)
     private val callBack get() = activity as? ReadBookActivity
     private lateinit var styleAdapter: StyleAdapter
+    private lateinit var view:ItemReadStyleBinding
 
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
     override fun onStart() {
         super.onStart()
         dialog?.window?.let {
             it.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+            it.setElevation(0.0f)
             it.setBackgroundDrawableResource(R.color.background)
             it.decorView.setPadding(0, 0, 0, 0)
             val attr = it.attributes
@@ -50,6 +58,7 @@ class ReadStyleDialog : BaseDialogFragment(R.layout.dialog_read_book_style),
     override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) {
         (activity as ReadBookActivity).bottomDialog++
         initView()
+        initReadCfgColor()
         initData()
         initViewEvent()
     }
@@ -60,14 +69,7 @@ class ReadStyleDialog : BaseDialogFragment(R.layout.dialog_read_book_style),
         (activity as ReadBookActivity).bottomDialog--
     }
 
-    private fun initView() = binding.run {
-        val bg = requireContext().bottomBackground
-        val isLight = ColorUtils.isColorLight(bg)
-        val textColor = requireContext().getPrimaryTextColor(isLight)
-        rootView.setBackgroundColor(bg)
-        tvPageAnim.setTextColor(textColor)
-        tvBgTs.setTextColor(textColor)
-        tvShareLayout.setTextColor(textColor)
+    private fun initView() =  binding.run{
         dsbTextSize.valueFormat = {
             (it + 5).toString()
         }
@@ -76,14 +78,14 @@ class ReadStyleDialog : BaseDialogFragment(R.layout.dialog_read_book_style),
         }
         dsbLineSize.valueFormat = { ((it - 10) / 10f).toString() }
         dsbParagraphSpacing.valueFormat = { (it / 10f).toString() }
+        dsbBoldSize.valueFormat = {(it/10f).toString()}
         styleAdapter = StyleAdapter()
         rvStyle.adapter = styleAdapter
         styleAdapter.addFooterView {
-            ItemReadStyleBinding.inflate(layoutInflater, it, false).apply {
+            view = ItemReadStyleBinding.inflate(layoutInflater, it, false)
+            view.apply {
                 ivStyle.setPadding(6.dp, 6.dp, 6.dp, 6.dp)
                 ivStyle.setText(null)
-                ivStyle.setColorFilter(textColor)
-                ivStyle.borderColor = textColor
                 ivStyle.setImageResource(R.drawable.ic_add)
                 root.setOnClickListener {
                     ReadBookConfig.configList.add(ReadBookConfig.Config())
@@ -93,9 +95,47 @@ class ReadStyleDialog : BaseDialogFragment(R.layout.dialog_read_book_style),
         }
     }
 
+    private fun initReadCfgColor() = with(binding) {
+        val bg = requireContext().readCfgBottomBg
+        val textColor = requireContext().readCfgBottomText
+        rootView.setBackgroundColor(bg)
+        tvBgTs.setTextColor(textColor)
+        tvShareLayout.setTextColor(textColor)
+        tvTextFont.setTextColor(textColor)
+        tvTextFont.upBackground()
+        textFontWeightConverter.setTextColor(textColor)
+        textFontWeightConverter.upBackground()
+        tvTextIndent.setTextColor(textColor)
+        tvTextIndent.upBackground()
+        chineseConverter.setTextColor(textColor)
+        chineseConverter.upBackground()
+        tvPadding.setTextColor(textColor)
+        tvPadding.upBackground()
+        tvTip.setTextColor(textColor)
+        tvTip.upBackground()
+        dsbTextSize.upBackground()
+        dsbBoldSize.upBackground()
+        dsbLineSize.upBackground()
+        dsbParagraphSpacing.upBackground()
+        dsbTextLetterSpacing.upBackground()
+        rbAnim0.initTheme()
+        rbAnim1.initTheme()
+        rbNoAnim.initTheme()
+        rbNoAnim.initTheme()
+        rbScrollAnim.initTheme()
+        rbSimulationAnim.initTheme()
+        if(::view.isInitialized){
+            view.apply {
+                ivStyle.setColorFilter(textColor)
+                ivStyle.borderColor = textColor
+            }
+        }
+    }
+
     private fun initData() {
         binding.cbShareLayout.isChecked = ReadBookConfig.shareLayout
         upView()
+        ReadBookConfig.configList.sortBy { it.name }
         styleAdapter.setItems(ReadBookConfig.configList)
     }
 
@@ -148,6 +188,10 @@ class ReadStyleDialog : BaseDialogFragment(R.layout.dialog_read_book_style),
             ReadBookConfig.lineSpacingExtra = it
             postEvent(EventBus.UP_CONFIG, true)
         }
+        dsbBoldSize.onChanged = {
+            ReadBookConfig.boldSize = it/10f
+            postEvent(EventBus.UP_CONFIG, true)
+        }
         dsbParagraphSpacing.onChanged = {
             ReadBookConfig.paragraphSpacing = it
             postEvent(EventBus.UP_CONFIG, true)
@@ -185,6 +229,7 @@ class ReadStyleDialog : BaseDialogFragment(R.layout.dialog_read_book_style),
             dsbTextLetterSpacing.progress = (it.letterSpacing * 100).toInt() + 50
             dsbLineSize.progress = it.lineSpacingExtra
             dsbParagraphSpacing.progress = it.paragraphSpacing
+            dsbBoldSize.progress = (it.boldSize*10).toInt()
         }
     }
 
@@ -230,6 +275,7 @@ class ReadStyleDialog : BaseDialogFragment(R.layout.dialog_read_book_style),
                 ivStyle.setOnClickListener {
                     if (ivStyle.isInView) {
                         changeBg(holder.layoutPosition)
+                        initReadCfgColor()
                     }
                 }
                 ivStyle.onLongClick(ivStyle.isInView) {
@@ -239,6 +285,5 @@ class ReadStyleDialog : BaseDialogFragment(R.layout.dialog_read_book_style),
                 }
             }
         }
-
     }
 }

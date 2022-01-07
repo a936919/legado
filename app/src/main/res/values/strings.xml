@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!--mq-->
+    <string name="read_over_enable" translatable="false">请设置阅读状态</string>
+
     <!--App-->
     <string name="app_name">Legado</string>
     <string name="receiving_shared_label">Legado·search</string>
@@ -825,7 +828,7 @@
     <string name="reverse_content">Reverse content</string>
     <string name="debug">Debug</string>
     <string name="crash_log">Crash log</string>
-    <string name="use_zh_layout">Custom Chinese line feed</string>
+    <string name="use_zh_layout">点击翻页无动画</string>
     <string name="image_style">Style of Images</string>
     <string name="system_tts">System tts</string>
     <string name="export_type">Exported file format</string>
