@@ -95,22 +95,24 @@ class ReadBookActivity : BaseReadBookActivity(),
                 viewModel.replaceRuleChanged()
             }
         }
-    private val searchContentActivity =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-            it ?: return@registerForActivityResult
-            it.data?.let { data ->
-                data.getIntExtra("chapterIndex", ReadBook.durChapterIndex).let {
-                    viewModel.searchContentQuery = data.getStringExtra("query") ?: ""
-                    val searchResultIndex = data.getIntExtra("searchResultIndex", 0)
-                    isShowingSearchResult = true
-                    binding.searchMenu.updateSearchResultIndex(searchResultIndex)
-                    binding.searchMenu.selectedSearchResult?.let { currentResult ->
-                        skipToSearch(currentResult)
-                        showActionMenu()
-                    }
+    private val searchContentActivity = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        it ?: return@registerForActivityResult
+        it.data?.let { data ->
+            val key = data.getLongExtra("key", System.currentTimeMillis())
+            val searchResult = IntentData.get<SearchResult>("searchResult$key")
+            val searchResultList = IntentData.get<List<SearchResult>>("searchResultList$key")
+            if (searchResult != null && searchResultList != null) {
+                viewModel.searchContentQuery = searchResult.query
+                binding.searchMenu.upSearchResultList(searchResultList)
+                isShowingSearchResult = true
+                binding.searchMenu.updateSearchResultIndex(searchResultList.indexOf(searchResult))
+                binding.searchMenu.selectedSearchResult?.let { currentResult ->
+                    skipToSearch(currentResult)
+                    showActionMenu()
                 }
             }
         }
+    }
     var menu: Menu? = null
     override var intentIsComic = false
     val textActionMenu: TextActionMenu by lazy {
@@ -938,7 +940,7 @@ class ReadBookActivity : BaseReadBookActivity(),
             }
         }
 
-        if (previousResult.chapterIndex != searchResult.chapterIndex) {
+        if (searchResult.chapterIndex != previousResult?.chapterIndex) {
             viewModel.openChapter(searchResult.chapterIndex) {
                 jumpToPosition()
             }
