@@ -902,7 +902,7 @@ class ReadBookActivity : BaseReadBookActivity(),
     override fun onTocRegexDialogResult(tocRegex: String) {
         ReadBook.book?.let {
             it.tocUrl = tocRegex
-            viewModel.loadChapterList(it)
+            loadChapterList(it)
         }
     }
 
