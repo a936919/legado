@@ -57,7 +57,6 @@ class ImportBookSourceViewModel(app: Application) : BaseViewModel(app) {
             selectStatus.forEachIndexed { index, b ->
                 if (b) {
                     val source = allSources[index]
-                    groupName?.let{source.addGroup(groupName!!)}
                     if (keepName) {
                         checkSources[index]?.let {
                             source.bookSourceName = it.bookSourceName
@@ -86,7 +85,7 @@ class ImportBookSourceViewModel(app: Application) : BaseViewModel(app) {
             finally.invoke()
         }
     }
-    
+
     fun importSource(text: String) {
         execute {
             val mText = text.trim()

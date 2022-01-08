@@ -183,6 +183,11 @@ data class Book(
         config().imageStyle = imageStyle
     }
 
+    fun setDelTag(tag: Long) {
+        config().delTag =
+            if ((config().delTag and tag) == tag) config().delTag and tag.inv() else config().delTag or tag
+    }
+
     fun getDelTag(tag: Long): Boolean {
         return config().delTag and tag == tag
     }
@@ -282,6 +287,7 @@ data class Book(
     companion object {
         const val hTag = 2L
         const val rubyTag = 4L
+        const val imgTag = 8L
         const val imgStyleDefault = "DEFAULT"
         const val imgStyleFull = "FULL"
         const val imgStyleText = "TEXT"
