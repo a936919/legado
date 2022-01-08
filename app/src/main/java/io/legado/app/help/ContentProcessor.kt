@@ -11,7 +11,7 @@ import splitties.init.appCtx
 import java.lang.ref.WeakReference
 import java.util.regex.Pattern
 
-class ContentProcessor private constructor(
+class ContentProcessor(
     private val bookName: String,
     private val bookOrigin: String
 ) {

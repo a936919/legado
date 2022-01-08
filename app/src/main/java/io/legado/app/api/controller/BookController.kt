@@ -55,7 +55,7 @@ object BookController {
             }
         }
 
-    var contentProcessor: ContentProcessor? = null
+    private var contentProcessor: ContentProcessor? = null
     private var timeRecord: TimeRecord? = null
     private var readStartTime: Long = System.currentTimeMillis()
     fun getBook(parameters: Map<String, List<String>>): ReturnData {
@@ -171,7 +171,7 @@ object BookController {
                 }
                 if (ReadBookConfig.isComic(book.origin))
                     content = content!!.replace("\\s*\\n+\\s*".toRegex(), "")
-                synRecord(book, index, 0)
+                saveBookReadIndex(book, index, 0)
                 returnData.setData(content!!)
             } else {
                 returnData.setErrorMsg("未找到")
@@ -189,7 +189,7 @@ object BookController {
         val pos = parameters["pos"]?.getOrNull(0)?.toInt()
         if (bookUrl == null || chapterIndex == null || pos == null)
             return returnData.setErrorMsg("参数url不能为空，请指定书籍地址")
-        appDb.bookDao.getBook(bookUrl)?.let { synRecord(it, chapterIndex, pos) }
+        appDb.bookDao.getBook(bookUrl)?.let { saveBookReadIndex(it, chapterIndex, pos) }
         return returnData.setData("成功")
     }
 
@@ -214,7 +214,7 @@ object BookController {
             ""
         )
         appDb.bookmarkDao.insert(bookmark)
-        synRecord(book, chapterIndex, pos)
+        saveBookReadIndex(book, chapterIndex, pos)
         return returnData.setData("成功")
     }
 
@@ -248,7 +248,7 @@ object BookController {
         }
     }
 
-    private suspend fun processReplace(book: Book, chapter: BookChapter, content: String): String {
+    private fun processReplace(book: Book, chapter: BookChapter, content: String): String {
         contentProcessor?.let {
             val contents =
                 it.getContent(book, chapter, content, false, book.getUseReplaceRule())
@@ -257,7 +257,7 @@ object BookController {
         return content
     }
 
-    private fun synRecord(book: Book, chapterIndex: Int, pos: Int) {
+    private fun saveBookReadIndex(book: Book, chapterIndex: Int, pos: Int) {
         Coroutine.async {
             book.webDurChapterTime = System.currentTimeMillis()
             book.webChapterIndex = chapterIndex
@@ -296,22 +296,6 @@ object BookController {
                 if (dataChange) appDb.timeRecordDao.insert(it) else appDb.timeRecordDao.update(it)
 
             }
-        }
-    }
-
-    fun saveBookReadIndex(book: Book, index: Int) {
-        book.durChapterIndex = index
-        book.durChapterTime = System.currentTimeMillis()
-        appDb.bookChapterDao.getChapter(book.bookUrl, index)?.let {
-            book.durChapterTitle = it.title
-        }
-        appDb.bookDao.update(book)
-        AppWebDav.uploadBookProgress(book)
-        if (ReadBook.book?.bookUrl == book.bookUrl) {
-            ReadBook.book = book
-            ReadBook.durChapterIndex = index
-            ReadBook.clearTextChapter()
-            ReadBook.loadContent(true)
         }
     }
 
