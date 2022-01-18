@@ -180,7 +180,6 @@ class ReadRecordActivity : BaseActivity<ActivityReadRecordBinding>() {
                 tvReadTime.text = string
                 tvStatus.text = if(item.status == 1) "已读" else if(item.status == 2) "" else ""
                 tvStatus.setTextColor(accentColor)
-                tvChapter.text = item.durChapterTitle
                 tvChapter.text = item.durChapterTitle?:""
             }
         }
