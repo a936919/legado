@@ -108,14 +108,20 @@ object Restore : BackupRestore() {
             }
             fileToListT<ReadRecord>(path, "readRecord.json")?.let {
                 it.forEach { readRecord ->
-                    //判断是不是本机记录
-                    if (readRecord.androidId != androidId) {
-                        appDb.readRecordDao.insert(readRecord)
-                    } else {
-                        val book = appDb.readRecordDao
-                            .getBook(readRecord.androidId, readRecord.bookName, readRecord.author)
-                        if (book == null || book.durChapterTime < readRecord.durChapterTime) {
+                    if (!readRecord.bookUrl.isNullOrBlank()) {
+                        //判断是不是本机记录
+                        if (readRecord.androidId != androidId) {
                             appDb.readRecordDao.insert(readRecord)
+                        } else {
+                            val book = appDb.readRecordDao
+                                .getBook(
+                                    readRecord.androidId,
+                                    readRecord.bookName,
+                                    readRecord.author
+                                )
+                            if (book == null || book.durChapterTime < readRecord.durChapterTime) {
+                                appDb.readRecordDao.insert(readRecord)
+                            }
                         }
                     }
                 }
