@@ -1,11 +1,8 @@
 name: Build and Release
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'CHANGELOG.md'
+  watch:
+    types: [started]
 #  schedule:
 #    - cron: '0 4 * * *'
 
